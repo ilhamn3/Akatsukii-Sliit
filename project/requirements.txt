@@ -1,0 +1,40 @@
+# ==============================================================================
+# Factory Memory - Dependencies
+# Innodata AI Catalyst '26 University Track Project
+# ==============================================================================
+
+# Multi-Agent Workflow & Orchestration
+langgraph>=0.0.26
+langchain>=0.1.10
+langchain-core>=0.1.28
+langchain-community>=0.0.24
+langchain-openai>=0.0.8
+
+# Data Modeling, Validation & Settings Management
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+
+# Speech-to-Text & Multimodal Audio Extraction
+openai-whisper>=20231117
+
+# Storage & Retrieval (Relational, Vector, Graph)
+chromadb>=0.4.22
+faiss-cpu>=1.7.4
+networkx>=3.1
+sentence-transformers>=2.2.2
+
+# User Interface & Interactive Dashboard
+streamlit>=1.31.0
+
+# Scientific Computing & Data Analysis
+pandas>=2.0.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Testing & Quality Assurance
+pytest>=8.0.0
+pytest-cov>=4.1.0
+
+# Document Handling (Proposal & Reports)
+python-docx>=1.1.0
