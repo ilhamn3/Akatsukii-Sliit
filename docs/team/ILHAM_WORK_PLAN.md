@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 12 / 30 points · 40% complete**
+**Overall: 17 / 30 points · 57% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP1 | Foundation and architecture | 12 | 12 | 100% |
-| WP5 | Assistance agents 5, 7 and 8 | 18 | 0 | 0% |
+| WP5 | Assistance agents 5, 7 and 8 | 18 | 5 | 28% |
 <!-- PROGRESS:END -->
 
 **How to update:** edit only the **Done %** column below (0-100). Points earned = Pts x Done %. A subtask is 100% only when it meets its "done when" in section 3 and has been reviewed. Partial progress is fine (25 / 50 / 75%).
@@ -36,8 +36,8 @@
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 5.1 | Diagnostic agent: ranked fault hypotheses with confidence | 3 | 24 Nov | 0% |
-| 5.2 | Diagnostic agent: clarifying-question flow | 2 | 24 Nov | 0% |
+| 5.1 | Diagnostic agent: ranked fault hypotheses with confidence | 3 | 24 Nov | 100% |
+| 5.2 | Diagnostic agent: clarifying-question flow | 2 | 24 Nov | 100% |
 | 5.3 | Safety rule base (from Tharshanth's hazard list) | 3 | 24 Nov | 0% |
 | 5.4 | Safety Verification agent: approve / amend / veto with reason | 3 | 26 Nov | 0% |
 | 5.5 | Orchestrator: task delegation and adaptive routing | 3 | 26 Nov | 0% |
@@ -160,5 +160,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 |---|---|---|---|---|---|---|
 | I1 | 21 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | core/agents/store/tests packages, schemas.py, 9 pytest tests | 0% -> 17% | Kavibarath S |
 | I2 | 21 Nov | [WP1] Shared state, JSONL trace logger and dynamic agent registry | 1.3 (0->100%), 1.4 (0->100%), 1.5 (0->100%) | BlackboardState, TraceLogger, registry.py, config.yaml, BaseAgent, main.py rewrite | 17% -> 40% | Kavibarath S |
+| I3 | 22 Nov | [WP5] Diagnostic agent with hypothesis ranking and clarifying flow | 5.1 (0->100%), 5.2 (0->100%) | a5_diagnostic.py, llm.py (GeminiLLMClient via google-genai + OpenAILLMClient + FakeLLM), diagnostic_v1.md prompt, provider routing, 10 dev queries verified against live gemini-3.5-flash API, 30 pytest tests (13 for diagnostic) | 40% -> 57% | Kavibarath S |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
