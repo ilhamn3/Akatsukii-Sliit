@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 5 / 30 points · 17% complete**
+**Overall: 12 / 30 points · 40% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP1 | Foundation and architecture | 12 | 5 | 42% |
+| WP1 | Foundation and architecture | 12 | 12 | 100% |
 | WP5 | Assistance agents 5, 7 and 8 | 18 | 0 | 0% |
 <!-- PROGRESS:END -->
 
@@ -28,9 +28,9 @@
 |---|---|---|---|---|
 | 1.1 | Repo scaffold in the required structure, `.gitignore`, `.env.example` | 2 | 22 Nov | 100% |
 | 1.2 | Pydantic schemas: repair record and agent message contracts | 3 | 22 Nov | 100% |
-| 1.3 | Shared state (blackboard) and LangGraph skeleton | 3 | 22 Nov | 0% |
-| 1.4 | JSONL trace logger (every agent handoff logged) | 2 | 22 Nov | 0% |
-| 1.5 | Agent registry and config file (add an agent without editing graph code) | 2 | 22 Nov | 0% |
+| 1.3 | Shared state (blackboard) and LangGraph skeleton | 3 | 22 Nov | 100% |
+| 1.4 | JSONL trace logger (every agent handoff logged) | 2 | 22 Nov | 100% |
+| 1.5 | Agent registry and config file (add an agent without editing graph code) | 2 | 22 Nov | 100% |
 
 #### WP5 – Assistance agents 5, 7 and 8 (18 pts)
 
@@ -159,5 +159,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
 | I1 | 21 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | core/agents/store/tests packages, schemas.py, 9 pytest tests | 0% -> 17% | Kavibarath S |
+| I2 | 21 Nov | [WP1] Shared state, JSONL trace logger and dynamic agent registry | 1.3 (0->100%), 1.4 (0->100%), 1.5 (0->100%) | BlackboardState, TraceLogger, registry.py, config.yaml, BaseAgent, main.py rewrite | 17% -> 40% | Kavibarath S |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*

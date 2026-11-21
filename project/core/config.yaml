@@ -1,0 +1,55 @@
+# ==============================================================================
+# Factory Memory - Declarative Agent Registry & Multi-Agent Configuration
+# ==============================================================================
+
+system:
+  safety_max_revision_loops: 2
+  confidence_threshold_review: 0.75
+  abstention_similarity_threshold: 0.55
+  log_path: "logs/audit_trace.jsonl"
+
+conflict_ranking_weights:
+  outcome_worked: 0.40
+  outcome_failed: -0.50
+  verified_by_senior: 0.25
+  recency_decay: 0.15
+  vector_similarity: 0.20
+
+# Active Pipeline Configurations
+pipelines:
+  # Pipeline B: Assistance & Troubleshooting Workflow
+  B:
+    name: "Assistance Pipeline"
+    entrypoint: "DummyDiagnosticAgent"
+    agents:
+      - name: "DummyDiagnosticAgent"
+        role: "Fault interpretation & hypothesis ranking"
+        pipeline: "B"
+        module: "project.core.stubs.dummy_agents"
+        class: "DummyDiagnosticAgent"
+        enabled: true
+        stub: true
+        order: 1
+
+      - name: "DummySafetyAgent"
+        role: "Safety verification and veto loop"
+        pipeline: "B"
+        module: "project.core.stubs.dummy_agents"
+        class: "DummySafetyAgent"
+        enabled: true
+        stub: true
+        order: 2
+
+    # Graph edge definitions (src -> dst). Use '__end__' to terminate.
+    edges:
+      - from: "DummyDiagnosticAgent"
+        to: "DummySafetyAgent"
+      - from: "DummySafetyAgent"
+        to: "__end__"
+
+  # Pipeline A: Ingestion & Knowledge Capture Workflow (Placeholder until WP3 merges)
+  A:
+    name: "Ingestion Pipeline"
+    entrypoint: null
+    agents: []
+    edges: []
