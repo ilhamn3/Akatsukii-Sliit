@@ -20,15 +20,15 @@ pipelines:
   # Pipeline B: Assistance & Troubleshooting Workflow
   B:
     name: "Assistance Pipeline"
-    entrypoint: "DummyDiagnosticAgent"
+    entrypoint: "DiagnosticAgent"
     agents:
-      - name: "DummyDiagnosticAgent"
+      - name: "DiagnosticAgent"
         role: "Fault interpretation & hypothesis ranking"
         pipeline: "B"
-        module: "project.core.stubs.dummy_agents"
-        class: "DummyDiagnosticAgent"
+        module: "project.agents.a5_diagnostic"
+        class: "DiagnosticAgent"
         enabled: true
-        stub: true
+        stub: false
         order: 1
 
       - name: "DummySafetyAgent"
@@ -41,9 +41,12 @@ pipelines:
         order: 2
 
     # Graph edge definitions (src -> dst). Use '__end__' to terminate.
+    # Conditional routing: specify condition: "check_clarification", on_true, on_false
     edges:
-      - from: "DummyDiagnosticAgent"
-        to: "DummySafetyAgent"
+      - from: "DiagnosticAgent"
+        condition: "check_clarification"
+        on_true: "__end__"
+        on_false: "DummySafetyAgent"
       - from: "DummySafetyAgent"
         to: "__end__"
 

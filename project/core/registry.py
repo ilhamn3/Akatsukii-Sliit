@@ -107,14 +107,33 @@ def build_graph(
     # Connect configured edges
     for edge in edges_cfg:
         src = edge["from"]
-        dst = edge["to"]
-
         if src not in enabled_agents:
             continue
 
-        if dst == "__end__" or dst == "END":
-            builder.add_edge(src, END)
-        elif dst in enabled_agents:
-            builder.add_edge(src, dst)
+        if "condition" in edge:
+            cond_type = edge["condition"]
+            if cond_type == "check_clarification":
+                raw_true = edge.get("on_true", "__end__")
+                raw_false = edge.get("on_false", "__end__")
+                true_target = END if raw_true in ("__end__", "END") else raw_true
+                false_target = END if raw_false in ("__end__", "END") else raw_false
+
+                def route_clarification(state: BlackboardState) -> str:
+                    return "clarify" if state.get("clarification_needed") else "continue"
+
+                builder.add_conditional_edges(
+                    src,
+                    route_clarification,
+                    {
+                        "clarify": true_target,
+                        "continue": false_target,
+                    },
+                )
+        else:
+            dst = edge["to"]
+            if dst == "__end__" or dst == "END":
+                builder.add_edge(src, END)
+            elif dst in enabled_agents:
+                builder.add_edge(src, dst)
 
     return builder.compile()

@@ -22,12 +22,14 @@ class BaseAgent(ABC):
         pipeline: str,
         trace_logger: Optional[TraceLogger] = None,
         is_stub: bool = False,
+        llm_name: Optional[str] = None,
     ):
         self.name = name
         self.role = role
         self.pipeline = pipeline
         self.trace_logger = trace_logger or TraceLogger.get_instance()
         self.is_stub = is_stub
+        self.llm_name = llm_name
 
     @abstractmethod
     def process(self, state: BlackboardState) -> Dict[str, Any]:
@@ -65,6 +67,7 @@ class BaseAgent(ABC):
             trace_id=trace_id,
             session_id=session_id,
             stub=self.is_stub,
+            llm=self.llm_name,
         )
 
         try:
@@ -108,6 +111,7 @@ class BaseAgent(ABC):
             trace_id=trace_id,
             session_id=session_id,
             stub=self.is_stub,
+            llm=self.llm_name,
         )
 
         if "audit_trace" not in state:

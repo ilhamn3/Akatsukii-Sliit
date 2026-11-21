@@ -40,7 +40,7 @@ def test_build_and_run_two_agent_graph(tmp_path):
     # Verify agent messages
     assert len(final_state["messages"]) >= 2
     senders = [m["sender"] for m in final_state["messages"]]
-    assert "DummyDiagnosticAgent" in senders
+    assert "DiagnosticAgent" in senders
     assert "DummySafetyAgent" in senders
 
 
@@ -63,7 +63,7 @@ def test_add_third_agent_via_config_only(tmp_path):
 
     # Rewire edges: Diagnostic -> Safety -> Audit -> END
     custom_cfg["pipelines"]["B"]["edges"] = [
-        {"from": "DummyDiagnosticAgent", "to": "DummySafetyAgent"},
+        {"from": "DiagnosticAgent", "to": "DummySafetyAgent"},
         {"from": "DummySafetyAgent", "to": "DummyAuditAgent"},
         {"from": "DummyAuditAgent", "to": "__end__"},
     ]

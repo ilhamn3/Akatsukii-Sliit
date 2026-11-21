@@ -1,0 +1,75 @@
+{
+  "_meta": "DEV SPLIT ONLY - Invented by Ilham MM for offline development and testing. NOT part of the frozen competition test set.",
+  "dev_queries": [
+    {
+      "id": "DEV-01",
+      "machine_type": "CNC Lathe (Turning Center)",
+      "query": "High-pitched 85dB whining noise at >2800 RPM; chuck clamping pressure fluctuating below 15 bar.",
+      "expected_clarification": false,
+      "expected_subsystem": "Main Spindle & Chuck Clamp"
+    },
+    {
+      "id": "DEV-02",
+      "machine_type": "Hydraulic Press (Stamping & Forging)",
+      "query": "Ram chattering noticeably on rapid descent; descent speed drops by 40% under light load.",
+      "expected_clarification": false,
+      "expected_subsystem": "Proportional Directional Valve & Main Cylinder"
+    },
+    {
+      "id": "DEV-03",
+      "machine_type": "Injection-Moulding Machine",
+      "query": "Barrel zone 3 temperature override alarm ALM-304; heating band remains energized continuously.",
+      "expected_clarification": false,
+      "expected_subsystem": "Barrel Heating & Temperature Control"
+    },
+    {
+      "id": "DEV-04",
+      "machine_type": "Conveyor Line (Automated Material Handling)",
+      "query": "Drive motor thermal overload trip after 10 minutes; take-up pulley belt slipping.",
+      "expected_clarification": false,
+      "expected_subsystem": "Drive Motor & Tensioning Assembly"
+    },
+    {
+      "id": "DEV-05",
+      "machine_type": "Rotary Screw Air Compressor",
+      "query": "Excessive oil carryover in downstream air receiver; discharge air temperature exceeding 105C.",
+      "expected_clarification": false,
+      "expected_subsystem": "Air/Oil Separator & Thermostatic Valve"
+    },
+    {
+      "id": "DEV-06",
+      "machine_type": "unspecified",
+      "query": "Machine is vibrating excessively during the morning shift.",
+      "expected_clarification": true,
+      "expected_subsystem": null
+    },
+    {
+      "id": "DEV-07",
+      "machine_type": null,
+      "query": "Error code ERR-99 displayed on operator panel.",
+      "expected_clarification": true,
+      "expected_subsystem": null
+    },
+    {
+      "id": "DEV-08",
+      "machine_type": "CNC Lathe (Turning Center)",
+      "query": "Something feels strange.",
+      "expected_clarification": true,
+      "expected_subsystem": null
+    },
+    {
+      "id": "DEV-09",
+      "machine_type": "CNC Lathe (Turning Center)",
+      "query": "Tool turret indexing misaligned by 3 degrees on station 4; servo alarm SV-024.",
+      "expected_clarification": false,
+      "expected_subsystem": "Tool Turret Indexer"
+    },
+    {
+      "id": "DEV-10",
+      "machine_type": "Hydraulic Press (Stamping & Forging)",
+      "query": "Main hydraulic accumulator bladder pressure drops from 120 bar to 40 bar within 2 hours.",
+      "expected_clarification": false,
+      "expected_subsystem": "Hydraulic Accumulator Assembly"
+    }
+  ]
+}
