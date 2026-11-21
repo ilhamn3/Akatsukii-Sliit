@@ -67,10 +67,11 @@ htmlcov/
 .nox/
 
 # Logs & Audit traces generated at runtime
-logs/*.log
-logs/*.jsonl
+logs/*
+!logs/.gitkeep
 *.log
 trace_logs/
+~$*
 
 # IDE / Editor configuration
 .idea/
