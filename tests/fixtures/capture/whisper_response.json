@@ -1,0 +1,22 @@
+{
+  "text": "The conveyor stopped. Replacing the sensor did not help. The connector was loose.",
+  "language": "en",
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 2.5,
+      "text": " The conveyor stopped.",
+      "avg_logprob": -0.2,
+      "no_speech_prob": 0.01,
+      "compression_ratio": 1.1
+    },
+    {
+      "start": 3.0,
+      "end": 7.0,
+      "text": " Replacing the sensor did not help. The connector was loose.",
+      "avg_logprob": -0.3,
+      "no_speech_prob": 0.02,
+      "compression_ratio": 1.2
+    }
+  ]
+}
