@@ -5,3 +5,4 @@ pyyaml>=6.0.1,<7
 langgraph>=0.0.26,<2
 openai-whisper>=20231117
 pytest>=8.0.0,<10
+streamlit
