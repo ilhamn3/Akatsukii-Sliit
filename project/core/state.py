@@ -20,6 +20,10 @@ class BlackboardState(TypedDict, total=False):
     machine_id: Optional[str]
     raw_query: str
 
+    # Pipeline A capture handoff (validated by core.capture_schemas).
+    capture_request: Dict[str, Any]
+    capture_result: Optional[Dict[str, Any]]
+
     # Diagnostic & Clarification State
     clarification_turns: int
     clarification_needed: bool

@@ -94,6 +94,7 @@ In accordance with Innodata AI Catalyst '26 competition integrity requirements, 
 | `chromadb` / `faiss-cpu` | Apache 2.0 / MIT | Local vector storage and similarity search. |
 | `networkx` | BSD-3-Clause | Ontological and causal relationship graph analysis. |
 | `pydantic` | MIT License | Input/output schema validation and structured data integrity. |
+| FFmpeg / ffprobe (Gyan essentials build 9.1) | GPLv3 | Local media decoding and periodic video-frame sampling for Agent 1; binaries installed in the development environment, not committed. |
 | `streamlit` | Apache 2.0 | Interactive web interface for technicians and supervisors. |
 | `scipy` & `pandas` | BSD-3-Clause | Empirical benchmark metrics, confidence intervals, and hypothesis testing. |
 
@@ -102,6 +103,7 @@ In accordance with Innodata AI Catalyst '26 competition integrity requirements, 
 
 | Tool / Assistant | Scope of Assistance | Human Verification & Validation Method |
 |---|---|---|
+| **OpenAI Codex** | Agent 1 capture/transcription implementation, additive capture schemas, tests and local setup documentation (K1). | 52 automated tests passed; real Whisper/FFmpeg smoke checks passed on generated speech, video and silence on 22 Nov 2026. Team-sample validation and Ilham's human review remain pending. These checks do not establish benchmark accuracy. |
 | **Google Antigravity AI Assistant** | Repository scaffolding, schema design drafting, test template generation, and documentation drafting. | All generated code, schemas, and safety veto logic were reviewed, executed, unit-tested via `pytest`, and verified against OSHA/ISO 13849 guidelines by the engineering team. |
 | **GitHub Copilot / IDE Assistant** | Syntax completion and boilerplates for Streamlit UI components and data modeling. | Manual code review, linting, and automated unit test execution before integration. |
 

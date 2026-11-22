@@ -1,0 +1,7 @@
+# Minimal Agent 1 + shared registry/test environment.
+# Use requirements.txt when setting up the entire application.
+pydantic>=2.5.0,<3
+pyyaml>=6.0.1,<7
+langgraph>=0.0.26,<2
+openai-whisper>=20231117
+pytest>=8.0.0,<10

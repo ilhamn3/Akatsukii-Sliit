@@ -111,6 +111,9 @@ factory-memory/
 ## 🚀 Setup & Installation
 
 ### Prerequisites
+
+For Agent 1 development, see [Capture setup and handoff contract](docs/CAPTURE_SETUP.md).
+
 - Python 3.10, 3.11, or 3.12
 - Git
 - FFmpeg (required for local audio transcription via OpenAI Whisper)

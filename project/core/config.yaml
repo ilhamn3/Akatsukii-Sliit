@@ -47,9 +47,16 @@ pipelines:
       - from: "DummySafetyAgent"
         to: "__end__"
 
-  # Pipeline A: Ingestion & Knowledge Capture Workflow (Placeholder until WP3 merges)
+  # Pipeline A currently ends after capture; extraction/validation follow in K2/K4.
   A:
     name: "Ingestion Pipeline"
-    entrypoint: null
-    agents: []
-    edges: []
+    entrypoint: "CaptureAgent"
+    agents:
+      - name: "CaptureAgent"
+        module: "project.agents.a1_capture"
+        class: "CaptureAgent"
+        enabled: true
+        stub: false
+    edges:
+      - from: "CaptureAgent"
+        to: "__end__"

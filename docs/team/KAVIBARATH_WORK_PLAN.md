@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 0 / 30 points · 0% complete**
+**Overall: 3 / 30 points · 10% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP3 | Ingestion agents 1-4 and review queue | 18 | 0 | 0% |
+| WP3 | Ingestion agents 1-4 and review queue | 18 | 3 | 17% |
 | WP4 | Knowledge store and retrieval | 10 | 0 | 0% |
 | WP10 | Hardening and unit tests | 2 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -27,8 +27,8 @@
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 3.1 | Agent 1: Whisper transcription (timestamped transcript) | 3 | 24 Nov | 0% |
-| 3.2 | Agent 1: video frame sampling and unclear-audio flagging | 1 | 24 Nov | 0% |
+| 3.1 | Agent 1: Whisper transcription (timestamped transcript) | 3 | 24 Nov | 75% |
+| 3.2 | Agent 1: video frame sampling and unclear-audio flagging | 1 | 24 Nov | 75% |
 | 3.3 | Agent 2: structured extraction (steps, tools, root cause, failed attempts, warnings) | 4 | 24 Nov | 0% |
 | 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 0% |
 | 3.5 | Agent 4: entity resolution and graph writes | 3 | 26 Nov | 0% |
@@ -174,6 +174,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
-|   |   |   |   |   |   |   |
+| Pending (local K1 draft; not opened) | 22 Nov 2026 | [WP3] Agent 1: Whisper transcription and frame sampling | 3.1 (0->75%), 3.2 (0->75%) | Capture implementation, schemas, registry handoff and local setup; 52 tests pass plus actual Whisper/FFmpeg checks on synthetic speech, video and silence. Evidence: docs/CAPTURE_SETUP.md and local logs/capture_smoke/. Team samples and review pending | 0% -> 10% (3/30 pts) | Ilham MM (pending) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
