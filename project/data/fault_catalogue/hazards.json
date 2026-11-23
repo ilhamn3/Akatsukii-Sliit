@@ -1,0 +1,149 @@
+[
+  {
+    "hazard_id": "H01",
+    "name": "Stored hydraulic pressure",
+    "required_control": "Depressurise the circuit and verify zero on the gauge before opening any line or fitting.",
+    "keywords": [
+      "lockout",
+      "depressurise",
+      "verify zero energy"
+    ]
+  },
+  {
+    "hazard_id": "H02",
+    "name": "Electrical energy",
+    "required_control": "Isolate, lock out and tag out the supply and prove dead before touching any electrical part.",
+    "keywords": [
+      "lockout/tagout",
+      "prove dead"
+    ]
+  },
+  {
+    "hazard_id": "H03",
+    "name": "Crush / pinch point",
+    "required_control": "Keep hands out of the die, mould, belt nip or ram path; block moving parts mechanically before entering.",
+    "keywords": [
+      "mechanical block",
+      "lockout"
+    ]
+  },
+  {
+    "hazard_id": "H04",
+    "name": "Hot oil or hot surface",
+    "required_control": "Let oil, gearbox or housing cool and wear heat-resistant gloves before draining or touching.",
+    "keywords": [
+      "cool down",
+      "heat-resistant gloves"
+    ]
+  },
+  {
+    "hazard_id": "H05",
+    "name": "Stored compressed air",
+    "required_control": "Vent the receiver and lines to zero pressure before servicing any pressurised component.",
+    "keywords": [
+      "vent to zero",
+      "lockout"
+    ]
+  },
+  {
+    "hazard_id": "H06",
+    "name": "Rotating spindle / chuck / pulley",
+    "required_control": "Bring rotation to a full stop and lock out before reaching into the machine; no loose clothing or gloves near rotating parts.",
+    "keywords": [
+      "full stop",
+      "lockout",
+      "no loose clothing"
+    ]
+  },
+  {
+    "hazard_id": "H07",
+    "name": "Hot barrel / molten plastic",
+    "required_control": "Wear face shield and heat-resistant gloves; never face the nozzle when purging; let the barrel cool for non-heating work.",
+    "keywords": [
+      "face shield",
+      "heat-resistant gloves"
+    ]
+  },
+  {
+    "hazard_id": "H08",
+    "name": "Moving belt / chain / rollers",
+    "required_control": "Stop and lock out the conveyor; never clean, lubricate or clear jams on a running line.",
+    "keywords": [
+      "lockout",
+      "guards in place"
+    ]
+  },
+  {
+    "hazard_id": "H09",
+    "name": "Slippery coolant / fluid spill",
+    "required_control": "Clean spills immediately; use non-slip footwear and absorbent; avoid skin contact with coolant.",
+    "keywords": [
+      "spill control",
+      "non-slip footwear"
+    ]
+  },
+  {
+    "hazard_id": "H10",
+    "name": "High-pressure fluid injection",
+    "required_control": "Never check for hydraulic leaks with hands; use cardboard, wear eye protection, and seek medical help for any injection injury.",
+    "keywords": [
+      "depressurise",
+      "eye protection",
+      "cardboard test only"
+    ]
+  },
+  {
+    "hazard_id": "H11",
+    "name": "Sharp swarf / hot chips",
+    "required_control": "Use hooks or brushes, not bare hands; wear cut-resistant gloves and eye protection.",
+    "keywords": [
+      "cut-resistant gloves",
+      "eye protection"
+    ]
+  },
+  {
+    "hazard_id": "H12",
+    "name": "Suspended / gravity load",
+    "required_control": "Support the ram, platen or load mechanically (safety blocks) before working beneath or inside.",
+    "keywords": [
+      "safety blocks",
+      "lockout"
+    ]
+  },
+  {
+    "hazard_id": "H13",
+    "name": "Residual capacitor / drive voltage",
+    "required_control": "Wait the drive's discharge time and measure DC bus voltage before touching drive or motor terminals.",
+    "keywords": [
+      "wait discharge time",
+      "measure DC bus"
+    ]
+  },
+  {
+    "hazard_id": "H14",
+    "name": "Pressure vessel / safety valve integrity",
+    "required_control": "Never plug, gag or adjust a safety valve; never raise settings beyond rated pressure.",
+    "keywords": [
+      "no bypass of safety devices",
+      "rated pressure only"
+    ]
+  },
+  {
+    "hazard_id": "H15",
+    "name": "Bypassed safety device",
+    "required_control": "Never bypass, jumper or defeat a light curtain, interlock or e-stop; fix the device and have the supervisor sign off.",
+    "keywords": [
+      "no bypass",
+      "supervisor sign-off"
+    ]
+  },
+  {
+    "hazard_id": "H16",
+    "name": "Water near live electrics",
+    "required_control": "Isolate the supply before dealing with any water leak near electrical equipment.",
+    "keywords": [
+      "lockout/tagout",
+      "dry area before re-energising"
+    ]
+  }
+]
