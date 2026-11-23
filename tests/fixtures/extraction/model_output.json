@@ -1,0 +1,80 @@
+{
+  "machine_type": {
+    "value": "conveyor",
+    "sources": [
+      {
+        "segment_id": "S0",
+        "quote": "conveyor"
+      }
+    ]
+  },
+  "machine_id": null,
+  "symptoms": [
+    {
+      "value": "conveyor stopped",
+      "sources": [
+        {
+          "segment_id": "S0",
+          "quote": "The conveyor stopped."
+        }
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "value": "secured the connector",
+      "sources": [
+        {
+          "segment_id": "S1",
+          "quote": "We secured the connector"
+        }
+      ]
+    }
+  ],
+  "tools": [],
+  "parts": [],
+  "root_cause": null,
+  "failed_attempts": [
+    {
+      "action": {
+        "value": "Replacing the sensor",
+        "sources": [
+          {
+            "segment_id": "S0",
+            "quote": "Replacing the sensor"
+          }
+        ]
+      },
+      "outcome": {
+        "value": "did not help",
+        "sources": [
+          {
+            "segment_id": "S0",
+            "quote": "did not help"
+          }
+        ]
+      },
+      "why_failed": null
+    }
+  ],
+  "safety_warnings": [
+    {
+      "value": "stored energy",
+      "sources": [
+        {
+          "segment_id": "S2",
+          "quote": "warning about stored energy"
+        }
+      ]
+    }
+  ],
+  "outcome": {
+    "value": "conveyor ran again",
+    "sources": [
+      {
+        "segment_id": "S1",
+        "quote": "the conveyor ran again"
+      }
+    ]
+  }
+}

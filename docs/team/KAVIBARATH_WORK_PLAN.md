@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 3 / 30 points · 10% complete**
+**Overall: 5 / 30 points · 17% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP3 | Ingestion agents 1-4 and review queue | 18 | 3 | 17% |
+| WP3 | Ingestion agents 1-4 and review queue | 18 | 5 | 28% |
 | WP4 | Knowledge store and retrieval | 10 | 0 | 0% |
 | WP10 | Hardening and unit tests | 2 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -29,7 +29,7 @@
 |---|---|---|---|---|
 | 3.1 | Agent 1: Whisper transcription (timestamped transcript) | 3 | 24 Nov | 75% |
 | 3.2 | Agent 1: video frame sampling and unclear-audio flagging | 1 | 24 Nov | 75% |
-| 3.3 | Agent 2: structured extraction (steps, tools, root cause, failed attempts, warnings) | 4 | 24 Nov | 0% |
+| 3.3 | Agent 2: structured extraction (steps, tools, root cause, failed attempts, warnings) | 4 | 24 Nov | 50% |
 | 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 0% |
 | 3.5 | Agent 4: entity resolution and graph writes | 3 | 26 Nov | 0% |
 | 3.6 | Review-queue backend for low-confidence records | 2 | 26 Nov | 0% |
@@ -171,6 +171,15 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 - Everyone must be able to explain the full architecture and benchmark method at the finale Q&A, not only their own modules.
 
 ## 7. PR log (add one row per PR, newest at the bottom)
+
+K2 local draft (24 Nov): subtask 3.3 at 50%, 2 additional points; overall 3/30 ->
+5/30 (10% -> 17%). Implemented draft extraction, provenance checks, A1 -> A2
+handoff and offline tests. First live Groq synthetic extraction passed schema and
+quote checks. V2 kept root cause unknown and 120B captured the replaced sensor;
+both tested models omitted the machine category. V3 with 120B passed the synthetic
+smoke check, including category, sensor, unknown root cause and derived evidence.
+Team-sample validation and Ilham's review remain pending. PR number will be
+recorded when opened; target main now contains K1.
 
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|

@@ -9,8 +9,9 @@ Branch: `wp3/capture-transcription`. Subtasks: 3.1 and 3.2.
   evidence IDs, and explicit quality flags.
 - Video frame sampling using FFmpeg/ffprobe, with a configurable interval and cap.
 - Typed capture request/result schemas and shared blackboard fields.
-- Agent 1 registered as the sole current node in Pipeline A. This pipeline ends
-  after capture; extraction, validation, human review and persistence are later PRs.
+- Agent 1 registered in Pipeline A. On the K2 branch the graph continues to
+  ExtractionAgent and requires an LLM; the standalone capture CLI stays capture-only.
+  See `docs/EXTRACTION_SETUP.md`. Validation and persistence follow later.
 - Existing `BaseAgent` timing, messages and JSONL trace logging are reused.
 - CLI entry point and offline tests with a clearly synthetic Whisper response.
 
@@ -173,7 +174,7 @@ from project.core.state import create_initial_state
 state = create_initial_state(query="")
 state["capture_request"] = {"source_path": "D:/samples/repair.wav"}
 result = build_graph("A").invoke(state)
-if result.get("capture_result") is None:
+if result.get("errors") or result.get("capture_result") is None:
     raise RuntimeError(result.get("errors"))
 ```
 

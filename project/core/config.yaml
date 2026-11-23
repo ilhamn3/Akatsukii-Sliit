@@ -50,7 +50,7 @@ pipelines:
       - from: "DummySafetyAgent"
         to: "__end__"
 
-  # Pipeline A currently ends after capture; extraction/validation follow in K2/K4.
+  # Pipeline A produces an unverified extraction draft; A3 validation follows in K4.
   A:
     name: "Ingestion Pipeline"
     entrypoint: "CaptureAgent"
@@ -60,6 +60,13 @@ pipelines:
         class: "CaptureAgent"
         enabled: true
         stub: false
+      - name: "ExtractionAgent"
+        module: "project.agents.a2_extraction"
+        class: "ExtractionAgent"
+        enabled: true
+        stub: false
     edges:
       - from: "CaptureAgent"
+        to: "ExtractionAgent"
+      - from: "ExtractionAgent"
         to: "__end__"

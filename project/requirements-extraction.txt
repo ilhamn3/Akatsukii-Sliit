@@ -1,0 +1,6 @@
+# Minimal K2 runtime and tests; capture dependencies are separate.
+pydantic>=2.5.0,<3
+pyyaml>=6.0.1,<7
+langgraph>=0.0.26,<2
+openai>=1.0.0
+pytest>=8.0.0,<10
