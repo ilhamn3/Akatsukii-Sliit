@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 0 / 20 points · 0% complete**
+**Overall: 2.2 / 20 points · 11% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP2 | Synthetic data and test set | 12 | 0 | 0% |
+| WP2 | Synthetic data and test set | 12 | 2.2 | 19% |
 | WP8 | Human baseline study | 5 | 0 | 0% |
 | WP9 | Documentation (Tharshanth's part) | 3 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -27,7 +27,7 @@
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 2.1 | Fault catalogue (~40 failure modes) with hazards across 5 machine types | 3 | 23 Nov | 0% |
+| 2.1 | Fault catalogue (~40 failure modes) with hazards across 5 machine types | 3 | 23 Nov | 75% |
 | 2.2 | Seeded generator script (reproducible) | 2 | 23 Nov | 0% |
 | 2.3 | ~400 repair episodes, 12 technicians, spoken-style narratives, ground-truth labels | 2 | 24 Nov | 0% |
 | 2.4 | Audio subset for the speech-to-text path | 1 | 26 Nov | 0% |

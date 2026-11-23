@@ -1,0 +1,1839 @@
+[
+  {
+    "fault_id": "L01",
+    "machine_type": "cnc_lathe",
+    "name": "Spindle overheating",
+    "error_codes": [
+      "ALM-410"
+    ],
+    "symptoms": [
+      "spindle housing too hot to touch",
+      "thermal alarm after about two hours running",
+      "slight whine from the spindle"
+    ],
+    "lay_description": "spindle is running hot and the machine keeps throwing a temperature alarm",
+    "cause_family": "clogging",
+    "root_cause": "clogged filter in the spindle chiller circuit",
+    "valid_fixes": [
+      "lock out the machine",
+      "drain the chiller reservoir",
+      "remove and clean the chiller filter",
+      "refill with the correct coolant",
+      "run for 30 minutes and confirm the temperature stays under limit"
+    ],
+    "tools": [
+      "spanner set",
+      "drain tray",
+      "lint-free cloth"
+    ],
+    "parts": [
+      "chiller filter element",
+      "spindle coolant"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the spindle bearings",
+        "why_it_fails": "bearings were fine, the heat came from restricted coolant flow"
+      },
+      {
+        "action": "lowered the spindle speed override",
+        "why_it_fails": "only hid the symptom, alarm came back at normal speed"
+      }
+    ],
+    "hazards": [
+      "H02",
+      "H06",
+      "H04"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "L02",
+    "machine_type": "cnc_lathe",
+    "name": "Chatter and poor surface finish",
+    "error_codes": [],
+    "symptoms": [
+      "wavy surface finish on the part",
+      "loud chatter at the cut",
+      "tool marks repeating at regular spacing"
+    ],
+    "lay_description": "parts are coming off rough with a wavy finish and the cut sounds awful",
+    "cause_family": "alignment",
+    "root_cause": "turret not fully clamped because chips are packed under the clamp face",
+    "valid_fixes": [
+      "stop the spindle and lock out",
+      "index the turret to a free station",
+      "clean chips and old coolant from the turret clamp face",
+      "check the turret seats flat with a feeler gauge",
+      "re-run a test cut"
+    ],
+    "tools": [
+      "air gun with guard",
+      "brush",
+      "feeler gauge"
+    ],
+    "parts": [],
+    "wrong_fixes": [
+      {
+        "action": "reduced the feed rate",
+        "why_it_fails": "chatter stayed because the turret was still moving under load"
+      },
+      {
+        "action": "swapped to a new insert",
+        "why_it_fails": "insert was not the issue"
+      }
+    ],
+    "hazards": [
+      "H06",
+      "H11"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "L03",
+    "machine_type": "cnc_lathe",
+    "name": "Chuck not clamping",
+    "error_codes": [
+      "ALM-522"
+    ],
+    "symptoms": [
+      "low chuck pressure alarm",
+      "workpiece slips in the jaws",
+      "pressure gauge drops after clamping"
+    ],
+    "lay_description": "chuck lets go of the part and the pressure alarm keeps coming up",
+    "cause_family": "seal_leak",
+    "root_cause": "worn seal in the rotary hydraulic union leaking pressure",
+    "valid_fixes": [
+      "stop the spindle and lock out",
+      "depressurise the chuck hydraulic line and verify zero",
+      "remove the rotary union cover",
+      "replace the worn union seal kit",
+      "re-pressurise and test clamping with a scrap part"
+    ],
+    "tools": [
+      "seal pick set",
+      "torque wrench",
+      "drip tray"
+    ],
+    "parts": [
+      "rotary union seal kit",
+      "hydraulic oil"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "raised the chuck pressure setting",
+        "why_it_fails": "leak got worse and pressure still dropped, and it risks overclamping"
+      },
+      {
+        "action": "replaced the chuck jaws",
+        "why_it_fails": "jaws were not worn"
+      }
+    ],
+    "hazards": [
+      "H01",
+      "H06",
+      "H10"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "L04",
+    "machine_type": "cnc_lathe",
+    "name": "X-axis servo overload",
+    "error_codes": [
+      "ALM-401"
+    ],
+    "symptoms": [
+      "X axis overload alarm on rapid moves",
+      "axis feels stiff when moved by hand",
+      "servo motor warm"
+    ],
+    "lay_description": "the X axis is stalling and throwing an overload alarm",
+    "cause_family": "lubrication",
+    "root_cause": "starved ball screw because the way-lube line is clogged",
+    "valid_fixes": [
+      "lock out and wait for drive discharge",
+      "trace the way-lube line to the X ball screw",
+      "clear the blocked lube line and replace the clogged metering block",
+      "run the lube pump manually until oil appears",
+      "jog the axis and confirm the load drops"
+    ],
+    "tools": [
+      "grease gun",
+      "hex key set",
+      "multimeter"
+    ],
+    "parts": [
+      "lube metering block",
+      "way oil"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the X servo motor",
+        "why_it_fails": "motor was healthy, the screw was dry and dragging"
+      },
+      {
+        "action": "increased the overload threshold",
+        "why_it_fails": "masked the problem and risks damaging the screw"
+      }
+    ],
+    "hazards": [
+      "H02",
+      "H13",
+      "H03"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "L05",
+    "machine_type": "cnc_lathe",
+    "name": "Coolant pump no flow",
+    "error_codes": [
+      "ALM-640"
+    ],
+    "symptoms": [
+      "no coolant at the nozzle",
+      "pump runs but sounds dry",
+      "low flow alarm"
+    ],
+    "lay_description": "no coolant is coming out even though the pump is running",
+    "cause_family": "clogging",
+    "root_cause": "suction strainer packed with swarf",
+    "valid_fixes": [
+      "lock out the machine",
+      "remove the tank cover",
+      "lift out and clean the suction strainer",
+      "refill coolant to the mark and bleed the pump",
+      "restart and check flow at the nozzle"
+    ],
+    "tools": [
+      "hook",
+      "bucket",
+      "gloves"
+    ],
+    "parts": [
+      "coolant top-up"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the pump motor",
+        "why_it_fails": "the pump was fine, the strainer was blocked"
+      },
+      {
+        "action": "added more coolant to the tank",
+        "why_it_fails": "level was not the problem"
+      }
+    ],
+    "hazards": [
+      "H02",
+      "H09",
+      "H11"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "L06",
+    "machine_type": "cnc_lathe",
+    "name": "Turret fails to index",
+    "error_codes": [
+      "ALM-715"
+    ],
+    "symptoms": [
+      "turret stops halfway",
+      "index timeout alarm",
+      "turret sometimes locks but control says unclamped"
+    ],
+    "lay_description": "the turret will not finish its index and times out",
+    "cause_family": "alignment",
+    "root_cause": "clamp proximity sensor out of position",
+    "valid_fixes": [
+      "lock out the machine",
+      "locate the turret clamp proximity sensor",
+      "reset the sensor gap to the manual value",
+      "tighten the bracket and recheck the signal on the diagnostics screen",
+      "cycle the turret ten times"
+    ],
+    "tools": [
+      "feeler gauge",
+      "hex key set",
+      "multimeter"
+    ],
+    "parts": [],
+    "wrong_fixes": [
+      {
+        "action": "replaced the turret drive motor",
+        "why_it_fails": "motor was never failing"
+      },
+      {
+        "action": "reloaded the PLC parameters",
+        "why_it_fails": "parameters were correct"
+      }
+    ],
+    "hazards": [
+      "H02",
+      "H03"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "L07",
+    "machine_type": "cnc_lathe",
+    "name": "Parts drifting out of tolerance",
+    "error_codes": [],
+    "symptoms": [
+      "diameters creeping out of tolerance",
+      "first parts good then they drift",
+      "offsets look right on the screen"
+    ],
+    "lay_description": "parts start good then slowly go out of size",
+    "cause_family": "sensor",
+    "root_cause": "damaged tool setter probe giving bad offset readings",
+    "valid_fixes": [
+      "stop the machine safely",
+      "test the tool setter probe against a known gauge pin",
+      "replace the damaged probe tip",
+      "recalibrate tool offsets",
+      "run a five-part check"
+    ],
+    "tools": [
+      "gauge pin",
+      "micrometer"
+    ],
+    "parts": [
+      "tool setter probe tip"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "kept adjusting the offsets by hand",
+        "why_it_fails": "the probe kept feeding wrong values so the drift came back"
+      },
+      {
+        "action": "replaced the inserts every shift",
+        "why_it_fails": "inserts were not the cause"
+      }
+    ],
+    "hazards": [],
+    "hazard_note": "none identified",
+    "recurrence_weight": 1
+  },
+  {
+    "fault_id": "L08",
+    "machine_type": "cnc_lathe",
+    "name": "Spindle encoder fault",
+    "error_codes": [
+      "ALM-362"
+    ],
+    "symptoms": [
+      "encoder alarm that comes and goes",
+      "spindle speed reading jumps",
+      "alarm worse when the door opens"
+    ],
+    "lay_description": "spindle speed readout jumps around and the encoder alarm comes and goes",
+    "cause_family": "electrical",
+    "root_cause": "encoder cable chafed in the drag chain",
+    "valid_fixes": [
+      "lock out and wait for drive discharge",
+      "inspect the encoder cable along the drag chain",
+      "replace the chafed cable section",
+      "re-route and clip the cable clear of the chain edge",
+      "power up and confirm a stable speed reading"
+    ],
+    "tools": [
+      "multimeter",
+      "cable ties",
+      "side cutters"
+    ],
+    "parts": [
+      "encoder cable"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the spindle drive",
+        "why_it_fails": "drive was fine, the signal was being lost in the cable"
+      },
+      {
+        "action": "cleared the alarm and carried on",
+        "why_it_fails": "alarm kept returning"
+      }
+    ],
+    "hazards": [
+      "H02",
+      "H13"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 1
+  },
+  {
+    "fault_id": "P01",
+    "machine_type": "hydraulic_press",
+    "name": "Slow ram descent",
+    "error_codes": [],
+    "symptoms": [
+      "ram descends slowly",
+      "pump whining louder than normal",
+      "cycle times longer"
+    ],
+    "lay_description": "the ram is crawling down and the pump sounds strained",
+    "cause_family": "clogging",
+    "root_cause": "clogged pump suction strainer",
+    "valid_fixes": [
+      "lock out and depressurise the press",
+      "drain the tank to the strainer level",
+      "remove and clean the suction strainer",
+      "refill with filtered oil",
+      "run empty cycles and time the ram"
+    ],
+    "tools": [
+      "spanner set",
+      "drain tray",
+      "clean rags"
+    ],
+    "parts": [
+      "suction strainer",
+      "hydraulic oil"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "raised the relief valve setting",
+        "why_it_fails": "did not fix flow starvation and over-pressurised the system"
+      },
+      {
+        "action": "replaced the pump",
+        "why_it_fails": "pump was cavitating from the blocked strainer"
+      }
+    ],
+    "hazards": [
+      "H01",
+      "H04"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "P02",
+    "machine_type": "hydraulic_press",
+    "name": "Pressure will not build",
+    "error_codes": [
+      "ERR-H21"
+    ],
+    "symptoms": [
+      "system pressure stuck low",
+      "pump runs normally",
+      "gauge never reaches setpoint"
+    ],
+    "lay_description": "press will not come up to pressure even though the pump is running",
+    "cause_family": "clogging",
+    "root_cause": "relief valve stuck partly open from contamination",
+    "valid_fixes": [
+      "lock out and depressurise the press",
+      "remove the relief valve cartridge",
+      "flush and clean the valve seat",
+      "inspect the poppet for scoring and replace if marked",
+      "reinstall and set the relief pressure to rated value with a gauge"
+    ],
+    "tools": [
+      "torque wrench",
+      "pressure test gauge",
+      "clean solvent"
+    ],
+    "parts": [
+      "relief valve cartridge",
+      "hydraulic oil filter"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the main pump",
+        "why_it_fails": "pump was delivering fine, oil was bleeding back through the relief valve"
+      },
+      {
+        "action": "added oil to the reservoir",
+        "why_it_fails": "level was already correct"
+      }
+    ],
+    "hazards": [
+      "H01",
+      "H10"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "P03",
+    "machine_type": "hydraulic_press",
+    "name": "Ram drifts down under hold",
+    "error_codes": [],
+    "symptoms": [
+      "ram slowly sinks while holding",
+      "pressure bleeds off during hold",
+      "cycle needs repeated top-up"
+    ],
+    "lay_description": "the ram creeps down by itself when it should be holding",
+    "cause_family": "seal_leak",
+    "root_cause": "worn piston seal letting oil pass inside the cylinder",
+    "valid_fixes": [
+      "support the ram with safety blocks",
+      "lock out and depressurise the press",
+      "remove the cylinder head",
+      "replace the piston seals and check the bore",
+      "reassemble and run a hold test for ten minutes"
+    ],
+    "tools": [
+      "safety blocks",
+      "seal tools",
+      "torque wrench"
+    ],
+    "parts": [
+      "piston seal kit"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "tightened the external fittings",
+        "why_it_fails": "there was no external leak, the oil was passing inside"
+      },
+      {
+        "action": "replaced the directional valve",
+        "why_it_fails": "valve was fine"
+      }
+    ],
+    "hazards": [
+      "H12",
+      "H01",
+      "H03"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "P04",
+    "machine_type": "hydraulic_press",
+    "name": "Hydraulic oil overheating",
+    "error_codes": [
+      "ERR-H33"
+    ],
+    "symptoms": [
+      "oil temperature alarm",
+      "tank hot to touch",
+      "oil looks thin and dark"
+    ],
+    "lay_description": "hydraulic oil is running hot and the temperature alarm trips",
+    "cause_family": "thermal",
+    "root_cause": "oil cooler fan failed and cooler fins fouled",
+    "valid_fixes": [
+      "lock out the machine and let the oil cool",
+      "check the cooler fan rotation and motor",
+      "replace the failed fan motor",
+      "clean the cooler fins with low-pressure air",
+      "run and confirm oil temperature stabilises"
+    ],
+    "tools": [
+      "multimeter",
+      "brush",
+      "air gun"
+    ],
+    "parts": [
+      "cooler fan motor"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "topped up the oil",
+        "why_it_fails": "oil level was fine, cooling was the issue"
+      },
+      {
+        "action": "changed the oil",
+        "why_it_fails": "helped nothing while the cooler was blocked"
+      }
+    ],
+    "hazards": [
+      "H02",
+      "H04"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "P05",
+    "machine_type": "hydraulic_press",
+    "name": "Jerky ram movement",
+    "error_codes": [],
+    "symptoms": [
+      "ram moves in jerks",
+      "foamy oil in the tank",
+      "knocking noise from the pump"
+    ],
+    "lay_description": "the ram moves in jerks and the oil looks foamy",
+    "cause_family": "seal_leak",
+    "root_cause": "air drawn into the circuit through a loose suction fitting",
+    "valid_fixes": [
+      "lock out and depressurise",
+      "inspect all suction side fittings and hoses",
+      "tighten or replace the leaking suction fitting",
+      "bleed air from the circuit at the cylinder bleed points",
+      "run cycles until motion is smooth"
+    ],
+    "tools": [
+      "spanner set",
+      "clean rags",
+      "drain tray"
+    ],
+    "parts": [
+      "suction hose clamp",
+      "hydraulic oil"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the proportional valve",
+        "why_it_fails": "valve was fine, air in the oil caused the jerking"
+      },
+      {
+        "action": "changed the oil only",
+        "why_it_fails": "foam came back as the leak remained"
+      }
+    ],
+    "hazards": [
+      "H01",
+      "H10"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "P06",
+    "machine_type": "hydraulic_press",
+    "name": "Light curtain fault stops cycle",
+    "error_codes": [
+      "ERR-S07"
+    ],
+    "symptoms": [
+      "press will not start a cycle",
+      "safety light curtain fault lit",
+      "fault clears then returns"
+    ],
+    "lay_description": "the press refuses to cycle and the light curtain keeps faulting",
+    "cause_family": "alignment",
+    "root_cause": "light curtain misaligned and lens dirty",
+    "valid_fixes": [
+      "lock out the machine",
+      "clean the emitter and receiver lenses",
+      "realign the light curtain using the alignment indicators",
+      "run the safety function test and record it",
+      "get supervisor sign-off before returning to production"
+    ],
+    "tools": [
+      "lens cloth",
+      "alignment bracket tool"
+    ],
+    "parts": [],
+    "wrong_fixes": [
+      {
+        "action": "bypassed the light curtain to keep producing",
+        "why_it_fails": "unsafe and illegal: removes operator protection"
+      },
+      {
+        "action": "replaced the safety relay",
+        "why_it_fails": "relay was healthy"
+      }
+    ],
+    "hazards": [
+      "H15",
+      "H03",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "P07",
+    "machine_type": "hydraulic_press",
+    "name": "Oil leak at cylinder gland",
+    "error_codes": [],
+    "symptoms": [
+      "oil film on the cylinder rod",
+      "oil dripping from the gland",
+      "rod surface feels scored"
+    ],
+    "lay_description": "oil is weeping out around the cylinder rod",
+    "cause_family": "seal_leak",
+    "root_cause": "worn rod seal damaged by a scored rod",
+    "valid_fixes": [
+      "support the ram with safety blocks",
+      "lock out and depressurise",
+      "remove the gland and old rod seal",
+      "polish minor rod scoring or replace the rod if deep",
+      "fit a new rod seal and wiper and test for leaks"
+    ],
+    "tools": [
+      "safety blocks",
+      "seal tools",
+      "emery cloth"
+    ],
+    "parts": [
+      "rod seal",
+      "wiper seal"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "tightened the gland nut",
+        "why_it_fails": "squeezed the seal harder and wore the rod faster"
+      },
+      {
+        "action": "wrapped tape around the gland",
+        "why_it_fails": "tape does not hold hydraulic pressure"
+      }
+    ],
+    "hazards": [
+      "H12",
+      "H01",
+      "H10"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "P08",
+    "machine_type": "hydraulic_press",
+    "name": "Pump motor trips on start",
+    "error_codes": [
+      "ERR-E15"
+    ],
+    "symptoms": [
+      "overload trips as the pump starts",
+      "contactor buzzes",
+      "burning smell near the cabinet"
+    ],
+    "lay_description": "the pump motor trips out every time it starts",
+    "cause_family": "electrical",
+    "root_cause": "pitted contactor contacts causing a phase imbalance",
+    "valid_fixes": [
+      "lock out and prove dead",
+      "open the starter cabinet and inspect the contactor",
+      "replace the pitted contactor",
+      "check the motor current on all three phases",
+      "start and confirm the overload stays closed"
+    ],
+    "tools": [
+      "multimeter",
+      "clamp meter",
+      "screwdriver set"
+    ],
+    "parts": [
+      "motor contactor"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "turned the overload setting up",
+        "why_it_fails": "motor ran with an imbalance and risked burning out"
+      },
+      {
+        "action": "replaced the pump motor",
+        "why_it_fails": "motor was healthy"
+      }
+    ],
+    "hazards": [
+      "H02",
+      "H13"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 1
+  },
+  {
+    "fault_id": "I01",
+    "machine_type": "injection_moulding",
+    "name": "Short shots",
+    "error_codes": [
+      "ERR-I11"
+    ],
+    "symptoms": [
+      "parts not filling completely",
+      "cushion position keeps changing",
+      "shot size varies shot to shot"
+    ],
+    "lay_description": "parts are coming out incomplete and the shot size is all over the place",
+    "cause_family": "wear",
+    "root_cause": "worn check ring letting melt flow back",
+    "valid_fixes": [
+      "lock out and let the barrel cool to a safe temperature",
+      "pull the screw",
+      "inspect the check ring and seat",
+      "replace the worn check ring set",
+      "reinstall and confirm a steady cushion"
+    ],
+    "tools": [
+      "screw puller",
+      "spanner set",
+      "brass brush"
+    ],
+    "parts": [
+      "check ring set"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "raised the injection pressure",
+        "why_it_fails": "melt just flowed back more and risked flash"
+      },
+      {
+        "action": "increased the shot size",
+        "why_it_fails": "cushion still varied"
+      }
+    ],
+    "hazards": [
+      "H07",
+      "H01",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "I02",
+    "machine_type": "injection_moulding",
+    "name": "Flash on parts",
+    "error_codes": [],
+    "symptoms": [
+      "thin flash on the parting line",
+      "flash gets worse over the shift",
+      "clamp tonnage looks normal"
+    ],
+    "lay_description": "thin flash keeps showing up around the edge of the parts",
+    "cause_family": "clogging",
+    "root_cause": "debris on the mould parting line",
+    "valid_fixes": [
+      "lock out and make sure the mould is cool",
+      "open the mould and clean the parting faces",
+      "inspect for damaged shut-off surfaces",
+      "apply mould protector and close slowly",
+      "run a test shot"
+    ],
+    "tools": [
+      "brass scraper",
+      "mould cleaner",
+      "lamp"
+    ],
+    "parts": [
+      "mould protector"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "increased clamp force to maximum",
+        "why_it_fails": "damages the mould and platens without fixing the debris"
+      },
+      {
+        "action": "lowered the barrel temperature",
+        "why_it_fails": "flash stayed"
+      }
+    ],
+    "hazards": [
+      "H03",
+      "H07"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "I03",
+    "machine_type": "injection_moulding",
+    "name": "Barrel temperature runaway",
+    "error_codes": [
+      "ERR-I27"
+    ],
+    "symptoms": [
+      "barrel temperature climbing above setpoint",
+      "one zone reads low but material is smoking",
+      "heater stays on continuously"
+    ],
+    "lay_description": "one barrel zone keeps heating and the material is smoking",
+    "cause_family": "sensor",
+    "root_cause": "failed thermocouple reading low so the heater stays on",
+    "valid_fixes": [
+      "switch off the heaters and lock out",
+      "let the barrel cool",
+      "test the zone thermocouple against a reference",
+      "replace the failed thermocouple",
+      "power up and watch the zone reach setpoint without overshoot"
+    ],
+    "tools": [
+      "multimeter",
+      "reference thermometer",
+      "spanner set"
+    ],
+    "parts": [
+      "thermocouple"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the heater band",
+        "why_it_fails": "band was working, the sensor misled the controller"
+      },
+      {
+        "action": "raised the setpoint",
+        "why_it_fails": "made the overheating worse"
+      }
+    ],
+    "hazards": [
+      "H07",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "I04",
+    "machine_type": "injection_moulding",
+    "name": "Screw will not rotate",
+    "error_codes": [
+      "ERR-I33"
+    ],
+    "symptoms": [
+      "screw torque alarm at start",
+      "screw stuck after a cold start",
+      "motor strains and stops"
+    ],
+    "lay_description": "the screw will not turn after starting from cold",
+    "cause_family": "thermal",
+    "root_cause": "unmelted plastic frozen in the barrel after a cold start",
+    "valid_fixes": [
+      "lock out the screw drive",
+      "bring the barrel up to temperature and heat soak for the full soak time",
+      "retry screw rotation at low torque",
+      "purge the barrel with a purging compound",
+      "verify the melt temperature is stable"
+    ],
+    "tools": [
+      "purge compound",
+      "face shield",
+      "heat-resistant gloves"
+    ],
+    "parts": [
+      "purging compound"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "forced the screw with higher torque",
+        "why_it_fails": "can shear the screw"
+      },
+      {
+        "action": "replaced the screw motor",
+        "why_it_fails": "motor was fine"
+      }
+    ],
+    "hazards": [
+      "H07",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "I05",
+    "machine_type": "injection_moulding",
+    "name": "Ejector sticking",
+    "error_codes": [],
+    "symptoms": [
+      "parts stick in the mould",
+      "ejector plate moves unevenly",
+      "squeak from the ejector pins"
+    ],
+    "lay_description": "the ejector is sticking and parts hang up in the mould",
+    "cause_family": "lubrication",
+    "root_cause": "dry ejector guide pins with no lubrication",
+    "valid_fixes": [
+      "lock out the machine",
+      "open the mould and pull the ejector plate",
+      "clean and inspect the guide pins and bushes",
+      "apply the correct mould grease",
+      "cycle the ejector by hand to check smooth travel"
+    ],
+    "tools": [
+      "grease gun",
+      "lint-free cloth"
+    ],
+    "parts": [
+      "mould grease"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "increased the ejection force",
+        "why_it_fails": "bent pins and left the real cause"
+      },
+      {
+        "action": "sprayed release agent on the parts",
+        "why_it_fails": "covered the problem for a few shots"
+      }
+    ],
+    "hazards": [
+      "H03"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "I06",
+    "machine_type": "injection_moulding",
+    "name": "Black specks in parts",
+    "error_codes": [],
+    "symptoms": [
+      "black specks in the moulded parts",
+      "specks come and go",
+      "parts look streaky after a restart"
+    ],
+    "lay_description": "there are little black specks in the parts",
+    "cause_family": "thermal",
+    "root_cause": "carbonised material trapped in a dead spot in the barrel and hot runner",
+    "valid_fixes": [
+      "lock out and make sure the area is safe from molten material",
+      "purge the barrel with purging compound",
+      "clean the nozzle and hot runner tip",
+      "dry the material and check the dryer settings",
+      "run parts and inspect for specks"
+    ],
+    "tools": [
+      "purge compound",
+      "face shield",
+      "brass brush"
+    ],
+    "parts": [
+      "purging compound"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "changed the colour masterbatch",
+        "why_it_fails": "masterbatch was not the source"
+      },
+      {
+        "action": "lowered the barrel temperature below spec",
+        "why_it_fails": "caused cold slugs without clearing the carbon"
+      }
+    ],
+    "hazards": [
+      "H07"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "I07",
+    "machine_type": "injection_moulding",
+    "name": "Mould will not close fully",
+    "error_codes": [
+      "ERR-I40"
+    ],
+    "symptoms": [
+      "mould close alarm",
+      "platen stops short",
+      "a part is visible in the cavity"
+    ],
+    "lay_description": "the mould stops before closing and trips an alarm",
+    "cause_family": "alignment",
+    "root_cause": "a part stuck in the cavity from the previous cycle",
+    "valid_fixes": [
+      "stop the machine and lock out",
+      "never reach in while the platens can move",
+      "remove the stuck part with brass tools",
+      "check for damage to the mould faces",
+      "reset and cycle slowly with mould protection on"
+    ],
+    "tools": [
+      "brass tools",
+      "lamp"
+    ],
+    "parts": [],
+    "wrong_fixes": [
+      {
+        "action": "increased the mould close pressure",
+        "why_it_fails": "crushes the mould with the part still in place"
+      },
+      {
+        "action": "reset the alarm and tried again",
+        "why_it_fails": "same stuck part blocked the close"
+      }
+    ],
+    "hazards": [
+      "H03",
+      "H12",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "I08",
+    "machine_type": "injection_moulding",
+    "name": "Water leak at cooling manifold",
+    "error_codes": [],
+    "symptoms": [
+      "water dripping near the mould",
+      "wet floor under the manifold",
+      "mould cooling flow reduced"
+    ],
+    "lay_description": "water is leaking near the mould and the floor is wet under the manifold",
+    "cause_family": "seal_leak",
+    "root_cause": "cracked hose coupling on the cooling water manifold",
+    "valid_fixes": [
+      "isolate the water supply and lock out the machine",
+      "dry the area before touching electrical parts",
+      "cut out and replace the cracked coupling",
+      "check the manifold for other cracks",
+      "restore water and check for leaks"
+    ],
+    "tools": [
+      "hose cutter",
+      "spanner set",
+      "wet vacuum"
+    ],
+    "parts": [
+      "hose coupling",
+      "hose clamp"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "wrapped tape around the coupling",
+        "why_it_fails": "tape does not hold under pressure"
+      },
+      {
+        "action": "ignored it and mopped the floor",
+        "why_it_fails": "leak grew and reached the cabinet"
+      }
+    ],
+    "hazards": [
+      "H16",
+      "H09",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "C01",
+    "machine_type": "conveyor_line",
+    "name": "Belt mistracking",
+    "error_codes": [],
+    "symptoms": [
+      "belt drifts to one side",
+      "belt edge rubbing the frame",
+      "product pushed off the edge"
+    ],
+    "lay_description": "the belt keeps wandering off to one side",
+    "cause_family": "alignment",
+    "root_cause": "build-up on an idler roller pushing the belt off line",
+    "valid_fixes": [
+      "stop and lock out the conveyor",
+      "find the idler with build-up",
+      "clean the roller surface and check it spins freely",
+      "square the roller to the frame",
+      "restart and watch the belt track for a few minutes"
+    ],
+    "tools": [
+      "scraper",
+      "spirit level",
+      "spanner set"
+    ],
+    "parts": [],
+    "wrong_fixes": [
+      {
+        "action": "tightened the belt tension fully",
+        "why_it_fails": "over-tensioned the belt and damaged the bearings"
+      },
+      {
+        "action": "trimmed the belt edge",
+        "why_it_fails": "wasted material and tracking stayed wrong"
+      }
+    ],
+    "hazards": [
+      "H08",
+      "H03"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "C02",
+    "machine_type": "conveyor_line",
+    "name": "Belt slipping at the drive",
+    "error_codes": [
+      "ERR-C04"
+    ],
+    "symptoms": [
+      "belt slips on the drive pulley",
+      "motor runs but belt speed is low",
+      "squeal on start"
+    ],
+    "lay_description": "the drive spins but the belt does not move properly",
+    "cause_family": "wear",
+    "root_cause": "worn lagging on the drive pulley",
+    "valid_fixes": [
+      "stop and lock out the conveyor",
+      "inspect the drive pulley lagging",
+      "re-lag or replace the pulley lagging",
+      "check belt tension against the spec",
+      "test run loaded"
+    ],
+    "tools": [
+      "tension gauge",
+      "spanner set"
+    ],
+    "parts": [
+      "pulley lagging"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "increased belt tension",
+        "why_it_fails": "stressed bearings and the slip returned"
+      },
+      {
+        "action": "replaced the belt",
+        "why_it_fails": "belt was fine"
+      }
+    ],
+    "hazards": [
+      "H08",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "C03",
+    "machine_type": "conveyor_line",
+    "name": "Gearbox overheating and noise",
+    "error_codes": [],
+    "symptoms": [
+      "gearbox casing very hot",
+      "grinding noise",
+      "oil smell near the drive"
+    ],
+    "lay_description": "the gearbox is very hot and grinding",
+    "cause_family": "lubrication",
+    "root_cause": "low gearbox oil level",
+    "valid_fixes": [
+      "stop and lock out the conveyor",
+      "let the gearbox cool before opening",
+      "check the oil level and condition",
+      "top up with the specified gear oil and look for leaks",
+      "run and confirm casing temperature"
+    ],
+    "tools": [
+      "oil can",
+      "gloves",
+      "infrared thermometer"
+    ],
+    "parts": [
+      "gear oil"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the drive motor",
+        "why_it_fails": "motor was healthy"
+      },
+      {
+        "action": "added general purpose grease",
+        "why_it_fails": "wrong lubricant for the gearbox"
+      }
+    ],
+    "hazards": [
+      "H04",
+      "H08",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "C04",
+    "machine_type": "conveyor_line",
+    "name": "Drive overcurrent trips",
+    "error_codes": [
+      "ERR-C12"
+    ],
+    "symptoms": [
+      "VFD overcurrent fault",
+      "motor runs hot",
+      "fault when the belt is loaded"
+    ],
+    "lay_description": "the drive trips on overcurrent every time the belt loads up",
+    "cause_family": "wear",
+    "root_cause": "seized idler roller dragging on the belt",
+    "valid_fixes": [
+      "stop, lock out and wait for drive discharge",
+      "spin the idler rollers by hand to find the seized one",
+      "replace the seized roller and bearing",
+      "check belt and drive current",
+      "restart and confirm no overcurrent trip"
+    ],
+    "tools": [
+      "multimeter",
+      "clamp meter",
+      "spanner set"
+    ],
+    "parts": [
+      "idler roller"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "raised the VFD current limit",
+        "why_it_fails": "motor ran hotter and the drag remained"
+      },
+      {
+        "action": "replaced the VFD",
+        "why_it_fails": "drive was not at fault"
+      }
+    ],
+    "hazards": [
+      "H02",
+      "H13",
+      "H08"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "C05",
+    "machine_type": "conveyor_line",
+    "name": "Photo-eye false stops",
+    "error_codes": [
+      "ERR-C20"
+    ],
+    "symptoms": [
+      "conveyor stops with nothing in the way",
+      "photo-eye indicator flickers",
+      "fault more common in the afternoon"
+    ],
+    "lay_description": "the line keeps stopping for no reason and the sensor flickers",
+    "cause_family": "sensor",
+    "root_cause": "dirty and slightly misaligned photo-eye",
+    "valid_fixes": [
+      "stop and lock out the conveyor",
+      "clean the sensor lens and reflector",
+      "realign the sensor and reflector",
+      "check the signal on the diagnostics screen",
+      "restart and watch several cycles"
+    ],
+    "tools": [
+      "lens cloth",
+      "hex key set"
+    ],
+    "parts": [],
+    "wrong_fixes": [
+      {
+        "action": "bypassed the sensor",
+        "why_it_fails": "unsafe: product can pile up and block detection"
+      },
+      {
+        "action": "replaced the PLC input card",
+        "why_it_fails": "card was fine"
+      }
+    ],
+    "hazards": [
+      "H08",
+      "H15"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "C06",
+    "machine_type": "conveyor_line",
+    "name": "Chain skipping",
+    "error_codes": [],
+    "symptoms": [
+      "chain jumps on the sprocket",
+      "clicking noise at the drive",
+      "slack hanging on the return side"
+    ],
+    "lay_description": "the chain keeps jumping on the sprocket and clicking",
+    "cause_family": "wear",
+    "root_cause": "stretched drive chain",
+    "valid_fixes": [
+      "stop and lock out the conveyor",
+      "measure the chain elongation",
+      "replace the stretched chain",
+      "check sprocket tooth wear",
+      "re-tension to spec and lubricate"
+    ],
+    "tools": [
+      "chain gauge",
+      "chain breaker",
+      "spanner set"
+    ],
+    "parts": [
+      "drive chain"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "tightened the chain tensioner to the limit",
+        "why_it_fails": "chain still jumped and wore the sprocket"
+      },
+      {
+        "action": "lubricated the chain only",
+        "why_it_fails": "stretch was the cause"
+      }
+    ],
+    "hazards": [
+      "H08",
+      "H03"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 1
+  },
+  {
+    "fault_id": "C07",
+    "machine_type": "conveyor_line",
+    "name": "E-stop pull cord trips randomly",
+    "error_codes": [
+      "ERR-C31"
+    ],
+    "symptoms": [
+      "line stops at random with an e-stop fault",
+      "pull cord switch resets by itself",
+      "fault after washdown"
+    ],
+    "lay_description": "the line randomly drops out on an e-stop fault",
+    "cause_family": "electrical",
+    "root_cause": "water ingress and corroded terminals in the pull cord switch",
+    "valid_fixes": [
+      "lock out and prove dead",
+      "open the pull cord switch box and dry it out",
+      "replace corroded terminals and the switch seal",
+      "test the e-stop circuit end to end",
+      "get supervisor sign-off before returning to production"
+    ],
+    "tools": [
+      "multimeter",
+      "screwdriver set",
+      "dry cloth"
+    ],
+    "parts": [
+      "terminal block",
+      "switch box seal"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "jumpered across the e-stop circuit",
+        "why_it_fails": "removes a life-safety function"
+      },
+      {
+        "action": "replaced the safety relay",
+        "why_it_fails": "relay was fine"
+      }
+    ],
+    "hazards": [
+      "H15",
+      "H02",
+      "H08"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "C08",
+    "machine_type": "conveyor_line",
+    "name": "Roller bearing squeal",
+    "error_codes": [],
+    "symptoms": [
+      "high pitched squeal from one roller",
+      "roller feels rough when spun",
+      "heat at the roller end"
+    ],
+    "lay_description": "one roller is squealing and runs rough",
+    "cause_family": "lubrication",
+    "root_cause": "failed roller bearing with no grease",
+    "valid_fixes": [
+      "stop and lock out the conveyor",
+      "identify the squealing roller by spinning by hand",
+      "replace the failed bearing",
+      "grease all bearings to schedule",
+      "restart and listen"
+    ],
+    "tools": [
+      "grease gun",
+      "bearing puller"
+    ],
+    "parts": [
+      "roller bearing",
+      "grease"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "sprayed lubricant onto the running roller",
+        "why_it_fails": "unsafe near a moving belt and does not repair the bearing"
+      },
+      {
+        "action": "slackened the belt",
+        "why_it_fails": "noise stayed"
+      }
+    ],
+    "hazards": [
+      "H08",
+      "H03"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "A01",
+    "machine_type": "air_compressor",
+    "name": "Fails to reach pressure",
+    "error_codes": [],
+    "symptoms": [
+      "pressure stalls below the cut-out",
+      "compressor runs continuously",
+      "air demand cannot be met"
+    ],
+    "lay_description": "the compressor runs and runs but never reaches full pressure",
+    "cause_family": "clogging",
+    "root_cause": "blocked air intake filter",
+    "valid_fixes": [
+      "stop and lock out the compressor",
+      "vent the receiver to zero",
+      "remove and inspect the intake filter",
+      "replace the filter element",
+      "restart and check the build-up time"
+    ],
+    "tools": [
+      "spanner set",
+      "torch"
+    ],
+    "parts": [
+      "intake filter element"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "raised the pressure switch setpoint",
+        "why_it_fails": "overpressure risk without fixing the intake"
+      },
+      {
+        "action": "replaced the compressor element",
+        "why_it_fails": "element was fine"
+      }
+    ],
+    "hazards": [
+      "H05",
+      "H14",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 3
+  },
+  {
+    "fault_id": "A02",
+    "machine_type": "air_compressor",
+    "name": "Excess oil carryover",
+    "error_codes": [],
+    "symptoms": [
+      "oil in the air lines",
+      "oil mist at the outlet",
+      "oil consumption high"
+    ],
+    "lay_description": "there is oil coming through in the air lines",
+    "cause_family": "wear",
+    "root_cause": "failed oil separator element",
+    "valid_fixes": [
+      "stop and lock out the compressor",
+      "vent to zero pressure",
+      "let the oil cool",
+      "remove the separator cover and old element",
+      "fit a new separator element and top up oil"
+    ],
+    "tools": [
+      "filter wrench",
+      "drain tray",
+      "gloves"
+    ],
+    "parts": [
+      "oil separator element",
+      "compressor oil"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the aftercooler",
+        "why_it_fails": "cooler was not the source"
+      },
+      {
+        "action": "drained the air receiver more often",
+        "why_it_fails": "oil came from the separator"
+      }
+    ],
+    "hazards": [
+      "H05",
+      "H04",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "A03",
+    "machine_type": "air_compressor",
+    "name": "High discharge temperature",
+    "error_codes": [
+      "ERR-A15"
+    ],
+    "symptoms": [
+      "discharge temperature alarm",
+      "hot air at the outlet",
+      "fan running but air feels weak"
+    ],
+    "lay_description": "the compressor overheats and trips on high discharge temperature",
+    "cause_family": "thermal",
+    "root_cause": "fouled cooler fins restricting airflow",
+    "valid_fixes": [
+      "stop and lock out the compressor",
+      "let it cool",
+      "clean the cooler fins with low-pressure air from the clean side",
+      "check the cooling fan direction",
+      "restart and watch temperature"
+    ],
+    "tools": [
+      "brush",
+      "air gun",
+      "infrared thermometer"
+    ],
+    "parts": [],
+    "wrong_fixes": [
+      {
+        "action": "added more oil",
+        "why_it_fails": "level was correct and overfilling causes carryover"
+      },
+      {
+        "action": "replaced the temperature sensor",
+        "why_it_fails": "sensor reading was accurate"
+      }
+    ],
+    "hazards": [
+      "H04",
+      "H05",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "A04",
+    "machine_type": "air_compressor",
+    "name": "Short cycling",
+    "error_codes": [],
+    "symptoms": [
+      "compressor starts and stops every few seconds",
+      "pressure drops quickly after unloading",
+      "hissing at the unloader"
+    ],
+    "lay_description": "the compressor keeps starting and stopping every few seconds",
+    "cause_family": "seal_leak",
+    "root_cause": "leaking minimum pressure check valve",
+    "valid_fixes": [
+      "stop and lock out the compressor",
+      "vent to zero pressure",
+      "remove the check valve and inspect the seat",
+      "replace the valve or seal",
+      "restart and watch the cycle"
+    ],
+    "tools": [
+      "spanner set",
+      "seal pick"
+    ],
+    "parts": [
+      "check valve kit"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the pressure switch",
+        "why_it_fails": "switch was fine"
+      },
+      {
+        "action": "fitted a bigger receiver",
+        "why_it_fails": "did not stop the leak"
+      }
+    ],
+    "hazards": [
+      "H05",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "A05",
+    "machine_type": "air_compressor",
+    "name": "Water in the air lines",
+    "error_codes": [],
+    "symptoms": [
+      "water drips from air tools",
+      "moisture in the filters",
+      "rust marks in pipework"
+    ],
+    "lay_description": "there is water coming out of the air tools",
+    "cause_family": "clogging",
+    "root_cause": "blocked automatic drain valve on the receiver",
+    "valid_fixes": [
+      "stop and lock out the compressor",
+      "vent the receiver to zero",
+      "clean or replace the auto drain valve",
+      "manually drain and check for rust",
+      "restart and verify the drain cycles"
+    ],
+    "tools": [
+      "spanner set",
+      "bucket"
+    ],
+    "parts": [
+      "auto drain valve"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the air dryer",
+        "why_it_fails": "dryer was working, the drain was blocked"
+      },
+      {
+        "action": "added an extra filter",
+        "why_it_fails": "did not remove the water"
+      }
+    ],
+    "hazards": [
+      "H05",
+      "H09"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "A06",
+    "machine_type": "air_compressor",
+    "name": "Motor trips on overload",
+    "error_codes": [
+      "ERR-A22"
+    ],
+    "symptoms": [
+      "motor overload trips under load",
+      "motor hums",
+      "lights flicker when it starts"
+    ],
+    "lay_description": "the motor trips out on overload and hums when it starts",
+    "cause_family": "electrical",
+    "root_cause": "loose power terminal causing single phasing",
+    "valid_fixes": [
+      "lock out and prove dead",
+      "inspect the motor and starter terminals",
+      "tighten or replace the burned terminal",
+      "check current balance on all phases",
+      "restart and monitor"
+    ],
+    "tools": [
+      "multimeter",
+      "clamp meter",
+      "torque screwdriver"
+    ],
+    "parts": [
+      "terminal block"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "replaced the motor",
+        "why_it_fails": "motor was fine"
+      },
+      {
+        "action": "increased the overload setting",
+        "why_it_fails": "damages the motor over time"
+      }
+    ],
+    "hazards": [
+      "H02",
+      "H13"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 1
+  },
+  {
+    "fault_id": "A07",
+    "machine_type": "air_compressor",
+    "name": "Safety valve popping",
+    "error_codes": [],
+    "symptoms": [
+      "safety valve lifts and vents",
+      "pressure goes above cut-out",
+      "loud blast of air"
+    ],
+    "lay_description": "the safety valve keeps blowing off",
+    "cause_family": "sensor",
+    "root_cause": "faulty pressure switch so the compressor never unloads",
+    "valid_fixes": [
+      "stop and lock out the compressor",
+      "vent to zero pressure",
+      "test the pressure switch against a calibrated gauge",
+      "replace the faulty pressure switch",
+      "restart and confirm it unloads at cut-out"
+    ],
+    "tools": [
+      "calibrated gauge",
+      "spanner set"
+    ],
+    "parts": [
+      "pressure switch"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "plugged the safety valve to stop the noise",
+        "why_it_fails": "extremely dangerous: removes overpressure protection"
+      },
+      {
+        "action": "fitted a higher rated safety valve",
+        "why_it_fails": "hides a control failure and is unsafe"
+      }
+    ],
+    "hazards": [
+      "H14",
+      "H05",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 2
+  },
+  {
+    "fault_id": "A08",
+    "machine_type": "air_compressor",
+    "name": "Belt squeal and vibration",
+    "error_codes": [],
+    "symptoms": [
+      "squeal when starting",
+      "visible vibration at the belt guard",
+      "belt dust on the guard"
+    ],
+    "lay_description": "the belt squeals and the whole guard shakes",
+    "cause_family": "wear",
+    "root_cause": "worn and loose drive belt",
+    "valid_fixes": [
+      "stop and lock out the compressor",
+      "remove the belt guard",
+      "check belt wear and tension",
+      "replace the belt and re-tension",
+      "refit the guard and test"
+    ],
+    "tools": [
+      "tension gauge",
+      "spanner set"
+    ],
+    "parts": [
+      "drive belt"
+    ],
+    "wrong_fixes": [
+      {
+        "action": "sprayed belt dressing on the running belt",
+        "why_it_fails": "unsafe near rotating parts and only a temporary fix"
+      },
+      {
+        "action": "replaced the motor bearings",
+        "why_it_fails": "bearings were fine"
+      }
+    ],
+    "hazards": [
+      "H06",
+      "H02"
+    ],
+    "hazard_note": "",
+    "recurrence_weight": 1
+  }
+]
