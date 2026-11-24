@@ -376,3 +376,19 @@ def test_gemini_client_retry_on_invalid_json(monkeypatch):
 
     result = client.generate_structured("Hydraulic issue", DiagnosticOutput)
     assert result.hypotheses[0].fault == "Hydraulic line blockage"
+
+
+def test_gemini_client_thinking_and_timeout_config(monkeypatch):
+    """Verify GeminiLLMClient respects GEMINI_THINKING and GEMINI_TIMEOUT_S environment variables."""
+    from google.genai import types
+    from project.core.llm import GeminiLLMClient
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test_key")
+    monkeypatch.setenv("GEMINI_THINKING", "minimal")
+    monkeypatch.setenv("GEMINI_TIMEOUT_S", "45")
+
+    client = GeminiLLMClient()
+    assert client.timeout == 45.0
+    t_cfg = client._get_thinking_config()
+    assert t_cfg is not None
+    assert t_cfg.thinking_level == types.ThinkingLevel.MINIMAL

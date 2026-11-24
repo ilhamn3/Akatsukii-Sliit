@@ -97,6 +97,7 @@ class TraceLogger:
         session_id: Optional[str] = None,
         stub: bool = False,
         llm: Optional[str] = None,
+        tokens: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Append a single structured JSONL line to the audit trail."""
         record: Dict[str, Any] = {
@@ -114,6 +115,11 @@ class TraceLogger:
         }
         if llm is not None:
             record["llm"] = llm
+        if tokens is not None:
+            try:
+                record["tokens"] = int(tokens)
+            except (TypeError, ValueError):
+                pass
 
         line = json.dumps(record, default=str)
         with self._file_lock:

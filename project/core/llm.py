@@ -40,18 +40,28 @@ class GeminiLLMClient(LLMClient):
         self,
         api_key: Optional[str] = None,
         model: Optional[str] = None,
+        thinking: Optional[str] = None,
         temperature: float = 0.0,
-        timeout: float = 30.0,
+        timeout: Optional[float] = None,
         max_retries: int = 3,
     ):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY", "").strip()
         if not self.api_key or self.api_key.startswith("your_"):
             raise ValueError("GEMINI_API_KEY is unset or default template in environment.")
         self.model = model or os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip()
+        self.thinking = thinking
         self.model_name = f"gemini:{self.model}"
         self.temperature = float(os.getenv("TEMPERATURE", str(temperature)))
-        self.timeout = timeout
+
+        # Configurable timeout: use explicit argument, or GEMINI_TIMEOUT_S env (default 60s)
+        if timeout is not None:
+            self.timeout = float(timeout)
+        else:
+            self.timeout = float(os.getenv("GEMINI_TIMEOUT_S", "60.0"))
+
         self.max_retries = max_retries
+        self.last_latency_ms: float = 0.0
+        self.last_token_count: Optional[int] = None
 
     def _get_client(self):
         try:
@@ -65,6 +75,23 @@ class GeminiLLMClient(LLMClient):
             api_key=self.api_key,
             http_options=types.HttpOptions(timeout=timeout_ms),
         )
+
+    def _get_thinking_config(self) -> Optional[Any]:
+        thinking_env = (self.thinking or os.getenv("GEMINI_THINKING", "")).strip().lower()
+        if not thinking_env or thinking_env == "default":
+            return None
+        from google.genai import types
+        if thinking_env == "off":
+            return types.ThinkingConfig(thinking_budget=0)
+        elif thinking_env == "minimal":
+            return types.ThinkingConfig(thinking_level=types.ThinkingLevel.MINIMAL)
+        elif thinking_env == "low":
+            return types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
+        elif thinking_env == "medium":
+            return types.ThinkingConfig(thinking_level=types.ThinkingLevel.MEDIUM)
+        elif thinking_env == "high":
+            return types.ThinkingConfig(thinking_level=types.ThinkingLevel.HIGH)
+        return None
 
     def _call_api_with_retry(
         self,
@@ -90,21 +117,39 @@ class GeminiLLMClient(LLMClient):
             config_kwargs["response_mime_type"] = "application/json"
             config_kwargs["response_schema"] = response_model
 
+        thinking_cfg = self._get_thinking_config()
+        if thinking_cfg is not None:
+            config_kwargs["thinking_config"] = thinking_cfg
+
         config = types.GenerateContentConfig(**config_kwargs)
 
         for attempt in range(self.max_retries):
+            t_start = time.perf_counter()
             try:
                 response = client.models.generate_content(
                     model=self.model,
                     contents=prompt,
                     config=config,
                 )
+                self.last_latency_ms = (time.perf_counter() - t_start) * 1000.0
+
+                usage = getattr(response, "usage_metadata", None)
+                if usage:
+                    self.last_token_count = getattr(usage, "total_token_count", None)
+
                 text = response.text or ""
                 # Verify JSON parseable if structured model was expected
                 if response_model is not None:
                     json.loads(text)
                 return text
             except Exception as e:
+                # If thinking_budget=0 is rejected by model with 400 Invalid Argument, fallback to MINIMAL
+                if "invalid argument" in str(e).lower() and config_kwargs.get("thinking_config"):
+                    try:
+                        config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_level=types.ThinkingLevel.MINIMAL)
+                        config = types.GenerateContentConfig(**config_kwargs)
+                    except Exception:
+                        pass
                 last_exception = e
                 wait_sec = (2 ** attempt) * 0.5
                 time.sleep(wait_sec)
@@ -141,6 +186,7 @@ class OpenAILLMClient(LLMClient):
         temperature: float = 0.0,
         timeout: float = 30.0,
         max_retries: int = 3,
+        base_url: Optional[str] = None,
     ):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
         if not self.api_key or self.api_key.startswith("your_"):
@@ -150,6 +196,9 @@ class OpenAILLMClient(LLMClient):
         self.temperature = float(os.getenv("TEMPERATURE", str(temperature)))
         self.timeout = timeout
         self.max_retries = max_retries
+        self.base_url = base_url or os.getenv("OPENAI_BASE_URL") or None
+        self.last_latency_ms: float = 0.0
+        self.last_token_count: Optional[int] = None
 
     def _call_api_with_retry(self, messages: List[Dict[str, str]], json_mode: bool = False) -> str:
         try:
@@ -157,10 +206,18 @@ class OpenAILLMClient(LLMClient):
         except ImportError:
             raise ImportError("openai package is required to run OpenAILLMClient.")
 
-        client = openai.OpenAI(api_key=self.api_key, timeout=self.timeout)
+        client_kwargs: Dict[str, Any] = {
+            "api_key": self.api_key,
+            "timeout": self.timeout,
+        }
+        if self.base_url:
+            client_kwargs["base_url"] = self.base_url
+
+        client = openai.OpenAI(**client_kwargs)
         last_exception = None
 
         for attempt in range(self.max_retries):
+            t_start = time.perf_counter()
             try:
                 kwargs: Dict[str, Any] = {
                     "model": self.model,
@@ -171,6 +228,9 @@ class OpenAILLMClient(LLMClient):
                     kwargs["response_format"] = {"type": "json_object"}
 
                 response = client.chat.completions.create(**kwargs)
+                self.last_latency_ms = (time.perf_counter() - t_start) * 1000.0
+                if getattr(response, "usage", None):
+                    self.last_token_count = getattr(response.usage, "total_tokens", None)
                 content = response.choices[0].message.content
                 return content or ""
             except Exception as e:
@@ -366,6 +426,61 @@ class FakeLLM(LLMClient):
                     ],
                 })
 
+        if response_model.__name__ in ("SafetyReviewOutput", "LLMSafetyReview"):
+            p_lower = prompt.lower()
+            if (
+                "without releasing pressure" in p_lower
+                or "skip lockout" in p_lower
+                or "panel live" in p_lower
+                or "still coasting" in p_lower
+                or "bypass" in p_lower
+                or "bare hand" in p_lower
+                or "boiling oil" in p_lower
+                or "pressurised line" in p_lower
+                or "plug safety valve" in p_lower
+                or "unrecognised hazard" in p_lower
+                or "unknown hazard" in p_lower
+            ):
+                return response_model.model_validate({
+                    "is_safe": False,
+                    "verdict": "veto",
+                    "concerns": ["Dangerous shortcut detected in maintenance steps."],
+                    "suggested_amendments": ["Apply Lockout/Tagout and verify zero energy before intervention."],
+                    "reason": "Simulated FakeLLM safety check identified critical hazard.",
+                })
+            elif "misordered" in p_lower or "ordering" in p_lower:
+                return response_model.model_validate({
+                    "is_safe": False,
+                    "verdict": "amend",
+                    "concerns": ["Control step ordering requires adjustment."],
+                    "suggested_amendments": ["Relocate safety isolation step to the beginning of the procedure."],
+                    "reason": "Simulated FakeLLM safety check recommends control sequence adjustment.",
+                })
+            else:
+                return response_model.model_validate({
+                    "is_safe": True,
+                    "verdict": "approve",
+                    "concerns": [],
+                    "suggested_amendments": [],
+                    "reason": "Simulated FakeLLM safety check: Procedure satisfies standard safety controls.",
+                })
+
+        if response_model.__name__ == "SafetyVerdict":
+            p_lower = prompt.lower()
+            if "veto" in p_lower or "danger" in p_lower:
+                return response_model.model_validate({
+                    "verdict": "veto",
+                    "reason": "Simulated safety veto by FakeLLM.",
+                    "rule_ids": ["SR-H01"],
+                    "suggested_amendments": ["Depressurise system before opening."],
+                })
+            return response_model.model_validate({
+                "verdict": "approve",
+                "reason": "Simulated safety approval by FakeLLM.",
+                "rule_ids": [],
+                "suggested_amendments": [],
+            })
+
         # Generic default model creation
         try:
             return response_model.model_validate({})
@@ -373,11 +488,15 @@ class FakeLLM(LLMClient):
             raise NotImplementedError(f"FakeLLM does not have a default simulation for {response_model.__name__}.")
 
 
-def get_llm(force_fake: Optional[bool] = None) -> LLMClient:
+def get_llm(
+    force_fake: Optional[bool] = None,
+    model: Optional[str] = None,
+    thinking: Optional[str] = None,
+) -> LLMClient:
     """Return configured LLMClient based on LLM_PROVIDER env var.
 
     Providers supported:
-      - 'gemini' (reads GEMINI_API_KEY, GEMINI_MODEL)
+      - 'gemini' (reads GEMINI_API_KEY, GEMINI_MODEL, GEMINI_THINKING)
       - 'openai' (reads OPENAI_API_KEY, PRIMARY_LLM_MODEL)
 
     Raises ValueError if provider API key is missing/unset unless force_fake or
@@ -398,7 +517,7 @@ def get_llm(force_fake: Optional[bool] = None) -> LLMClient:
         key = os.getenv("GEMINI_API_KEY", "").strip()
         if key and not key.startswith("your_"):
             try:
-                return GeminiLLMClient(api_key=key)
+                return GeminiLLMClient(api_key=key, model=model, thinking=thinking)
             except Exception:
                 if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
                     return FakeLLM()
@@ -411,11 +530,14 @@ def get_llm(force_fake: Optional[bool] = None) -> LLMClient:
         key = os.getenv("OPENAI_API_KEY", "").strip()
         if key and not key.startswith("your_"):
             try:
-                return OpenAILLMClient(api_key=key)
+                return OpenAILLMClient(api_key=key, model=model)
             except Exception:
                 if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
                     return FakeLLM()
                 raise
+        if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
+            return FakeLLM()
+        raise ValueError("OPENAI_API_KEY not set; set it in .env, or pass --fake-llm for offline demo")
         if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
             return FakeLLM()
         raise ValueError("OPENAI_API_KEY not set; set it in .env, or pass --fake-llm for offline demo")

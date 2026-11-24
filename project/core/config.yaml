@@ -31,14 +31,23 @@ pipelines:
         stub: false
         order: 1
 
-      - name: "DummySafetyAgent"
-        role: "Safety verification and veto loop"
+      - name: "DummyOrchestratorAgent"
+        role: "Draft repair step retrieval and synthesis (STUB)"
         pipeline: "B"
         module: "project.core.stubs.dummy_agents"
-        class: "DummySafetyAgent"
+        class: "DummyOrchestratorAgent"
         enabled: true
         stub: true
         order: 2
+
+      - name: "SafetyAgent"
+        role: "Deterministic safety rule verification and LLM oversight"
+        pipeline: "B"
+        module: "project.agents.a7_safety"
+        class: "SafetyAgent"
+        enabled: true
+        stub: false
+        order: 3
 
     # Graph edge definitions (src -> dst). Use '__end__' to terminate.
     # Conditional routing: specify condition: "check_clarification", on_true, on_false
@@ -46,8 +55,10 @@ pipelines:
       - from: "DiagnosticAgent"
         condition: "check_clarification"
         on_true: "__end__"
-        on_false: "DummySafetyAgent"
-      - from: "DummySafetyAgent"
+        on_false: "DummyOrchestratorAgent"
+      - from: "DummyOrchestratorAgent"
+        to: "SafetyAgent"
+      - from: "SafetyAgent"
         to: "__end__"
 
   # Pipeline A produces an unverified extraction draft; A3 validation follows in K4.
