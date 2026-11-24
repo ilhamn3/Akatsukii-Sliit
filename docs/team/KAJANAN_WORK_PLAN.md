@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 0 / 20 points · 0% complete**
+**Overall: 6 / 20 points · 30% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP6 | User interface | 8 | 0 | 0% |
+| WP6 | User interface | 8 | 6 | 75% |
 | WP7 | Single-agent baseline and benchmark | 9 | 0 | 0% |
 | WP9 | Demo and slides (Kajanan's part) | 3 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -28,9 +28,9 @@
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
 | 6.1 | Streamlit skeleton and chat page | 3 | 22 Nov | 75% |
-| 6.2 | Cited answers display (evidence links to source repairs) | 1 | 24 Nov | 0% |
-| 6.3 | Technician review-queue page | 2 | 24 Nov | 0% |
-| 6.4 | Trace viewer showing every agent handoff | 2 | 26 Nov | 0% |
+| 6.2 | Cited answers display (evidence links to source repairs) | 1 | 24 Nov | 75% |
+| 6.3 | Technician review-queue page | 2 | 24 Nov | 75% |
+| 6.4 | Trace viewer showing every agent handoff | 2 | 26 Nov | 75% |
 
 #### WP7 – Single-agent baseline and benchmark (9 pts)
 

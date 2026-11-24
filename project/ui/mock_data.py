@@ -33,3 +33,12 @@ def mock_answer(query: str) -> dict:
 
 def get_repair(repair_id: str) -> dict:
     return REPAIRS.get(repair_id, {})
+def get_review_queue() -> list:
+    return [
+        {"id": "Q-001", "machine": "Press-03", "root_cause": "Worn hydraulic seal",
+         "fix": "Replaced seal", "safety_warning": "Lock out the machine first", "confidence": 0.58},
+        {"id": "Q-002", "machine": "CNC Lathe-02", "root_cause": "Loose spindle belt",
+         "fix": "Tightened the belt", "safety_warning": "Not mentioned", "confidence": 0.41},
+        {"id": "Q-003", "machine": "Compressor-01", "root_cause": "Clogged air filter",
+         "fix": "Cleaned the filter", "safety_warning": "Switch off and release air pressure", "confidence": 0.63},
+    ]
