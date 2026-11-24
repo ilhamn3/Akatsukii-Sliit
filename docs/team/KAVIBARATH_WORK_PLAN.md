@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 5 / 30 points · 17% complete**
+**Overall: 9.5 / 30 points · 32% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP3 | Ingestion agents 1-4 and review queue | 18 | 5 | 28% |
-| WP4 | Knowledge store and retrieval | 10 | 0 | 0% |
+| WP4 | Knowledge store and retrieval | 10 | 4.5 | 45% |
 | WP10 | Hardening and unit tests | 2 | 0 | 0% |
 <!-- PROGRESS:END -->
 
@@ -39,9 +39,9 @@
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 4.1 | SQLite tables for verified records | 2 | 26 Nov | 0% |
-| 4.2 | Vector index (ChromaDB or FAISS) | 2 | 26 Nov | 0% |
-| 4.3 | Knowledge graph (NetworkX) of machines, faults, causes, fixes, hazards | 2 | 26 Nov | 0% |
+| 4.1 | SQLite tables for verified records | 2 | 26 Nov | 75% |
+| 4.2 | Vector index (ChromaDB or FAISS) | 2 | 26 Nov | 75% |
+| 4.3 | Knowledge graph (NetworkX) of machines, faults, causes, fixes, hazards | 2 | 26 Nov | 75% |
 | 4.4 | Agent 6: hybrid vector + graph retrieval | 3 | 27 Nov | 0% |
 | 4.5 | Retrieval returns failed attempts and outcomes | 1 | 27 Nov | 0% |
 
@@ -187,5 +187,6 @@ After merging origin/main at f735884, all 80 tests and pip check passed locally.
 |---|---|---|---|---|---|---|
 | [#5](https://github.com/ilhamn3/Akatsukii-Sliit/pull/5) (K1 draft) | 22 Nov 2026 | [WP3] Agent 1: Whisper transcription and frame sampling | 3.1 (0->75%), 3.2 (0->75%) | Capture implementation, schemas, registry handoff and local setup; 52 tests pass plus actual Whisper/FFmpeg checks on synthetic speech, video and silence. Evidence: docs/CAPTURE_SETUP.md and local logs/capture_smoke/. Team samples and review pending | 0% -> 10% (3/30 pts) | Ilham MM (pending) |
 | [#7](https://github.com/ilhamn3/Akatsukii-Sliit/pull/7) (K2) | 24 Nov 2026 | [WP3] Agent 2: source-linked knowledge extraction | 3.3 (0->50%) | Draft schema, extraction agent, quote/timestamp provenance, A1 -> A2 handoff, traced failures, API diagnostics and setup docs; 76 tests passed before main sync and in Ilham's review. Live Groq 120B / prompt v3 synthetic smoke check passed. Evidence: docs/EXTRACTION_SETUP.md; representative samples pending | 10% -> 17% (3/30 -> 5/30 pts) | Ilham MM (code approved; requested log row added) |
+| Not opened (K3 local draft) | 24 Nov 2026 | [WP4] Verified knowledge store and query interface | 4.1, 4.2, 4.3 (0->75% each) | SQLite envelopes/provenance and audit events, FAISS symptom search, episode-scoped NetworkX graph, atomic writes and documented K4-K6 interface. 95 tests pass; real pinned MiniLM synthetic lookup succeeds. Evidence: docs/KNOWLEDGE_STORE.md. Integration, representative data and reviewer acceptance pending | 17% -> 32% (5/30 -> 9.5/30 pts) | Ilham MM (pending) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
