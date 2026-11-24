@@ -174,6 +174,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
-|   |   |   |   |   |   |   |
+| #6 | 23 Nov | [WP2] Fault catalogue with hazards | 2.1 (0->75%) | 40 failure modes across 5 machine types, hazards.json, build and validate scripts | 0% -> 11% | Kajanan K |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
