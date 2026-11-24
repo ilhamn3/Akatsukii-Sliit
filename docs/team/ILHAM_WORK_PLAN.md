@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 15.8 / 30 points · 53% complete**
+**Overall: 17 / 30 points · 57% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP1 | Foundation and architecture | 12 | 12 | 100% |
-| WP5 | Assistance agents 5, 7 and 8 | 18 | 3.8 | 21% |
+| WP5 | Assistance agents 5, 7 and 8 | 18 | 5 | 28% |
 <!-- PROGRESS:END -->
 
 **How to update:** edit only the **Done %** column below (0-100). Points earned = Pts x Done %. A subtask is 100% only when it meets its "done when" in section 3 and has been reviewed. Partial progress is fine (25 / 50 / 75%).
@@ -36,7 +36,7 @@
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 5.1 | Diagnostic agent: ranked fault hypotheses with confidence | 3 | 24 Nov | 60% |
+| 5.1 | Diagnostic agent: ranked fault hypotheses with confidence | 3 | 24 Nov | 100% |
 | 5.2 | Diagnostic agent: clarifying-question flow | 2 | 24 Nov | 100% |
 | 5.3 | Safety rule base (from Tharshanth's hazard list) | 3 | 24 Nov | 0% |
 | 5.4 | Safety Verification agent: approve / amend / veto with reason | 3 | 26 Nov | 0% |
@@ -65,7 +65,8 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 |---|---|---|---|---|
 | I1 | `wp1/scaffold-schemas` | 1.1, 1.2 | 5 | 22 Nov |
 | I2 | `wp1/state-trace-registry` | 1.3, 1.4, 1.5 | 7 | 22 Nov |
-| I3 | `wp5/diagnostic-agent` | 5.1, 5.2 | 5 | 24 Nov |
+| I3 | `wp5/diagnostic-agent` | 5.1 (partial 60%), 5.2 | 3.8 | 24 Nov |
+| I3b | `wp5/llm-gemini` | 5.1 (finish 100%) | 1.2 | 24 Nov |
 | I4 | `wp5/safety-agent` | 5.3, 5.4 | 6 | 26 Nov |
 | I5 | `wp5/orchestrator` | 5.5, 5.6 | 6 | 26 Nov |
 | I6 | `wp5/e2e-integration` | 5.7 | 1 | 28 Nov |
@@ -161,5 +162,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | I1 | 21 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | core/agents/store/tests packages, schemas.py, 9 pytest tests | 0% -> 17% | Kavibarath S |
 | I2 | 21 Nov | [WP1] Shared state, JSONL trace logger and dynamic agent registry | 1.3 (0->100%), 1.4 (0->100%), 1.5 (0->100%) | BlackboardState, TraceLogger, registry.py, config.yaml, BaseAgent, main.py rewrite | 17% -> 40% | Kavibarath S |
 | I3 | 21 Nov | [WP5] Diagnostic agent with hypothesis ranking and clarifying flow | 5.1 (0->60%), 5.2 (0->100%) | a5_diagnostic.py, llm.py (OpenAI+FakeLLM), diagnostic_v1.md prompt, dev queries, unit tests; 60%: prompt + agent + schema + tests complete; dev_queries run on FakeLLM pending real OpenAI key; real-model verification deferred to I5/I8 | 40% -> 53% | Kavibarath S |
+| I3b | 24 Nov | [WP5] Add GeminiLLMClient via google-genai and finish subtask 5.1 | 5.1 (60->100%) | llm.py (GeminiLLMClient via google-genai + OpenAILLMClient + FakeLLM), provider routing (LLM_PROVIDER), 10 dev queries verified against live gemini-3.5-flash API, 13 diagnostic tests (65 total in repo) | 53% -> 57% | Kavibarath S |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*

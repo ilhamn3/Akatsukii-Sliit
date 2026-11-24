@@ -71,10 +71,10 @@ def run_dev_queries(force_fake: bool = False) -> List[Dict[str, Any]]:
     # Print table header
     header = (
         f"{'ID':<7} | {'Machine':<25} | {'Clarify?':<8} | {'Conf':<5} | "
-        f"{'Latency':<9} | {'Top Fault Hypothesis / Question':<40}"
+        f"{'Latency':<9} | {'Model':<18} | {'Top Fault Hypothesis / Question':<40}"
     )
     print(header)
-    print("-" * 105)
+    print("-" * 125)
 
     for q in queries:
         qid = q["id"]
@@ -107,10 +107,11 @@ def run_dev_queries(force_fake: bool = False) -> List[Dict[str, Any]]:
             summary_text = summary_text[:37] + "..."
 
         m_display = machine if len(machine) <= 25 else machine[:22] + "..."
+        model_display = llm_backend if len(llm_backend) <= 18 else llm_backend[:15] + "..."
 
         print(
             f"{qid:<7} | {m_display:<25} | {clarify_str:<8} | {conf_str:<5} | "
-            f"{latency_ms:>7.1f}ms | {summary_text:<40}"
+            f"{latency_ms:>7.1f}ms | {model_display:<18} | {summary_text:<40}"
         )
 
         results.append({

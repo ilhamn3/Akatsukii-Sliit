@@ -12,6 +12,7 @@ langchain-openai>=0.0.8
 
 # LLM Providers & Direct Clients
 openai>=1.0.0
+google-genai>=0.1.0
 
 # Data Modeling, Validation & Settings Management
 pydantic>=2.5.0
