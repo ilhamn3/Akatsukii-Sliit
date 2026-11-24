@@ -106,3 +106,40 @@ class DummyAuditAgent(BaseAgent):
             "metadata": meta,
             "decision": "AUDIT_PASSED",
         }
+
+
+class DummyOrchestratorAgent(BaseAgent):
+    """STUB: Placeholder upstream orchestrator generating draft candidate repair steps pending real Orchestrator (PR I5)."""
+
+    def __init__(self, trace_logger=None):
+        super().__init__(
+            name="DummyOrchestratorAgent",
+            role="Draft repair step retrieval and synthesis (STUB)",
+            pipeline="B",
+            trace_logger=trace_logger,
+            is_stub=True,
+        )
+
+    def process(self, state: BlackboardState) -> Dict[str, Any]:
+        hyp = state.get("selected_hypothesis") or {}
+        fault_desc = hyp.get("fault", "generic mechanism fault")
+        return {
+            "candidate_steps": [
+                {
+                    "step_number": 1,
+                    "instruction": "Isolate machine main electrical supply and apply lockout/tagout (LOTO).",
+                    "evidence_ids": ["EV-STUB-01"],
+                },
+                {
+                    "step_number": 2,
+                    "instruction": f"STUB: Perform mechanical inspection and repair for {fault_desc}.",
+                    "evidence_ids": ["EV-STUB-02"],
+                },
+                {
+                    "step_number": 3,
+                    "instruction": "Verify all safety guards and interlocks are restored before re-energising.",
+                    "evidence_ids": ["EV-STUB-03"],
+                },
+            ],
+            "decision": "DRAFT_STEPS_PRODUCED",
+        }

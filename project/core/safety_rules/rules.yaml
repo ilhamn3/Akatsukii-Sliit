@@ -1,0 +1,503 @@
+# ==============================================================================
+# Factory Memory - Deterministic Safety Rules Definition
+# Rules corresponding to catalogue hazards H01-H16 plus cross-cutting rules SR-X01..SR-X04.
+# At runtime, required_control and hazard names are dynamically synchronized with
+# project/data/fault_catalogue/hazards.json as the single source of truth.
+# ==============================================================================
+
+rules:
+  # H01: Stored hydraulic pressure
+  - id: "SR-H01"
+    hazard_id: "H01"
+    name: "Stored hydraulic pressure"
+    severity: "critical"
+    trigger_keywords:
+      - "hydraulic"
+      - "accumulator"
+      - "pressure line"
+      - "hose"
+      - "valve block"
+      - "drawbar cylinder"
+      - "manifold"
+      - "fluid power"
+    required_step_patterns:
+      - "depressuri[sz]e"
+      - "bleed.*pressure"
+      - "verify.*zero"
+      - "zero.*bar"
+      - "gauge.*zero"
+      - "dump.*valve"
+    negative_step_patterns:
+      - "open.*without.*(depressuri|bleed)"
+      - "loosen.*pressuri[sz]ed"
+      - "skip.*(depressuri|bleed)"
+      - "disconnect.*pressuri[sz]ed"
+    message: "Hydraulic circuit must be depressurised and verified zero energy on pressure gauge before opening lines or fittings."
+
+  # H02: Electrical energy
+  - id: "SR-H02"
+    hazard_id: "H02"
+    name: "Electrical energy"
+    severity: "critical"
+    trigger_keywords:
+      - "electrical"
+      - "fuse"
+      - "terminal"
+      - "breaker"
+      - "wire"
+      - "contactor"
+      - "cabinet"
+      - "transformer"
+      - "inverter"
+      - "vfd"
+      - "power supply"
+      - "400v"
+      - "415v"
+      - "230v"
+    required_step_patterns:
+      - "lock\\s*out"
+      - "tag\\s*out"
+      - "loto"
+      - "isolate"
+      - "prove.*dead"
+      - "test.*before.*touch"
+      - "multimeter"
+      - "voltmeter"
+      - "de-?energi[sz]e"
+    negative_step_patterns:
+      - "replace.*live"
+      - "touch.*live"
+      - "work.*live"
+      - "skip.*(lock\\s*out|loto|isolat)"
+      - "without.*(isolat|lock\\s*out|loto)"
+    message: "Electrical supply must be isolated, locked/tagged out (LOTO), and proven dead before touching electrical components."
+
+  # H03: Crush / pinch point
+  - id: "SR-H03"
+    hazard_id: "H03"
+    name: "Crush / pinch point"
+    severity: "critical"
+    trigger_keywords:
+      - "die"
+      - "ram"
+      - "mould"
+      - "mold"
+      - "pinch"
+      - "crush"
+      - "platen"
+      - "clamping mechanism"
+      - "press bed"
+    required_step_patterns:
+      - "mechanical.*block"
+      - "safety.*block"
+      - "lock\\s*out"
+      - "block.*mechanically"
+      - "hands.*out"
+    negative_step_patterns:
+      - "reach.*(die|mould|mold|ram|pinch)"
+      - "enter.*without.*(block|loto|lock\\s*out)"
+      - "place.*hand.*(die|ram|pinch)"
+    message: "Keep hands out of die/mould/ram path; insert mechanical safety blocks before entering."
+
+  # H04: Hot oil or hot surface
+  - id: "SR-H04"
+    hazard_id: "H04"
+    name: "Hot oil or hot surface"
+    severity: "medium"
+    trigger_keywords:
+      - "hot oil"
+      - "hot surface"
+      - "drain oil"
+      - "gearbox"
+      - "gearbox housing"
+      - "hot housing"
+      - "heater"
+      - "exhaust"
+      - "coolant reservoir"
+    required_step_patterns:
+      - "cool"
+      - "cool.*down"
+      - "heat-resistant.*glove"
+      - "protective.*glove"
+      - "allow.*to.*cool"
+    negative_step_patterns:
+      - "drain.*hot"
+      - "touch.*hot.*without.*glove"
+      - "handle.*boiling"
+    message: "Allow oil/gearbox/housing to cool and wear heat-resistant gloves before draining or touching."
+
+  # H05: Stored compressed air
+  - id: "SR-H05"
+    hazard_id: "H05"
+    name: "Stored compressed air"
+    severity: "high"
+    trigger_keywords:
+      - "compressed air"
+      - "pneumatic"
+      - "air receiver"
+      - "air tank"
+      - "pneumatic cylinder"
+      - "regulator"
+      - "compressor line"
+    required_step_patterns:
+      - "vent"
+      - "vent.*to.*zero"
+      - "exhaust.*air"
+      - "zero.*psi"
+      - "zero.*pressure"
+      - "dump.*valve"
+    negative_step_patterns:
+      - "disconnect.*pressuri[sz]ed"
+      - "open.*air.*without.*vent"
+      - "service.*pressuri[sz]ed.*air"
+    message: "Pneumatic receiver and lines must be vented to zero pressure before servicing."
+
+  # H06: Rotating spindle / chuck / pulley
+  - id: "SR-H06"
+    hazard_id: "H06"
+    name: "Rotating spindle / chuck / pulley"
+    severity: "critical"
+    trigger_keywords:
+      - "spindle"
+      - "chuck"
+      - "pulley"
+      - "flywheel"
+      - "rotary table"
+      - "collet"
+      - "lathe chuck"
+    required_step_patterns:
+      - "full.*stop"
+      - "zero.*speed"
+      - "spindle.*stop"
+      - "stop.*rotation"
+      - "lock\\s*out"
+      - "loto"
+      - "come.*to.*a.*stop"
+    negative_step_patterns:
+      - "reach.*while.*(coasting|spinning|rotating|running)"
+      - "glove.*near.*rotating"
+      - "adjust.*while.*spinning"
+      - "touch.*moving.*spindle"
+    message: "Bring rotation to full stop, verify zero speed, and lock out before reaching into rotating parts."
+
+  # H07: Hot barrel / molten plastic
+  - id: "SR-H07"
+    hazard_id: "H07"
+    name: "Hot barrel / molten plastic"
+    severity: "high"
+    trigger_keywords:
+      - "barrel"
+      - "molten plastic"
+      - "injection nozzle"
+      - "purge"
+      - "heater band"
+      - "extruder"
+    required_step_patterns:
+      - "face.*shield"
+      - "heat-resistant.*glove"
+      - "let.*cool"
+      - "stand.*clear"
+    negative_step_patterns:
+      - "(?:^|\\b)(?:face|facing)\\s+(?:the\\s+)?(?:injection\\s+)?nozzle"
+      - "purg.*without.*(shield|glove)"
+      - "look.*into.*nozzle"
+    message: "Wear face shield and heat-resistant gloves; never face nozzle during purging; let barrel cool."
+
+  # H08: Moving belt / chain / rollers
+  - id: "SR-H08"
+    hazard_id: "H08"
+    name: "Moving belt / chain / rollers"
+    severity: "critical"
+    trigger_keywords:
+      - "conveyor"
+      - "moving belt"
+      - "drive chain"
+      - "rollers"
+      - "sprocket"
+      - "nip point"
+    required_step_patterns:
+      - "stop"
+      - "lock\\s*out"
+      - "loto"
+      - "guard.*in.*place"
+      - "power.*off"
+      - "e-?stop"
+    negative_step_patterns:
+      - "clean.*running"
+      - "lubricate.*running"
+      - "clear.*jam.*while.*(running|moving|energised)"
+      - "clear.*running.*belt"
+    message: "Stop and lock out conveyor; never clean, lubricate, or clear jams on a running line."
+
+  # H09: Slippery coolant / fluid spill
+  - id: "SR-H09"
+    hazard_id: "H09"
+    name: "Slippery coolant / fluid spill"
+    severity: "medium"
+    trigger_keywords:
+      - "coolant"
+      - "fluid spill"
+      - "puddle"
+      - "oil spill"
+      - "cutting fluid"
+      - "lubricant leak"
+    required_step_patterns:
+      - "clean.*spill"
+      - "spill.*kit"
+      - "absorbent"
+      - "non-slip.*footwear"
+      - "dry.*area"
+    negative_step_patterns:
+      - "leave.*spill"
+      - "ignore.*(oil|spill|puddle)"
+    message: "Clean spills immediately; use absorbent pads and non-slip footwear; avoid skin contact with coolant."
+
+  # H10: High-pressure fluid injection
+  - id: "SR-H10"
+    hazard_id: "H10"
+    name: "High-pressure fluid injection"
+    severity: "critical"
+    trigger_keywords:
+      - "hydraulic leak"
+      - "pinhole"
+      - "pinhole leak"
+      - "high-pressure line"
+      - "fluid injection"
+      - "hose check"
+    required_step_patterns:
+      - "cardboard"
+      - "depressuri[sz]e"
+      - "eye.*protection"
+      - "safety.*glasses"
+      - "cardboard.*test"
+    negative_step_patterns:
+      - "check.*(leak|fitting|hose).*with.*(hand|finger|bare)"
+      - "feel.*for.*leak"
+      - "run.*hand.*along"
+    message: "Never check for hydraulic leaks with bare hands or fingers; use cardboard, depressurise first, and wear eye protection."
+
+  # H11: Sharp swarf / hot chips
+  - id: "SR-H11"
+    hazard_id: "H11"
+    name: "Sharp swarf / hot chips"
+    severity: "medium"
+    trigger_keywords:
+      - "swarf"
+      - "metal chips"
+      - "shavings"
+      - "turnings"
+      - "lathe bed"
+      - "chip conveyor"
+    required_step_patterns:
+      - "hook"
+      - "brush"
+      - "rake"
+      - "cut-resistant.*glove"
+      - "eye.*protection"
+    negative_step_patterns:
+      - "(clear|pull|remove|grab).*(swarf|chips).*bare.*hand"
+      - "bare.*hands"
+      - "sweep.*with.*hands"
+    message: "Use hooks, rakes or brushes, not bare hands; wear cut-resistant gloves and safety glasses."
+
+  # H12: Suspended / gravity load
+  - id: "SR-H12"
+    hazard_id: "H12"
+    name: "Suspended / gravity load"
+    severity: "critical"
+    trigger_keywords:
+      - "ram"
+      - "platen"
+      - "counterweight"
+      - "suspended load"
+      - "vertical slide"
+      - "press head"
+    required_step_patterns:
+      - "safety.*block"
+      - "mechanical.*block"
+      - "support.*mechanically"
+      - "lock.*pin"
+    negative_step_patterns:
+      - "walk.*beneath"
+      - "work.*under.*without.*block"
+      - "reach.*under.*unsupported"
+      - "stand.*under.*ram"
+    message: "Support the ram/platen/load mechanically with certified safety blocks before working beneath."
+
+  # H13: Residual capacitor / drive voltage
+  - id: "SR-H13"
+    hazard_id: "H13"
+    name: "Residual capacitor / drive voltage"
+    severity: "critical"
+    trigger_keywords:
+      - "capacitor"
+      - "dc bus"
+      - "vfd"
+      - "inverter"
+      - "servo drive"
+      - "variable frequency drive"
+    required_step_patterns:
+      - "wait.*discharge"
+      - "discharge.*time"
+      - "measure.*dc.*bus"
+      - "verify.*0 ?v"
+      - "zero.*volts"
+      - "multimeter"
+    negative_step_patterns:
+      - "touch.*(dc bus|terminals).*immediately"
+      - "skip.*discharge"
+      - "without.*measuring.*dc"
+    message: "Wait drive discharge time and measure DC bus voltage (verify 0V) before touching drive/motor terminals."
+
+  # H14: Pressure vessel / safety valve integrity
+  - id: "SR-H14"
+    hazard_id: "H14"
+    name: "Pressure vessel / safety valve integrity"
+    severity: "critical"
+    trigger_keywords:
+      - "safety valve"
+      - "relief valve"
+      - "plug safety valve"
+      - "adjust safety valve"
+      - "gag safety valve"
+    required_step_patterns: []
+    negative_step_patterns:
+      - "plug.*(safety|relief).*valve"
+      - "gag.*(safety|relief).*valve"
+      - "raise.*pressure.*beyond"
+      - "bypass.*relief"
+      - "tamper.*with.*valve"
+    message: "Never plug, gag, or tamper with a safety relief valve; never exceed vessel rated pressure."
+
+  # H15: Bypassed safety device
+  - id: "SR-H15"
+    hazard_id: "H15"
+    name: "Bypassed safety device"
+    severity: "critical"
+    trigger_keywords:
+      - "bypass interlock"
+      - "jumper interlock"
+      - "override safety"
+      - "defeat light curtain"
+      - "bypass safety"
+    required_step_patterns: []
+    negative_step_patterns:
+      - "bypass.*(interlock|curtain|e-stop|switch|guard)"
+      - "jumper.*(interlock|curtain|sensor|switch)"
+      - "defeat.*(interlock|curtain|sensor)"
+      - "tape.*over.*(switch|sensor|interlock)"
+      - "override.*safety"
+    message: "Never bypass, jumper, or defeat an interlock, light curtain, or emergency stop."
+
+  # H16: Water near live electrics
+  - id: "SR-H16"
+    hazard_id: "H16"
+    name: "Water near live electrics"
+    severity: "critical"
+    trigger_keywords:
+      - "water"
+      - "washdown"
+      - "flood"
+      - "leak near electrical"
+      - "wet panel"
+      - "coolant on electrical"
+    required_step_patterns:
+      - "isolate.*supply"
+      - "lock\\s*out"
+      - "loto"
+      - "dry.*area"
+      - "de-?energi[sz]e.*before"
+    negative_step_patterns:
+      - "mop.*energi[sz]ed"
+      - "clean.*water.*live"
+      - "wipe.*wet.*panel.*live"
+    message: "Isolate electrical supply before dealing with water leaks or pooling near electrical equipment."
+
+  # ============================================================================
+  # Cross-Cutting Rules (SR-X01 to SR-X04)
+  # ============================================================================
+
+  # SR-X01: High energy threshold (>50V or >10 bar without LOTO/depressurisation)
+  - id: "SR-X01"
+    hazard_id: null
+    name: "High energy threshold control"
+    severity: "critical"
+    trigger_keywords:
+      - "> 50 v"
+      - ">50v"
+      - "400v"
+      - "415v"
+      - "230v"
+      - "high voltage"
+      - "> 10 bar"
+      - ">10bar"
+      - "> 15 bar"
+      - "120 bar"
+      - "high pressure"
+    required_step_patterns:
+      - "lock\\s*out"
+      - "tag\\s*out"
+      - "loto"
+      - "isolate"
+      - "depressuri[sz]e"
+      - "bleed"
+    negative_step_patterns:
+      - "work.*live"
+      - "open.*pressuri[sz]ed"
+      - "skip.*(loto|lock\\s*out|isolation|depressurisation)"
+    message: "Energies exceeding 50 V or 10 bar require full LOTO / positive isolation and energy dissipation."
+
+  # SR-X02: Guard or interlock bypass prohibition
+  - id: "SR-X02"
+    hazard_id: null
+    name: "Safety interlock tampering prohibition"
+    severity: "critical"
+    trigger_keywords:
+      - "bypass"
+      - "jumper"
+      - "defeat"
+      - "tape over"
+      - "disable sensor"
+    required_step_patterns: []
+    negative_step_patterns:
+      - "(bypass|jumper|defeat|tape over|disable).*(interlock|guard|sensor|curtain|e-stop|switch|circuit)"
+    message: "Bypassing safety guards, sensors, interlocks, or emergency stops is strictly prohibited."
+
+  # SR-X03: Moving parts zero-speed verification
+  - id: "SR-X03"
+    hazard_id: null
+    name: "Moving parts zero-speed verification"
+    severity: "critical"
+    trigger_keywords:
+      - "moving parts"
+      - "rotating"
+      - "spindle"
+      - "conveyor"
+      - "rollers"
+      - "drive belt"
+    required_step_patterns:
+      - "zero.*speed"
+      - "full.*stop"
+      - "stop.*rotation"
+      - "lock\\s*out"
+      - "power.*off"
+      - "e-?stop"
+    negative_step_patterns:
+      - "reach.*in.*while.*(moving|spinning|coasting|running)"
+      - "service.*running.*mechanism"
+    message: "Working on moving mechanisms requires verified zero-speed and complete cessation of motion."
+
+  # SR-X04: Unknown hazard class review
+  - id: "SR-X04"
+    hazard_id: null
+    name: "Unknown hazard class mandatory escalation"
+    severity: "critical"
+    trigger_keywords:
+      - "unknown hazard"
+      - "unclassified"
+      - "unrecognized hazard"
+    required_step_patterns:
+      - "supervisor.*review"
+      - "safety.*officer"
+    negative_step_patterns: []
+    message: "Unrecognised or unclassified hazard detected; mandatory supervisor review required before approval."
