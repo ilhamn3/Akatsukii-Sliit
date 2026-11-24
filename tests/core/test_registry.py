@@ -41,7 +41,7 @@ def test_build_and_run_two_agent_graph(tmp_path):
     assert len(final_state["messages"]) >= 2
     senders = [m["sender"] for m in final_state["messages"]]
     assert "DiagnosticAgent" in senders
-    assert "DummySafetyAgent" in senders
+    assert any(s in senders for s in ("SafetyAgent", "DummySafetyAgent"))
 
 
 def test_add_third_agent_via_config_only(tmp_path):
@@ -61,10 +61,11 @@ def test_add_third_agent_via_config_only(tmp_path):
     }
     custom_cfg["pipelines"]["B"]["agents"].append(audit_agent_entry)
 
-    # Rewire edges: Diagnostic -> Safety -> Audit -> END
+    # Rewire edges: Diagnostic -> SecondAgent -> Audit -> END
+    second_agent = custom_cfg["pipelines"]["B"]["agents"][1]["name"]
     custom_cfg["pipelines"]["B"]["edges"] = [
-        {"from": "DiagnosticAgent", "to": "DummySafetyAgent"},
-        {"from": "DummySafetyAgent", "to": "DummyAuditAgent"},
+        {"from": "DiagnosticAgent", "to": second_agent},
+        {"from": second_agent, "to": "DummyAuditAgent"},
         {"from": "DummyAuditAgent", "to": "__end__"},
     ]
 
@@ -94,8 +95,18 @@ def test_stub_agent_trace_flag_and_pipeline_detection(tmp_path):
     assert diag.is_stub is True, "DummyDiagnosticAgent must have is_stub=True"
     assert safety.is_stub is True, "DummySafetyAgent must have is_stub=True"
 
-    # Verify pipeline detection
-    assert is_pipeline_stub("B") is True, "Pipeline B with dummy agents must be flagged as stub"
+    # Verify pipeline detection: real pipeline B is not stub, but stub config override is flagged
+    assert is_pipeline_stub("B") is False, "Production Pipeline B with DiagnosticAgent and SafetyAgent is not stub"
+    stub_override = {
+        "pipelines": {
+            "B": {
+                "agents": [
+                    {"name": "DummySafetyAgent", "module": "project.core.stubs.dummy_agents", "stub": True, "enabled": True}
+                ]
+            }
+        }
+    }
+    assert is_pipeline_stub("B", config_override=stub_override) is True, "Stub pipeline override must be flagged"
 
     # Test trace log entries contain 'stub': True
     log_file = tmp_path / "stub_trace.jsonl"

@@ -40,6 +40,7 @@ class GeminiLLMClient(LLMClient):
         self,
         api_key: Optional[str] = None,
         model: Optional[str] = None,
+        thinking: Optional[str] = None,
         temperature: float = 0.0,
         timeout: Optional[float] = None,
         max_retries: int = 3,
@@ -48,6 +49,7 @@ class GeminiLLMClient(LLMClient):
         if not self.api_key or self.api_key.startswith("your_"):
             raise ValueError("GEMINI_API_KEY is unset or default template in environment.")
         self.model = model or os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip()
+        self.thinking = thinking
         self.model_name = f"gemini:{self.model}"
         self.temperature = float(os.getenv("TEMPERATURE", str(temperature)))
 
@@ -75,7 +77,7 @@ class GeminiLLMClient(LLMClient):
         )
 
     def _get_thinking_config(self) -> Optional[Any]:
-        thinking_env = os.getenv("GEMINI_THINKING", "").strip().lower()
+        thinking_env = (self.thinking or os.getenv("GEMINI_THINKING", "")).strip().lower()
         if not thinking_env or thinking_env == "default":
             return None
         from google.genai import types
@@ -424,6 +426,61 @@ class FakeLLM(LLMClient):
                     ],
                 })
 
+        if response_model.__name__ in ("SafetyReviewOutput", "LLMSafetyReview"):
+            p_lower = prompt.lower()
+            if (
+                "without releasing pressure" in p_lower
+                or "skip lockout" in p_lower
+                or "panel live" in p_lower
+                or "still coasting" in p_lower
+                or "bypass" in p_lower
+                or "bare hand" in p_lower
+                or "boiling oil" in p_lower
+                or "pressurised line" in p_lower
+                or "plug safety valve" in p_lower
+                or "unrecognised hazard" in p_lower
+                or "unknown hazard" in p_lower
+            ):
+                return response_model.model_validate({
+                    "is_safe": False,
+                    "verdict": "veto",
+                    "concerns": ["Dangerous shortcut detected in maintenance steps."],
+                    "suggested_amendments": ["Apply Lockout/Tagout and verify zero energy before intervention."],
+                    "reason": "Simulated FakeLLM safety check identified critical hazard.",
+                })
+            elif "misordered" in p_lower or "ordering" in p_lower:
+                return response_model.model_validate({
+                    "is_safe": False,
+                    "verdict": "amend",
+                    "concerns": ["Control step ordering requires adjustment."],
+                    "suggested_amendments": ["Relocate safety isolation step to the beginning of the procedure."],
+                    "reason": "Simulated FakeLLM safety check recommends control sequence adjustment.",
+                })
+            else:
+                return response_model.model_validate({
+                    "is_safe": True,
+                    "verdict": "approve",
+                    "concerns": [],
+                    "suggested_amendments": [],
+                    "reason": "Simulated FakeLLM safety check: Procedure satisfies standard safety controls.",
+                })
+
+        if response_model.__name__ == "SafetyVerdict":
+            p_lower = prompt.lower()
+            if "veto" in p_lower or "danger" in p_lower:
+                return response_model.model_validate({
+                    "verdict": "veto",
+                    "reason": "Simulated safety veto by FakeLLM.",
+                    "rule_ids": ["SR-H01"],
+                    "suggested_amendments": ["Depressurise system before opening."],
+                })
+            return response_model.model_validate({
+                "verdict": "approve",
+                "reason": "Simulated safety approval by FakeLLM.",
+                "rule_ids": [],
+                "suggested_amendments": [],
+            })
+
         # Generic default model creation
         try:
             return response_model.model_validate({})
@@ -431,11 +488,15 @@ class FakeLLM(LLMClient):
             raise NotImplementedError(f"FakeLLM does not have a default simulation for {response_model.__name__}.")
 
 
-def get_llm(force_fake: Optional[bool] = None) -> LLMClient:
+def get_llm(
+    force_fake: Optional[bool] = None,
+    model: Optional[str] = None,
+    thinking: Optional[str] = None,
+) -> LLMClient:
     """Return configured LLMClient based on LLM_PROVIDER env var.
 
     Providers supported:
-      - 'gemini' (reads GEMINI_API_KEY, GEMINI_MODEL)
+      - 'gemini' (reads GEMINI_API_KEY, GEMINI_MODEL, GEMINI_THINKING)
       - 'openai' (reads OPENAI_API_KEY, PRIMARY_LLM_MODEL)
 
     Raises ValueError if provider API key is missing/unset unless force_fake or
@@ -456,7 +517,7 @@ def get_llm(force_fake: Optional[bool] = None) -> LLMClient:
         key = os.getenv("GEMINI_API_KEY", "").strip()
         if key and not key.startswith("your_"):
             try:
-                return GeminiLLMClient(api_key=key)
+                return GeminiLLMClient(api_key=key, model=model, thinking=thinking)
             except Exception:
                 if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
                     return FakeLLM()
@@ -469,11 +530,14 @@ def get_llm(force_fake: Optional[bool] = None) -> LLMClient:
         key = os.getenv("OPENAI_API_KEY", "").strip()
         if key and not key.startswith("your_"):
             try:
-                return OpenAILLMClient(api_key=key)
+                return OpenAILLMClient(api_key=key, model=model)
             except Exception:
                 if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
                     return FakeLLM()
                 raise
+        if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
+            return FakeLLM()
+        raise ValueError("OPENAI_API_KEY not set; set it in .env, or pass --fake-llm for offline demo")
         if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
             return FakeLLM()
         raise ValueError("OPENAI_API_KEY not set; set it in .env, or pass --fake-llm for offline demo")

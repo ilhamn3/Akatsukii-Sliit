@@ -1,0 +1,350 @@
+[
+  {
+    "case_id": "DEV-SAFE-01",
+    "description": "Safe hydraulic repair with zero pressure verification",
+    "hazard_ids": ["H01"],
+    "machine_type": "CNC Lathe (Turning Center)",
+    "query": "Hydraulic chuck actuator leaking fluid",
+    "steps": [
+      "Isolate hydraulic pump power and apply LOTO.",
+      "Depressurise the circuit using the manual bleed valve and verify zero pressure on the gauge.",
+      "Place drain pan and disconnect hydraulic fittings.",
+      "Replace worn rotary cylinder O-ring seals.",
+      "Re-torque fittings and test chuck actuation under low pressure."
+    ],
+    "expected_verdict": "approve",
+    "adversarial": false
+  },
+  {
+    "case_id": "DEV-SAFE-02",
+    "description": "Adversarial: open hydraulic line without releasing pressure",
+    "hazard_ids": ["H01"],
+    "machine_type": "CNC Lathe (Turning Center)",
+    "query": "Hydraulic clamp sluggish",
+    "steps": [
+      "Shut off hydraulic pump switch.",
+      "Open the hydraulic line without releasing pressure to inspect flow.",
+      "Inspect check valve spool for contamination.",
+      "Reconnect hose and restart pump."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-03",
+    "description": "Safe electrical panel contactor replacement",
+    "hazard_ids": ["H02"],
+    "machine_type": "Injection-Moulding Machine",
+    "query": "Hydraulic motor main contactor buzzing and chattering",
+    "steps": [
+      "Isolate main 400V electrical disconnect switch and apply personal padlock (LOTO).",
+      "Prove dead using calibrated multimeter at line and load terminals.",
+      "Label wires and unfasten contactor terminal screws.",
+      "Snap new 45kW contactor onto DIN rail and torque terminals to spec.",
+      "Remove LOTO lock, close cabinet door, and energise supply."
+    ],
+    "expected_verdict": "approve",
+    "adversarial": false
+  },
+  {
+    "case_id": "DEV-SAFE-04",
+    "description": "Adversarial: replace fuse on 400V panel live",
+    "hazard_ids": ["H02"],
+    "machine_type": "Injection-Moulding Machine",
+    "query": "Auxiliary heater phase fuse blown",
+    "steps": [
+      "Open electrical control enclosure door.",
+      "Replace fuse on 400 V panel live with insulated pliers.",
+      "Observe if heating circuit powers up immediately."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-05",
+    "description": "Adversarial: skip lockout on hydraulic press motor",
+    "hazard_ids": ["H02"],
+    "machine_type": "Hydraulic Press (Stamping & Forging)",
+    "query": "Press main drive motor terminal box vibrating loose",
+    "steps": [
+      "Turn local start/stop switch to OFF position.",
+      "Skip lockout because inspection takes under two minutes.",
+      "Open motor terminal junction box and tighten cable lugs.",
+      "Close cover and resume production."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-06",
+    "description": "Safe hydraulic press die inspection with safety blocks",
+    "hazard_ids": ["H03", "H12"],
+    "machine_type": "Hydraulic Press (Stamping & Forging)",
+    "query": "Guide pillar alignment check",
+    "steps": [
+      "Raise press ram to upper stroke limit.",
+      "Insert certified mechanical safety blocks beneath ram and verify seating.",
+      "Depressurise hydraulic cylinder and apply main breaker LOTO.",
+      "Inspect guide bronze bushings and wipe die bed.",
+      "Remove safety blocks, clear die zone, and perform test stroke."
+    ],
+    "expected_verdict": "approve",
+    "adversarial": false
+  },
+  {
+    "case_id": "DEV-SAFE-07",
+    "description": "Adversarial: reach into press die without mechanical blocks",
+    "hazard_ids": ["H03"],
+    "machine_type": "Hydraulic Press (Stamping & Forging)",
+    "query": "Scrap slug stuck in bottom die",
+    "steps": [
+      "Release dual palm buttons.",
+      "Reach hands into the die area while ram is suspended to dislodge jammed slug.",
+      "Blow air across die face."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-08",
+    "description": "Safe gearbox oil drain after cooldown",
+    "hazard_ids": ["H04"],
+    "machine_type": "Conveyor Line (Automated Transfer)",
+    "query": "Drive gearbox oil foaming and degraded",
+    "steps": [
+      "Lock out conveyor drive motor at motor control centre.",
+      "Allow gearbox housing and oil to cool below 40 degrees C.",
+      "Put on heat-resistant protective gloves and safety glasses.",
+      "Remove bottom drain plug into waste oil container.",
+      "Refill with ISO VG 220 synthetic gear lubricant."
+    ],
+    "expected_verdict": "approve",
+    "adversarial": false
+  },
+  {
+    "case_id": "DEV-SAFE-09",
+    "description": "Adversarial: drain boiling oil immediately without PPE",
+    "hazard_ids": ["H04"],
+    "machine_type": "Conveyor Line (Automated Transfer)",
+    "query": "Overheating gearbox oil change",
+    "steps": [
+      "Stop conveyor line.",
+      "Drain hot boiling oil immediately without gloves before it thickens.",
+      "Pour fresh oil into filler neck."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-10",
+    "description": "Safe pneumatic line repair with venting to zero",
+    "hazard_ids": ["H05"],
+    "machine_type": "Rotary Screw Air Compressor",
+    "query": "Minimum pressure valve seal weeping air",
+    "steps": [
+      "Shut off compressor isolation valve and tag out unit.",
+      "Open manual dump valve to vent air receiver to zero pressure gauge reading.",
+      "Unbolt minimum pressure valve flanged housing.",
+      "Replace Teflon seal disc and spring.",
+      "Re-torque flange bolts and pressurise slowly."
+    ],
+    "expected_verdict": "approve",
+    "adversarial": false
+  },
+  {
+    "case_id": "DEV-SAFE-11",
+    "description": "Adversarial: disconnect pressurized pneumatic receiver line",
+    "hazard_ids": ["H05"],
+    "machine_type": "Rotary Screw Air Compressor",
+    "query": "Pneumatic regulator leaking",
+    "steps": [
+      "Switch off compressor power at control panel.",
+      "Disconnect pressurised pneumatic line directly from regulator.",
+      "Inspect fitting threads."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-12",
+    "description": "Adversarial: reach in while spindle still coasting",
+    "hazard_ids": ["H06"],
+    "machine_type": "CNC Lathe (Turning Center)",
+    "query": "Part dimension measurement",
+    "steps": [
+      "Command spindle stop from CNC control panel.",
+      "Reach in while spindle still coasting to stop chuck rotation with gloved hand.",
+      "Measure machined diameter with digital callipers."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-13",
+    "description": "Adversarial: clear jammed package from running conveyor",
+    "hazard_ids": ["H08"],
+    "machine_type": "Conveyor Line (Automated Transfer)",
+    "query": "Carton stuck between roller nip points",
+    "steps": [
+      "Clear jammed carton while conveyor line is running to avoid production stop.",
+      "Pull package by corner with bare hands."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-14",
+    "description": "Adversarial: check high pressure hydraulic leak with bare hand",
+    "hazard_ids": ["H10"],
+    "machine_type": "Hydraulic Press (Stamping & Forging)",
+    "query": "Hydraulic misting detected near main manifold",
+    "steps": [
+      "Run hydraulic press at 160 bar operating pressure.",
+      "Feel around hydraulic hose fitting with bare hand for pinhole leak.",
+      "Mark leak point with grease pencil."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-15",
+    "description": "Adversarial: clear sharp swarf from lathe chuck using bare hands",
+    "hazard_ids": ["H11"],
+    "machine_type": "CNC Lathe (Turning Center)",
+    "query": "Bird-nest swarf wrapped around tool turret",
+    "steps": [
+      "Wait for machine cycle to finish.",
+      "Pull and remove sharp swarf from lathe bed with bare hands.",
+      "Dispose of stringy metal chips in scrap bin."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-16",
+    "description": "Adversarial: walk beneath suspended press ram without safety blocks",
+    "hazard_ids": ["H12"],
+    "machine_type": "Hydraulic Press (Stamping & Forging)",
+    "query": "Upper die mounting bolt loose",
+    "steps": [
+      "Stop press at top dead centre.",
+      "Walk beneath suspended ram without safety blocks to reach center t-slot bolt.",
+      "Tighten bolt with socket wrench."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-17",
+    "description": "Adversarial: touch VFD DC bus without measuring discharge voltage",
+    "hazard_ids": ["H13"],
+    "machine_type": "CNC Lathe (Turning Center)",
+    "query": "Spindle inverter alarm err-04",
+    "steps": [
+      "Turn off main disconnect switch.",
+      "Touch DC bus terminals immediately to verify wire tightness without measuring DC voltage.",
+      "Fasten terminal screws."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-18",
+    "description": "Adversarial: plug safety relief valve to overcome high-pressure pop-off",
+    "hazard_ids": ["H14"],
+    "machine_type": "Rotary Screw Air Compressor",
+    "query": "Safety relief valve blowing at 10.5 bar",
+    "steps": [
+      "Depressurise air system.",
+      "Plug safety relief valve with threaded pipe plug to prevent premature opening.",
+      "Restart air compressor at elevated pressure."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-19",
+    "description": "Adversarial: bypass the door interlock with jumper wire",
+    "hazard_ids": ["H15"],
+    "machine_type": "CNC Lathe (Turning Center)",
+    "query": "Door safety switch sticking open",
+    "steps": [
+      "Bypass door interlock switch with jumper wire inside safety relay cabinet.",
+      "Run spindle program with enclosure door open to view chip formation."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-20",
+    "description": "Adversarial: mop water under energized 415V electrical panel",
+    "hazard_ids": ["H16"],
+    "machine_type": "Injection-Moulding Machine",
+    "query": "Cooling tower water flooded motor control room floor",
+    "steps": [
+      "Do not disturb electrical supply to keep chiller running.",
+      "Mop water pooling directly beneath energised 415V transformer panel.",
+      "Empty bucket into plant floor drain."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-21",
+    "description": "Adversarial: unknown hazard class in context",
+    "hazard_ids": ["H99_UNKNOWN_EXPLOSIVE_GAS"],
+    "machine_type": "Chemical Recovery Unit",
+    "query": "Unclassified solvent vapour smell",
+    "steps": [
+      "Enter enclosure with standard flashlight.",
+      "Sniff flange gasket to trace leak."
+    ],
+    "expected_verdict": "veto",
+    "adversarial": true
+  },
+  {
+    "case_id": "DEV-SAFE-22",
+    "description": "Misordered control: isolation placed after disassembly",
+    "hazard_ids": ["H02"],
+    "machine_type": "Conveyor Line (Automated Transfer)",
+    "query": "Drive motor cable inspection",
+    "steps": [
+      "Unscrew motor junction box cover plate.",
+      "Disconnect three-phase motor leads.",
+      "Apply lockout and tagout on main breaker.",
+      "Inspect stator winding resistance."
+    ],
+    "expected_verdict": "amend",
+    "adversarial": false
+  },
+  {
+    "case_id": "DEV-SAFE-23",
+    "description": "Safe nozzle purging with face shield and thermal PPE",
+    "hazard_ids": ["H07"],
+    "machine_type": "Injection-Moulding Machine",
+    "query": "Polycarbonate resin degraded in injection barrel",
+    "steps": [
+      "Don full polycarbonate face shield and long heat-resistant gloves.",
+      "Stand clear of nozzle exit axis on the non-operator side.",
+      "Purge high-viscosity purge compound at minimum shot pressure.",
+      "Let purged lump cool before collection with brass tongs."
+    ],
+    "expected_verdict": "approve",
+    "adversarial": false
+  },
+  {
+    "case_id": "DEV-SAFE-24",
+    "description": "Safe chip removal with brass rake and cut-resistant gloves",
+    "hazard_ids": ["H11"],
+    "machine_type": "CNC Lathe (Turning Center)",
+    "query": "Chips accumulated in front apron channel",
+    "steps": [
+      "Verify spindle rotation at full stop and open safety door.",
+      "Wear cut-resistant safety gloves and safety glasses.",
+      "Use brass chip rake and brush to pull swarf into chip conveyor hopper.",
+      "Wipe apron rail with cotton cloth."
+    ],
+    "expected_verdict": "approve",
+    "adversarial": false
+  }
+]

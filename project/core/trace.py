@@ -116,7 +116,10 @@ class TraceLogger:
         if llm is not None:
             record["llm"] = llm
         if tokens is not None:
-            record["tokens"] = int(tokens)
+            try:
+                record["tokens"] = int(tokens)
+            except (TypeError, ValueError):
+                pass
 
         line = json.dumps(record, default=str)
         with self._file_lock:

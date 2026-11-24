@@ -31,13 +31,13 @@ pipelines:
         stub: false
         order: 1
 
-      - name: "DummySafetyAgent"
-        role: "Safety verification and veto loop"
+      - name: "SafetyAgent"
+        role: "Deterministic safety rule verification and LLM oversight"
         pipeline: "B"
-        module: "project.core.stubs.dummy_agents"
-        class: "DummySafetyAgent"
+        module: "project.agents.a7_safety"
+        class: "SafetyAgent"
         enabled: true
-        stub: true
+        stub: false
         order: 2
 
     # Graph edge definitions (src -> dst). Use '__end__' to terminate.
@@ -46,8 +46,8 @@ pipelines:
       - from: "DiagnosticAgent"
         condition: "check_clarification"
         on_true: "__end__"
-        on_false: "DummySafetyAgent"
-      - from: "DummySafetyAgent"
+        on_false: "SafetyAgent"
+      - from: "SafetyAgent"
         to: "__end__"
 
   # Pipeline A produces an unverified extraction draft; A3 validation follows in K4.
