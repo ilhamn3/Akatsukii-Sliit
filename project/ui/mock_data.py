@@ -26,7 +26,7 @@ def mock_answer(query: str) -> dict:
         "answer": "Most likely cause: worn hydraulic seal.\n\n"
                   "Steps: 1) Lock out the machine. 2) Check the seal. 3) Replace it.",
         "confidence": 0.82,
-        "safety_verdict": "NOT CHECKED",
+        "safety_verdict": "NOT CHECKED(mock)",
         "citations": ["REP-014", "REP-102"],
     }
 
