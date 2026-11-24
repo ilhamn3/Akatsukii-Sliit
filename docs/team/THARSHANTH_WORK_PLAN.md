@@ -174,6 +174,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
-| #TBD | 25 Nov | [WP8] Consent form and human-study protocol | 8.1 (0->75%), 2.1 (75->100%) | Consent form template, full protocol (packets, session script, timing, CSV formats, anonymisation and blind-grading steps), private/ folder git-ignored. 2.1 to 100%: #6 merged and the Safety agent loads hazards.json | 11% -> 19% (42% once T2 and T3 merge) | Kajanan K |
+| #18 | 25 Nov | [WP8] Consent form and human-study protocol | 8.1 (0->75%), 2.1 (75->100%) | Consent form template, full protocol (packets, session script, timing, CSV formats, anonymisation and blind-grading steps), private/ folder git-ignored. 2.1 to 100%: #6 merged and the Safety agent loads hazards.json | 11% -> 19% (42% once T2 and T3 merge) | Kajanan K |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
