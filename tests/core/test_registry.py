@@ -95,18 +95,20 @@ def test_stub_agent_trace_flag_and_pipeline_detection(tmp_path):
     assert diag.is_stub is True, "DummyDiagnosticAgent must have is_stub=True"
     assert safety.is_stub is True, "DummySafetyAgent must have is_stub=True"
 
-    # Verify pipeline detection: real pipeline B is not stub, but stub config override is flagged
-    assert is_pipeline_stub("B") is False, "Production Pipeline B with DiagnosticAgent and SafetyAgent is not stub"
-    stub_override = {
+    # Verify pipeline detection: pipeline B contains DummyOrchestratorAgent so is_pipeline_stub is True;
+    # a pipeline with only real agents returns False.
+    assert is_pipeline_stub("B") is True, "Pipeline B with DummyOrchestratorAgent must be flagged as stub"
+    real_override = {
         "pipelines": {
             "B": {
                 "agents": [
-                    {"name": "DummySafetyAgent", "module": "project.core.stubs.dummy_agents", "stub": True, "enabled": True}
+                    {"name": "DiagnosticAgent", "module": "project.agents.a5_diagnostic", "stub": False, "enabled": True},
+                    {"name": "SafetyAgent", "module": "project.agents.a7_safety", "stub": False, "enabled": True},
                 ]
             }
         }
     }
-    assert is_pipeline_stub("B", config_override=stub_override) is True, "Stub pipeline override must be flagged"
+    assert is_pipeline_stub("B", config_override=real_override) is False, "Pipeline with only real agents must not be stub"
 
     # Test trace log entries contain 'stub': True
     log_file = tmp_path / "stub_trace.jsonl"

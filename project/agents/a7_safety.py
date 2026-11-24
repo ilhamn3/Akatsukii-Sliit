@@ -74,8 +74,8 @@ class SafetyAgent(BaseAgent):
         # 1. Initialize Deterministic Rule Engine
         self.rule_engine = rule_engine or RuleEngine()
 
-        # 2. Initialize Faults Catalogue for hazard mapping
-        self.faults_map: Dict[str, Dict[str, Any]] = {}
+        # 2. Initialize Faults Catalogue strictly for hazard mapping (NEVER for steps)
+        self.faults_hazard_map: Dict[str, List[str]] = {}
         f_path = Path(faults_json_path or DEFAULT_FAULTS_JSON)
         if f_path.exists():
             try:
@@ -83,11 +83,12 @@ class SafetyAgent(BaseAgent):
                     fault_entries = json.load(f)
                     for fe in fault_entries:
                         fid = fe.get("fault_id")
+                        hazards = fe.get("hazards", [])
                         if fid:
-                            self.faults_map[fid.lower()] = fe
-                            self.faults_map[fe.get("name", "").lower()] = fe
+                            self.faults_hazard_map[fid.lower()] = list(hazards)
+                            self.faults_hazard_map[fe.get("name", "").lower()] = list(hazards)
             except Exception as e:
-                logger.warning("Could not index faults.json: %s", e)
+                logger.warning("Could not index hazards from faults.json: %s", e)
 
         # 3. Resolve LLM client (with per-agent model override support)
         if llm_client is not None:
@@ -104,16 +105,16 @@ class SafetyAgent(BaseAgent):
                 self.llm_client = None
 
     def _extract_fault_hazards(self, hypothesis: Dict[str, Any], query: str) -> List[str]:
-        """Extract hazard IDs associated with the fault from catalogue."""
+        """Extract hazard IDs associated with the fault from catalogue (hazards field only)."""
         hazards: List[str] = []
         fid = hypothesis.get("fault_id")
-        if fid and str(fid).lower() in self.faults_map:
-            hazards.extend(self.faults_map[str(fid).lower()].get("hazards", []))
+        if fid and str(fid).lower() in self.faults_hazard_map:
+            hazards.extend(self.faults_hazard_map[str(fid).lower()])
 
         fault_desc = hypothesis.get("fault", "").lower()
-        for k, v in self.faults_map.items():
+        for k, h_list in self.faults_hazard_map.items():
             if k in fault_desc or k in query.lower():
-                for h in v.get("hazards", []):
+                for h in h_list:
                     if h not in hazards:
                         hazards.append(h)
         return hazards
@@ -125,22 +126,60 @@ class SafetyAgent(BaseAgent):
         hypothesis = state.get("selected_hypothesis") or {}
         fault_desc = hypothesis.get("fault", "Unspecified fault")
 
-        # 1. Extract candidate repair steps
+        # 1. Candidate steps must come ONLY from state (never generated, never from faults.json)
         candidate_steps: List[Any] = state.get("candidate_steps") or []
+
+        # If there are no candidate steps in state, explicitly reject/abstain
         if not candidate_steps:
-            # Fallback: check if valid fixes are available in fault catalogue for demonstration
-            fid = hypothesis.get("fault_id")
-            if fid and str(fid).lower() in self.faults_map:
-                candidate_steps = self.faults_map[str(fid).lower()].get("valid_fixes", [])
-            elif fault_desc in self.faults_map:
-                candidate_steps = self.faults_map[fault_desc].get("valid_fixes", [])
-            else:
-                # Default baseline steps to inspect
-                candidate_steps = [
-                    f"Perform initial safety lockout and physical inspection for {fault_desc}",
-                    "Inspect affected mechanical and electrical subassemblies",
-                    "Replace worn components and confirm machine calibration under load",
-                ]
+            current_loop = state.get("safety_loop_count", 0) + 1
+            verdict_obj = SafetyVerdict(
+                verdict="veto",
+                reason="no candidate steps to verify",
+                rule_ids=[],
+                suggested_amendments=None,
+            )
+            final_answer_obj = FinalAnswer(
+                machine_type=machine_type,
+                symptoms=[raw_query],
+                diagnosed_cause=fault_desc,
+                steps=[],
+                safety_warnings=["NO STEPS TO VERIFY: Candidate step list is empty; safety verification cannot proceed."],
+                abstained=True,
+                abstention_reason="no candidate steps to verify",
+                escalated=False,
+                trace_id=state.get("trace_id", "TR-UNKNOWN"),
+            )
+            output_digest = {
+                "verdict": "veto",
+                "rule_ids": [],
+                "reason": "no candidate steps to verify",
+                "safety_approved": "False",
+                "safety_loop_count": current_loop,
+                "escalated_to_supervisor": "False",
+                "llm_check": "skipped",
+                "llm_model": getattr(self.llm_client, "model_name", "none") if self.llm_client else "none",
+            }
+            if self.trace_logger:
+                self.trace_logger.log(
+                    trace_id=state.get("trace_id", "TR-DEV"),
+                    session_id=state.get("session_id", "SES-DEV"),
+                    agent=self.name,
+                    stub=False,
+                    event="AGENT_COMPLETED",
+                    input_data={"query": raw_query, "machine": machine_type},
+                    output_data=output_digest,
+                    decision="NO_STEPS_TO_VERIFY",
+                    llm=None,
+                )
+            return {
+                "safety_approved": False,
+                "safety_violations": ["Missing candidate steps: SafetyAgent cannot verify an empty procedure."],
+                "safety_loop_count": current_loop,
+                "escalated_to_supervisor": False,
+                "safety_verdict": verdict_obj.model_dump(),
+                "final_answer": final_answer_obj.model_dump(),
+                "decision": "NO_STEPS_TO_VERIFY",
+            }
 
         # 2. Extract context hazards
         context_hazards = list(state.get("hazard_ids") or [])
@@ -255,21 +294,43 @@ class SafetyAgent(BaseAgent):
         is_approved = final_verdict == "approve"
         escalate = (final_verdict == "veto" and current_loop >= max_loops) or ("SR-X04" in all_rule_ids)
 
-        # Format ActionSteps
-        norm_steps_list = self.rule_engine._normalize_steps(candidate_steps)
+        # Format ActionSteps - preserve original step text and upstream evidence_ids strictly
         action_steps: List[ActionStep] = []
         if is_approved:
-            for i, st in enumerate(norm_steps_list, 1):
+            for i, st in enumerate(candidate_steps, 1):
+                if isinstance(st, dict):
+                    instruction = str(st.get("instruction") or st.get("action") or "").strip()
+                    ev_ids = list(st.get("evidence_ids") or [])
+                elif isinstance(st, ActionStep):
+                    instruction = st.instruction.strip()
+                    ev_ids = list(st.evidence_ids)
+                else:
+                    instruction = str(st).strip()
+                    ev_ids = []
                 action_steps.append(
-                    ActionStep(step_number=i, instruction=st, evidence_ids=[f"EV-STEP-{i:02d}"])
+                    ActionStep(step_number=i, instruction=instruction, evidence_ids=ev_ids)
                 )
         elif final_verdict == "amend":
-            # Prepend or include suggested amendments
-            combined_steps = list(all_amendments) + norm_steps_list
-            for i, st in enumerate(combined_steps, 1):
+            current_idx = 1
+            for amend in all_amendments:
                 action_steps.append(
-                    ActionStep(step_number=i, instruction=st, evidence_ids=[f"EV-AMEND-{i:02d}"])
+                    ActionStep(step_number=current_idx, instruction=f"[SAFETY AMENDMENT] {amend}", evidence_ids=[])
                 )
+                current_idx += 1
+            for st in candidate_steps:
+                if isinstance(st, dict):
+                    instruction = str(st.get("instruction") or st.get("action") or "").strip()
+                    ev_ids = list(st.get("evidence_ids") or [])
+                elif isinstance(st, ActionStep):
+                    instruction = st.instruction.strip()
+                    ev_ids = list(st.evidence_ids)
+                else:
+                    instruction = str(st).strip()
+                    ev_ids = []
+                action_steps.append(
+                    ActionStep(step_number=current_idx, instruction=instruction, evidence_ids=ev_ids)
+                )
+                current_idx += 1
 
         safety_warnings = (
             [f"SAFETY VETO: {combined_reason}"] if final_verdict == "veto"
@@ -322,4 +383,5 @@ class SafetyAgent(BaseAgent):
             "safety_verdict": verdict_obj.model_dump(),
             "final_answer": final_answer_obj.model_dump(),
             "decision": f"SAFETY_{final_verdict.upper()}",
+            "llm_check": llm_check_status,
         }
