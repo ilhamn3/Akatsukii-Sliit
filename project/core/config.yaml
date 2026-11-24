@@ -5,6 +5,8 @@
 system:
   safety_max_revision_loops: 2
   confidence_threshold_review: 0.75
+  # A3 semantic near-duplicate warning (symptom cosine, same machine label). Uncalibrated.
+  duplicate_similarity_threshold: 0.90
   abstention_similarity_threshold: 0.55
   log_path: "logs/audit_trace.jsonl"
 
@@ -61,7 +63,8 @@ pipelines:
       - from: "SafetyAgent"
         to: "__end__"
 
-  # Pipeline A produces an unverified extraction draft; A3 validation follows in K4.
+  # Pipeline A: capture -> unverified draft -> A3 validation into the human review queue.
+  # Only ReviewQueue.approve() publishes verified episodes; A4 (K5) follows later.
   A:
     name: "Ingestion Pipeline"
     entrypoint: "CaptureAgent"
@@ -76,8 +79,15 @@ pipelines:
         class: "ExtractionAgent"
         enabled: true
         stub: false
+      - name: "ValidationAgent"
+        module: "project.agents.a3_validation"
+        class: "ValidationAgent"
+        enabled: true
+        stub: false
     edges:
       - from: "CaptureAgent"
         to: "ExtractionAgent"
       - from: "ExtractionAgent"
+        to: "ValidationAgent"
+      - from: "ValidationAgent"
         to: "__end__"

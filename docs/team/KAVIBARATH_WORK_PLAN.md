@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 9.5 / 30 points · 32% complete**
+**Overall: 13 / 30 points · 43% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP3 | Ingestion agents 1-4 and review queue | 18 | 5 | 28% |
+| WP3 | Ingestion agents 1-4 and review queue | 18 | 8.5 | 47% |
 | WP4 | Knowledge store and retrieval | 10 | 4.5 | 45% |
 | WP10 | Hardening and unit tests | 2 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -30,9 +30,9 @@
 | 3.1 | Agent 1: Whisper transcription (timestamped transcript) | 3 | 24 Nov | 75% |
 | 3.2 | Agent 1: video frame sampling and unclear-audio flagging | 1 | 24 Nov | 75% |
 | 3.3 | Agent 2: structured extraction (steps, tools, root cause, failed attempts, warnings) | 4 | 24 Nov | 50% |
-| 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 0% |
+| 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 50% |
 | 3.5 | Agent 4: entity resolution and graph writes | 3 | 26 Nov | 0% |
-| 3.6 | Review-queue backend for low-confidence records | 2 | 26 Nov | 0% |
+| 3.6 | Review-queue backend for low-confidence records | 2 | 26 Nov | 75% |
 | 3.7 | Extraction precision / recall / F1 numbers exported to the harness | 1 | 27 Nov | 0% |
 
 #### WP4 – Knowledge store and retrieval (10 pts)
@@ -188,5 +188,6 @@ After merging origin/main at f735884, all 80 tests and pip check passed locally.
 | [#5](https://github.com/ilhamn3/Akatsukii-Sliit/pull/5) (K1 draft) | 22 Nov 2026 | [WP3] Agent 1: Whisper transcription and frame sampling | 3.1 (0->75%), 3.2 (0->75%) | Capture implementation, schemas, registry handoff and local setup; 52 tests pass plus actual Whisper/FFmpeg checks on synthetic speech, video and silence. Evidence: docs/CAPTURE_SETUP.md and local logs/capture_smoke/. Team samples and review pending | 0% -> 10% (3/30 pts) | Ilham MM (pending) |
 | [#7](https://github.com/ilhamn3/Akatsukii-Sliit/pull/7) (K2) | 24 Nov 2026 | [WP3] Agent 2: source-linked knowledge extraction | 3.3 (0->50%) | Draft schema, extraction agent, quote/timestamp provenance, A1 -> A2 handoff, traced failures, API diagnostics and setup docs; 76 tests passed before main sync and in Ilham's review. Live Groq 120B / prompt v3 synthetic smoke check passed. Evidence: docs/EXTRACTION_SETUP.md; representative samples pending | 10% -> 17% (3/30 -> 5/30 pts) | Ilham MM (code approved; requested log row added) |
 | [#12](https://github.com/ilhamn3/Akatsukii-Sliit/pull/12) (K3) | 24 Nov 2026 | [WP4] Verified knowledge store and query interface | 4.1, 4.2, 4.3 (0->75% each) | SQLite envelopes/provenance and audit events, FAISS symptom search, episode-scoped NetworkX graph, atomic writes and documented K4-K6 interface. 95 tests passed at ed90444; after merging main 6c5fd72 on 25 Nov, 126 tests and pip check pass and the cached MiniLM synthetic demo reproduces. Base is main (K2 merged). Evidence: docs/KNOWLEDGE_STORE.md. Integration, representative data and reviewer acceptance pending | 17% -> 32% (5/30 -> 9.5/30 pts) | Ilham MM (pending) |
+| K4 (PR number pending; stacked on #12) | 25 Nov 2026 | [WP3] Agent 3: validation, dedup, confidence and review-queue backend | 3.4 (0->50%), 3.6 (0->75%) | Rule-based A3 (grounding, quantity/unit, consistency, exact and semantic dedup), uncalibrated transparent confidence, Pipeline A handoff, SQLite review queue with audited approve/reject and reviewer corrections, publishing to K3. Every draft needs human approval. 150 tests and pip check pass; cached-MiniLM synthetic queue -> approve -> search run passes. Evidence: docs/VALIDATION_REVIEW.md. Score calibration, representative data, UI integration and review pending | 32% -> 43% (9.5/30 -> 13/30 pts) | Ilham MM (pending) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
