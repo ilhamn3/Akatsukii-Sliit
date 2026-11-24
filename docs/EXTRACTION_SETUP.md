@@ -70,6 +70,11 @@ run may still exist, so check the exit code. Runtime files under logs are ignore
 On 24 Nov 2026, the repository suite passed all 76 tests and `pip check` reported
 no broken requirements. The offline CLI produced a draft labelled as fixture output.
 
+After syncing origin/main at f735884 on 24 Nov, the expanded suite passed all
+80 tests and pip check passed. The extraction requirements now include google-genai
+to support the shared Gemini client/tests added by main. This verification used
+mocked providers; it does not establish live Gemini extraction quality.
+
 Tests cover missing facts, failed attempts/warnings, derived timestamps, bad IDs
 and quotes, malformed output, silence, quality flags, stale-output clearing,
 provider failures, CLI output and the A1 -> A2 registered graph handoff.
@@ -97,12 +102,19 @@ not held-out benchmark results; broader unseen narratives are still required.
 
 For Groq, set OPENAI_BASE_URL=https://api.groq.com/openai/v1 and
 PRIMARY_LLM_MODEL=openai/gpt-oss-120b in the same terminal, with the Groq secret in
-OPENAI_API_KEY for the shared client. The SDK uses the configured endpoint.
+OPENAI_API_KEY for the shared client. Set LLM_PROVIDER=openai explicitly for this
+OpenAI-compatible endpoint. The latest shared client also supports Gemini and
+may select it when GEMINI_API_KEY is present and LLM_PROVIDER is unset. A2 keeps
+using get_llm_client(); the final benchmark provider/model is a team-wide choice.
+Groq remains a development configuration. The SDK uses the configured endpoint.
 If Ctrl+V is captured as a control character or -MaskInput is unsupported, copy
 the full key then manually type `$env:OPENAI_API_KEY = (Get-Clipboard -Raw).Trim()`.
 Do not copy that command after copying the key, since it would replace the
 clipboard contents. `python -m scripts.diagnose_extraction_api --connection-only`
 checks key formatting and authenticated model access without generating text.
 
-Team recordings, extraction-quality evaluation and Ilham's draft-contract review
-remain pending. No precision/recall/F1 claim is made. K2 is recorded at 50%.
+Ilham approved K2's code and additive state/config edits subject to adding the
+PR #7 tracker row, now included. K4 must map drafts to RepairRecord with provenance;
+K5 must resolve machine categories to catalogue IDs. Team recordings and broader
+extraction-quality evaluation remain pending. No precision/recall/F1 claim is
+made. K2 is recorded at 50%.

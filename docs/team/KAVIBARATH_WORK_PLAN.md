@@ -104,12 +104,14 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 - **Branch:** `wp3/validation-review-queue` · **Merge by:** 26 Nov · **Subtasks:** 3.4, 3.6 · **Reviewer:** Ilham MM
 - **Summary:** Implements Agent 3 and the review-queue backend. (Team checkpoint is 25 Nov.)
 - **Done when:** Inconsistent or duplicate records are caught; each record has a confidence score; low-confidence records land in the queue and can be approved/rejected through the backend API for Kajanan's UI.
+- **K2 review follow-up:** A3 must map `DraftRepairRecord` to the shared `RepairRecord` while retaining evidence spans and provenance. Missing required facts must remain reviewable rather than being invented to satisfy the target schema.
 
 ### K5: [WP3] Agent 4: entity resolution and graph writes
 
 - **Branch:** `wp3/graph-agent` · **Merge by:** 26 Nov · **Subtasks:** 3.5 · **Reviewer:** Ilham MM
 - **Summary:** Implements Agent 4: resolves aliases (e.g. "hyd. press 3" = "Press-03") and writes verified records into the graph and indexes.
 - **Done when:** Alias test cases resolve to one entity; graph shows linked machine -> fault -> cause -> fix -> hazard; in-memory NetworkX is enough (no Neo4j needed).
+- **K2 review follow-up:** Resolve A2's free-text `machine_type` to catalogue IDs: `cnc_lathe`, `hydraulic_press`, `injection_moulding`, `conveyor_line`, `air_compressor`.
 
 ### K6: [WP4] Agent 6: hybrid retrieval including failed attempts
 
@@ -168,21 +170,22 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 - Never cut: trace logging of every handoff from your agents.
 - Original work built during the competition; reused components and pre-existing code must be disclosed.
 - Declare every AI model, service and coding assistant you use (send your list to Tharshanth for `docs/PROJECT_DETAILS.md`).
+- **K2 review follow-up:** The final benchmark must use one team-agreed LLM provider/model. Continue using `get_llm_client()`; the Groq development smoke tests do not select the final benchmark provider.
 - Everyone must be able to explain the full architecture and benchmark method at the finale Q&A, not only their own modules.
 
 ## 7. PR log (add one row per PR, newest at the bottom)
 
-K2 local draft (24 Nov): subtask 3.3 at 50%, 2 additional points; overall 3/30 ->
-5/30 (10% -> 17%). Implemented draft extraction, provenance checks, A1 -> A2
-handoff and offline tests. First live Groq synthetic extraction passed schema and
-quote checks. V2 kept root cause unknown and 120B captured the replaced sensor;
-both tested models omitted the machine category. V3 with 120B passed the synthetic
-smoke check, including category, sensor, unknown root cause and derived evidence.
-Team-sample validation and Ilham's review remain pending. PR number will be
-recorded when opened; target main now contains K1.
+K2 review (24 Nov): Ilham reported 76 passing tests and approved the code subject
+to adding the PR #7 row below. Approval explicitly covers the additive
+`state.py` draft_record and `config.yaml` Capture -> Extraction handoff changes.
+The required log row is now included. Representative team-sample validation is
+still pending, so subtask 3.3 stays at 50%. Non-blocking follow-ups are recorded
+under K4, K5 and the benchmark rules above.
+After merging origin/main at f735884, all 80 tests and pip check passed locally.
 
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
 | [#5](https://github.com/ilhamn3/Akatsukii-Sliit/pull/5) (K1 draft) | 22 Nov 2026 | [WP3] Agent 1: Whisper transcription and frame sampling | 3.1 (0->75%), 3.2 (0->75%) | Capture implementation, schemas, registry handoff and local setup; 52 tests pass plus actual Whisper/FFmpeg checks on synthetic speech, video and silence. Evidence: docs/CAPTURE_SETUP.md and local logs/capture_smoke/. Team samples and review pending | 0% -> 10% (3/30 pts) | Ilham MM (pending) |
+| [#7](https://github.com/ilhamn3/Akatsukii-Sliit/pull/7) (K2) | 24 Nov 2026 | [WP3] Agent 2: source-linked knowledge extraction | 3.3 (0->50%) | Draft schema, extraction agent, quote/timestamp provenance, A1 -> A2 handoff, traced failures, API diagnostics and setup docs; 76 tests passed before main sync and in Ilham's review. Live Groq 120B / prompt v3 synthetic smoke check passed. Evidence: docs/EXTRACTION_SETUP.md; representative samples pending | 10% -> 17% (3/30 -> 5/30 pts) | Ilham MM (code approved; requested log row added) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
