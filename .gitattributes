@@ -1,3 +1,4 @@
 # Generated data is hashed byte-for-byte; keep LF on every OS.
 project/data/episodes/** text eol=lf
 project/data/test_set/** text eol=lf
+project/human_study/materials/** text eol=lf
