@@ -2,10 +2,11 @@
 
 Owner: Kavibarath S. Reviewer: Ilham MM. Branch: `wp4/knowledge-store`.
 
-K3 was started from reviewed K2 commit 8ced194 with main f735884 already merged.
-PR #7 was not yet in main at branch creation. Until K2 is merged, a K3 draft PR
-should target wp3/extraction-agent to show only K3 changes; after K2 merges, sync
-main and retarget the K3 PR to main. Do not merge K2 independently of its owner.
+PR: [#12](https://github.com/ilhamn3/Akatsukii-Sliit/pull/12), base `main`.
+K3 was started from reviewed K2 commit 8ced194. K2 (PR #7) has since merged into
+main, and main 6c5fd72 (Gemini latency PR #9 and SafetyAgent PR #11) was merged
+into this branch on 25 Nov without conflicts, so the PR diff against main shows only
+K3 changes.
 
 ## Boundary and verification
 
@@ -123,6 +124,10 @@ These are development smoke results, not retrieval accuracy measurements.
 The separate-process rerun with `--local-files-only` also passed, recovering both
 episodes and the same ranking from SQLite with cached weights. The local summary
 is saved in logs/store_demo_restart.json; repeat inserts produced STORE_NOOP events.
+
+After merging main 6c5fd72 (25 Nov 2026): the full suite passed 126 tests, pip check
+passed, and the cached `--local-files-only` demo reproduced the same ranking
+(conveyor about 0.708, compressor about 0.138) and graph result.
 
 ## References
 
