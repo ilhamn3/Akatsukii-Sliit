@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 15.2 / 30 points · 51% complete**
+**Overall: 18.2 / 30 points · 61% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP3 | Ingestion agents 1-4 and review queue | 18 | 10.8 | 60% |
-| WP4 | Knowledge store and retrieval | 10 | 4.5 | 45% |
+| WP4 | Knowledge store and retrieval | 10 | 7.5 | 75% |
 | WP10 | Hardening and unit tests | 2 | 0 | 0% |
 <!-- PROGRESS:END -->
 
@@ -42,8 +42,8 @@
 | 4.1 | SQLite tables for verified records | 2 | 26 Nov | 75% |
 | 4.2 | Vector index (ChromaDB or FAISS) | 2 | 26 Nov | 75% |
 | 4.3 | Knowledge graph (NetworkX) of machines, faults, causes, fixes, hazards | 2 | 26 Nov | 75% |
-| 4.4 | Agent 6: hybrid vector + graph retrieval | 3 | 27 Nov | 0% |
-| 4.5 | Retrieval returns failed attempts and outcomes | 1 | 27 Nov | 0% |
+| 4.4 | Agent 6: hybrid vector + graph retrieval | 3 | 27 Nov | 75% |
+| 4.5 | Retrieval returns failed attempts and outcomes | 1 | 27 Nov | 75% |
 
 #### WP10 – Hardening and unit tests (2 pts)
 
@@ -190,5 +190,6 @@ After merging origin/main at f735884, all 80 tests and pip check passed locally.
 | [#12](https://github.com/ilhamn3/Akatsukii-Sliit/pull/12) (K3) | 24 Nov 2026 | [WP4] Verified knowledge store and query interface | 4.1, 4.2, 4.3 (0->75% each) | SQLite envelopes/provenance and audit events, FAISS symptom search, episode-scoped NetworkX graph, atomic writes and documented K4-K6 interface. 95 tests passed at ed90444; after merging main 6c5fd72 on 25 Nov, 126 tests and pip check pass and the cached MiniLM synthetic demo reproduces. Base is main (K2 merged). Evidence: docs/KNOWLEDGE_STORE.md. Integration, representative data and reviewer acceptance pending | 17% -> 32% (5/30 -> 9.5/30 pts) | Ilham MM (pending) |
 | [#13](https://github.com/ilhamn3/Akatsukii-Sliit/pull/13) (K4; builds on #12) | 25 Nov 2026 | [WP3] Agent 3: validation, dedup, confidence and review-queue backend | 3.4 (0->50%), 3.6 (0->75%) | Rule-based A3 (grounding, quantity/unit, consistency, exact and semantic dedup), uncalibrated transparent confidence, Pipeline A handoff, SQLite review queue with audited approve/reject and reviewer corrections, publishing to K3. Every draft needs human approval. 150 tests and pip check pass; cached-MiniLM synthetic queue -> approve -> search run passes. Evidence: docs/VALIDATION_REVIEW.md. Score calibration, representative data, UI integration and review pending | 32% -> 43% (9.5/30 -> 13/30 pts) | Ilham MM (pending) |
 | [#14](https://github.com/ilhamn3/Akatsukii-Sliit/pull/14) (K5; builds on #13) | 25 Nov 2026 | [WP3] Agent 4: entity resolution and graph writes | 3.5 (0->75%) | Deterministic machine/asset/hazard resolution from a curated vocabulary plus SafetyAgent rule keywords; unknown, ambiguous and conflicting labels stay blocked in review; approvals publish through traced GraphAgent with canonical IDs and raw text kept in provenance; shared asset and catalogue-hazard graph nodes; A3 dedup uses canonical machines. 183 tests and pip check pass; cached-MiniLM synthetic approve -> canonical store/graph run passes. Evidence: docs/ENTITY_GRAPH.md. Vocabulary check on team recordings/asset names and review pending | 43% -> 51% (13/30 -> 15.25/30 pts) | Ilham MM (pending) |
+| K6 (PR number pending; builds on #14) | 25 Nov 2026 | [WP4] Agent 6: hybrid retrieval including failed attempts | 4.4 (0->75%), 4.5 (0->75%) | RetrievalEngine contract: K5 machine resolution and filter-before-rank, MiniLM/FAISS symptom cosine fused (support-only) with NetworkX traversal and alarm-code/asset hops; Evidence carries failed attempts, outcome, step-level evidence IDs, verification and provenance; RetrievalAgent node and proven Pipeline B wiring. 195 tests and pip check pass; code-computed synthetic catalogue check hybrid hit@1 0.975 / hit@3 1.0 (not a benchmark). Evidence: docs/RETRIEVAL.md. Orchestrator integration, real-episode evaluation and review pending | 51% -> 61% (15.25/30 -> 18.25/30 pts) | Ilham MM (pending) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*

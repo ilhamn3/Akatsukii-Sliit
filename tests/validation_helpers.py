@@ -25,6 +25,25 @@ class KeywordEmbedder:
                          for t in texts], dtype=np.float32)
 
 
+class HashEmbedder:
+    """Test-only bag-of-words embedder (crc32 buckets): cosine ~ word overlap."""
+
+    model_id = "test-only-hash-bow-v1"
+    dimension = 256
+
+    def encode(self, texts):
+        import re
+        import zlib
+        rows = []
+        for text in texts:
+            row = np.zeros(self.dimension, dtype=np.float32)
+            row[0] = 0.05  # Never all-zero.
+            for word in re.findall(r"[a-z0-9]+", text.lower()):
+                row[1 + zlib.crc32(word.encode()) % (self.dimension - 1)] += 1.0
+            rows.append(row)
+        return np.array(rows)
+
+
 def model_output(complete=False):
     data = json.loads((FIXTURES / "model_output.json").read_text())
     if complete:
