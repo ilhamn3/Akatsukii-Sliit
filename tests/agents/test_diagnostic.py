@@ -219,16 +219,176 @@ def test_diagnostic_trace_includes_llm_metadata(tmp_path):
 
 
 def test_get_llm_raises_without_key_or_fake_flag(monkeypatch):
-    """Verify get_llm raises ValueError if OPENAI_API_KEY is unset and no fake flag passed."""
+    """Verify get_llm raises ValueError if chosen provider's API key is unset and no fake flag passed."""
     from project.core.llm import get_llm
 
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("FACTORY_FAKE_LLM", raising=False)
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
 
+    # Gemini provider missing key
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    with pytest.raises(ValueError, match="GEMINI_API_KEY not set"):
+        get_llm()
+
+    # OpenAI provider missing key
+    monkeypatch.setenv("LLM_PROVIDER", "openai")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     with pytest.raises(ValueError, match="OPENAI_API_KEY not set"):
+        get_llm()
+
+    # Unsupported provider
+    monkeypatch.setenv("LLM_PROVIDER", "unsupported_provider")
+    with pytest.raises(ValueError, match="Unsupported LLM_PROVIDER"):
         get_llm()
 
     # With force_fake it succeeds
     client = get_llm(force_fake=True)
     assert client.model_name == "fake"
+
+
+def test_provider_selection_gemini_and_openai(monkeypatch):
+    """Verify get_llm instantiates the appropriate client based on LLM_PROVIDER."""
+    from project.core.llm import GeminiLLMClient, OpenAILLMClient, get_llm
+
+    monkeypatch.delenv("FACTORY_FAKE_LLM", raising=False)
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+
+    # Gemini selection
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("GEMINI_API_KEY", "test_gemini_key_12345")
+    monkeypatch.setenv("GEMINI_MODEL", "gemini-3.5-flash")
+    gemini_client = get_llm()
+    assert isinstance(gemini_client, GeminiLLMClient)
+    assert gemini_client.model_name == "gemini:gemini-3.5-flash"
+
+    # OpenAI selection
+    monkeypatch.setenv("LLM_PROVIDER", "openai")
+    monkeypatch.setenv("OPENAI_API_KEY", "test_openai_key_12345")
+    openai_client = get_llm()
+    assert isinstance(openai_client, OpenAILLMClient)
+    assert openai_client.model == "gpt-4o-mini"
+
+
+def test_gemini_client_structured_output_mocked(monkeypatch):
+    """Verify GeminiLLMClient parses structured output using mocked SDK."""
+    from unittest.mock import MagicMock
+    from project.agents.a5_diagnostic import DiagnosticOutput
+    from project.core.llm import GeminiLLMClient
+
+    mock_response = MagicMock()
+    mock_response.text = json.dumps({
+        "needs_clarification": False,
+        "clarifying_question": None,
+        "hypotheses": [
+            {
+                "rank": 1,
+                "fault": "Spindle rotary seal failure",
+                "subsystem": "Spindle Unit",
+                "confidence": 0.92,
+                "rationale": "High-pitched whining noise indicates seal breakdown.",
+            }
+        ],
+    })
+
+    mock_client = MagicMock()
+    mock_client.models.generate_content.return_value = mock_response
+
+    client = GeminiLLMClient(api_key="mock_key", model="gemini-3.5-flash")
+    monkeypatch.setattr(client, "_get_client", lambda: mock_client)
+
+    result = client.generate_structured("Check spindle noise", DiagnosticOutput)
+    assert isinstance(result, DiagnosticOutput)
+    assert result.needs_clarification is False
+    assert len(result.hypotheses) == 1
+    assert result.hypotheses[0].fault == "Spindle rotary seal failure"
+    assert result.hypotheses[0].confidence == 0.92
+
+
+def test_gemini_client_retry_on_429(monkeypatch):
+    """Verify GeminiLLMClient retries on rate limit (429) errors."""
+    from unittest.mock import MagicMock
+    from project.agents.a5_diagnostic import DiagnosticOutput
+    from project.core.llm import GeminiLLMClient
+
+    mock_response = MagicMock()
+    mock_response.text = json.dumps({
+        "needs_clarification": True,
+        "clarifying_question": "Which machine?",
+        "hypotheses": [],
+    })
+
+    call_count = 0
+
+    def mock_generate(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise RuntimeError("429 ResourceExhausted: Quota exceeded")
+        return mock_response
+
+    mock_client = MagicMock()
+    mock_client.models.generate_content.side_effect = mock_generate
+
+    client = GeminiLLMClient(api_key="mock_key", model="gemini-3.5-flash", max_retries=3)
+    monkeypatch.setattr(client, "_get_client", lambda: mock_client)
+
+    result = client.generate_structured("Machine stopped", DiagnosticOutput)
+    assert call_count == 2
+    assert result.needs_clarification is True
+    assert result.clarifying_question == "Which machine?"
+
+
+def test_gemini_client_retry_on_invalid_json(monkeypatch):
+    """Verify GeminiLLMClient retries when response contains non-JSON text."""
+    from unittest.mock import MagicMock
+    from project.agents.a5_diagnostic import DiagnosticOutput
+    from project.core.llm import GeminiLLMClient
+
+    invalid_resp = MagicMock()
+    invalid_resp.text = "Error: output was truncated or non-JSON"
+
+    valid_resp = MagicMock()
+    valid_resp.text = json.dumps({
+        "needs_clarification": False,
+        "clarifying_question": None,
+        "hypotheses": [
+            {
+                "rank": 1,
+                "fault": "Hydraulic line blockage",
+                "subsystem": "Hydraulics",
+                "confidence": 0.88,
+                "rationale": "Pressure drop observed.",
+            }
+        ],
+    })
+
+    attempts = [invalid_resp, valid_resp]
+
+    def mock_generate(*args, **kwargs):
+        return attempts.pop(0)
+
+    mock_client = MagicMock()
+    mock_client.models.generate_content.side_effect = mock_generate
+
+    client = GeminiLLMClient(api_key="mock_key", model="gemini-3.5-flash", max_retries=3)
+    monkeypatch.setattr(client, "_get_client", lambda: mock_client)
+
+    result = client.generate_structured("Hydraulic issue", DiagnosticOutput)
+    assert result.hypotheses[0].fault == "Hydraulic line blockage"
+
+
+def test_gemini_client_thinking_and_timeout_config(monkeypatch):
+    """Verify GeminiLLMClient respects GEMINI_THINKING and GEMINI_TIMEOUT_S environment variables."""
+    from google.genai import types
+    from project.core.llm import GeminiLLMClient
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test_key")
+    monkeypatch.setenv("GEMINI_THINKING", "minimal")
+    monkeypatch.setenv("GEMINI_TIMEOUT_S", "45")
+
+    client = GeminiLLMClient()
+    assert client.timeout == 45.0
+    t_cfg = client._get_thinking_config()
+    assert t_cfg is not None
+    assert t_cfg.thinking_level == types.ThinkingLevel.MINIMAL

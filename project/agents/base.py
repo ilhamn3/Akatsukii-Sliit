@@ -99,6 +99,8 @@ class BaseAgent(ABC):
             state["messages"] = []
         state["messages"].append(msg.model_dump())
 
+        tokens = getattr(getattr(self, "llm_client", None), "last_token_count", None)
+
         # Log completion event
         log_record = self.trace_logger.log(
             agent=self.name,
@@ -112,6 +114,7 @@ class BaseAgent(ABC):
             session_id=session_id,
             stub=self.is_stub,
             llm=self.llm_name,
+            tokens=tokens,
         )
 
         if "audit_trace" not in state:
