@@ -175,6 +175,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
 | #6 | 23 Nov | [WP2] Fault catalogue with hazards | 2.1 (0->75%) | 40 failure modes across 5 machine types, hazards.json, build and validate scripts | 0% -> 11% | Kajanan K |
-| #7 | 25 Nov | [WP2] Seeded generator, 400 episodes and narratives | 2.2 (0->75%), 2.3 (0->75%) | Seeded stdlib generator, 400 episodes from 12 simulated technicians (audio debriefs and shift logs), separate ground truth validated against RepairRecord, samples.json for hand-off, 8 tests | 11% -> 26% | Kajanan K |
+| #16 | 25 Nov | [WP2] Seeded generator, 400 episodes and narratives | 2.2 (0->75%), 2.3 (0->75%) | Seeded stdlib generator, 400 episodes from 12 simulated technicians (audio debriefs and shift logs), separate ground truth validated against RepairRecord, samples.json for hand-off, 8 tests | 11% -> 26% | Kajanan K |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
