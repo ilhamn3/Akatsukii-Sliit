@@ -1,0 +1,20 @@
+{
+  "synthetic": true,
+  "size": 100,
+  "episodes": 100,
+  "faults_covered": 40,
+  "by_machine": {
+    "air_compressor": 15,
+    "cnc_lathe": 22,
+    "conveyor_line": 20,
+    "hydraulic_press": 20,
+    "injection_moulding": 23
+  },
+  "first_episode": "EP-0012",
+  "last_episode": "EP-0400",
+  "verified_by": "synthetic-generator (not human-reviewed)",
+  "files_sha256": {
+    "episodes.jsonl": "95486ae19c5b109112b02a9e676bea34e91a3efee4bd7e37069eb76042800c01",
+    "labels.jsonl": "53e03ba0bc7851c798f3de7336e44b6a85b77a95eef50c8a929ae065e1179715"
+  }
+}
