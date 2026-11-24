@@ -23,6 +23,7 @@ class BlackboardState(TypedDict, total=False):
     # Pipeline A capture handoff (validated by core.capture_schemas).
     capture_request: Dict[str, Any]
     capture_result: Optional[Dict[str, Any]]
+    draft_record: Optional[Dict[str, Any]]
 
     # Diagnostic & Clarification State
     clarification_turns: int

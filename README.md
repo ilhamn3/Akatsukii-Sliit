@@ -113,6 +113,7 @@ factory-memory/
 ### Prerequisites
 
 For Agent 1 development, see [Capture setup and handoff contract](docs/CAPTURE_SETUP.md).
+For Agent 2, see [Extraction setup and draft contract](docs/EXTRACTION_SETUP.md).
 
 - Python 3.10, 3.11, or 3.12
 - Git
