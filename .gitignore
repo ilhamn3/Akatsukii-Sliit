@@ -81,3 +81,6 @@ trace_logs/
 *~
 .DS_Store
 Thumbs.db
+
+# Human study: signed consent forms and the code list never leave the study lead
+project/human_study/private/
