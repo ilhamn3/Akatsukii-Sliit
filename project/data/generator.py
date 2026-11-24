@@ -313,8 +313,10 @@ def generate(seed: int = DEFAULT_SEED, n: int = DEFAULT_N):
         "technicians.json": json.dumps(TECHNICIANS, indent=2) + "\n",
         "samples.json": json.dumps(samples, indent=2, ensure_ascii=False) + "\n",
     }
-    catalogue_hash = hashlib.sha256((CATALOGUE / "faults.json").read_bytes()
-                                    + (CATALOGUE / "hazards.json").read_bytes()).hexdigest()
+    # Normalise line endings so a Windows (CRLF) checkout hashes the same as Linux/macOS.
+    catalogue_hash = hashlib.sha256(b"".join(
+        (CATALOGUE / name).read_bytes().replace(b"\r\n", b"\n") for name in ("faults.json", "hazards.json")
+    )).hexdigest()
     stats = {
         "episodes": n,
         "technicians": len({r["technician_id"] for r in narratives}),
