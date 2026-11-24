@@ -118,6 +118,8 @@ class DiagnosticAgent(BaseAgent):
                 "ranked_hypotheses": ranked,
                 "selected_hypothesis": selected,
                 "decision": "HYPOTHESES_RANKED",
+                "tokens": getattr(self.llm_client, "last_token_count", None),
+                "latency_ms": getattr(self.llm_client, "last_latency_ms", None),
             }
 
         except Exception as e:
@@ -127,7 +129,7 @@ class DiagnosticAgent(BaseAgent):
                 fault=f"General mechanical inspection required for {machine_type} (LLM diagnostic fallback)",
                 subsystem="General Mechanical Subsystem",
                 confidence=0.30,
-                rationale="Automated diagnostic fallback triggered due to LLM service failure.",
+                rationale=f"Automated diagnostic fallback triggered due to LLM service failure: {str(e)[:120]}",
             )
             return {
                 "clarification_needed": False,
@@ -135,6 +137,7 @@ class DiagnosticAgent(BaseAgent):
                 "ranked_hypotheses": [fallback_hyp.model_dump()],
                 "selected_hypothesis": fallback_hyp.model_dump(),
                 "decision": "FALLBACK_DIAGNOSIS",
+                "error": str(e),
             }
 
 
