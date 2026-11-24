@@ -33,6 +33,104 @@ class LLMClient(ABC):
         pass
 
 
+class GeminiLLMClient(LLMClient):
+    """Production Gemini client using the official google-genai SDK with retries and structured validation."""
+
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        temperature: float = 0.0,
+        timeout: float = 30.0,
+        max_retries: int = 3,
+    ):
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY", "").strip()
+        if not self.api_key or self.api_key.startswith("your_"):
+            raise ValueError("GEMINI_API_KEY is unset or default template in environment.")
+        self.model = model or os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip()
+        self.model_name = f"gemini:{self.model}"
+        self.temperature = float(os.getenv("TEMPERATURE", str(temperature)))
+        self.timeout = timeout
+        self.max_retries = max_retries
+
+    def _get_client(self):
+        try:
+            from google import genai
+            from google.genai import types
+        except ImportError:
+            raise ImportError("google-genai package is required to run GeminiLLMClient.")
+
+        timeout_ms = int(self.timeout * 1000)
+        return genai.Client(
+            api_key=self.api_key,
+            http_options=types.HttpOptions(timeout=timeout_ms),
+        )
+
+    def _call_api_with_retry(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        response_model: Optional[Type[T]] = None,
+    ) -> str:
+        try:
+            from google.genai import types
+        except ImportError:
+            raise ImportError("google-genai package is required to run GeminiLLMClient.")
+
+        client = self._get_client()
+        last_exception = None
+
+        config_kwargs: Dict[str, Any] = {
+            "temperature": self.temperature,
+        }
+        if system_prompt:
+            config_kwargs["system_instruction"] = system_prompt
+
+        if response_model is not None:
+            config_kwargs["response_mime_type"] = "application/json"
+            config_kwargs["response_schema"] = response_model
+
+        config = types.GenerateContentConfig(**config_kwargs)
+
+        for attempt in range(self.max_retries):
+            try:
+                response = client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=config,
+                )
+                text = response.text or ""
+                # Verify JSON parseable if structured model was expected
+                if response_model is not None:
+                    json.loads(text)
+                return text
+            except Exception as e:
+                last_exception = e
+                wait_sec = (2 ** attempt) * 0.5
+                time.sleep(wait_sec)
+
+        raise RuntimeError(f"Gemini API call failed after {self.max_retries} retries: {last_exception}")
+
+    def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
+        return self._call_api_with_retry(prompt=prompt, system_prompt=system_prompt, response_model=None)
+
+    def generate_structured(
+        self,
+        prompt: str,
+        response_model: Type[T],
+        system_prompt: Optional[str] = None,
+    ) -> T:
+        raw_output = self._call_api_with_retry(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            response_model=response_model,
+        )
+        try:
+            return response_model.model_validate_json(raw_output)
+        except Exception as e:
+            raise ValueError(f"Failed to validate Gemini output against {response_model.__name__}: {e}\nRaw: {raw_output}")
+
+
 class OpenAILLMClient(LLMClient):
     """Production OpenAI client with exponential backoff retries and structured validation."""
 
@@ -276,28 +374,54 @@ class FakeLLM(LLMClient):
 
 
 def get_llm(force_fake: Optional[bool] = None) -> LLMClient:
-    """Return configured LLMClient.
+    """Return configured LLMClient based on LLM_PROVIDER env var.
 
-    Raises ValueError if OPENAI_API_KEY is missing/unset unless force_fake or
+    Providers supported:
+      - 'gemini' (reads GEMINI_API_KEY, GEMINI_MODEL)
+      - 'openai' (reads OPENAI_API_KEY, PRIMARY_LLM_MODEL)
+
+    Raises ValueError if provider API key is missing/unset unless force_fake or
     FACTORY_FAKE_LLM=1 is set (or running under pytest).
     """
     if force_fake is True or os.getenv("FACTORY_FAKE_LLM") == "1":
         return FakeLLM()
 
-    key = os.getenv("OPENAI_API_KEY", "").strip()
-    if key and not key.startswith("your_"):
-        try:
-            return OpenAILLMClient(api_key=key)
-        except Exception:
-            if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
-                return FakeLLM()
-            raise
+    provider = os.getenv("LLM_PROVIDER", "").strip().lower()
+    if not provider:
+        # Heuristic default based on which key is configured
+        if os.getenv("GEMINI_API_KEY") and not os.getenv("GEMINI_API_KEY", "").startswith("your_"):
+            provider = "gemini"
+        else:
+            provider = "openai"
 
-    # API key is missing or placeholder
-    if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
-        return FakeLLM()
+    if provider == "gemini":
+        key = os.getenv("GEMINI_API_KEY", "").strip()
+        if key and not key.startswith("your_"):
+            try:
+                return GeminiLLMClient(api_key=key)
+            except Exception:
+                if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
+                    return FakeLLM()
+                raise
+        if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
+            return FakeLLM()
+        raise ValueError("GEMINI_API_KEY not set; set it in .env, or pass --fake-llm for offline demo")
 
-    raise ValueError("OPENAI_API_KEY not set; set it in .env, or pass --fake-llm for offline demo")
+    elif provider == "openai":
+        key = os.getenv("OPENAI_API_KEY", "").strip()
+        if key and not key.startswith("your_"):
+            try:
+                return OpenAILLMClient(api_key=key)
+            except Exception:
+                if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
+                    return FakeLLM()
+                raise
+        if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
+            return FakeLLM()
+        raise ValueError("OPENAI_API_KEY not set; set it in .env, or pass --fake-llm for offline demo")
+
+    else:
+        raise ValueError(f"Unsupported LLM_PROVIDER '{provider}'. Supported providers are: 'gemini', 'openai'.")
 
 
 def get_llm_client() -> LLMClient:
