@@ -27,7 +27,9 @@ verification timestamp. Span paths retain their draft-field meaning; A3 must pre
 the mapping through conversion. Overall outcome is a separate nullable envelope field
 because the shared RepairRecord does not currently define it. K4 adds the optional
 `provenance.reviewer_supplied_fields` list naming record fields a human reviewer
-supplied or replaced (no transcript evidence); it defaults to empty. K5 owns alias/catalogue
+supplied or replaced (no transcript evidence); it defaults to empty. K5 adds
+`provenance.entity_links` (raw text -> catalogue machine/asset/hazard IDs), and the
+graph gains shared `asset` and `catalogue_hazard` nodes; see docs/ENTITY_GRAPH.md. K5 owns alias/catalogue
 resolution; the store only normalizes case and whitespace for category comparison.
 
 ## Architecture and consistency

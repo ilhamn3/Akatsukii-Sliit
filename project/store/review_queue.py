@@ -23,6 +23,7 @@ import uuid
 from pydantic import Field
 
 from project.agents.a3_validation import ReviewBlocked, _issue, episode_ids, verify
+from project.agents.a4_graph import GraphAgent
 from project.core.extraction_schemas import DraftRepairRecord, StrictModel
 from project.core.validation_schemas import ValidationReport
 from project.store.embeddings import storage_root
@@ -64,12 +65,14 @@ def _text(value, name, *, minimum=1, maximum=200) -> str:
 class ReviewQueue:
     """SQLite-backed queue. Decisions are serialized with BEGIN IMMEDIATE."""
 
-    def __init__(self, db_path: Path | None = None, *, store=None):
+    def __init__(self, db_path: Path | None = None, *, store=None, graph_agent=None):
         self.path = Path(db_path or storage_root() / "review" / "review_queue.sqlite3")
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        # Any object with put_verified(episode, *, trace_id) and get(id, *, trace_id);
-        # K5 may wrap KnowledgeStore to add entity resolution before persistence.
+        # store: KnowledgeStore (get/put_verified). Approved episodes are published
+        # through Agent 4 (K5), which resolves catalogue entities before writing.
         self.store = store
+        self.publisher = graph_agent if graph_agent is not None else (
+            GraphAgent(store) if store is not None else None)
         with self._connect() as db:
             db.executescript('''
                 CREATE TABLE IF NOT EXISTS review_items (
@@ -177,7 +180,7 @@ class ReviewQueue:
         """
         reviewer, trace_id = _text(reviewer, "reviewer"), _text(trace_id, "trace_id")
         note = _text(note, "note", maximum=2000) if note is not None else None
-        if self.store is None:
+        if self.store is None or self.publisher is None:
             raise RuntimeError("approve() needs a knowledge store to publish the verified episode")
         try:
             with self._connect() as db:
@@ -198,13 +201,17 @@ class ReviewQueue:
                 decided = _now()
                 episode, supplied = verify(item.draft, reviewer=reviewer, verified_at=decided,
                                            corrections=corrections)
-                self.store.put_verified(episode, trace_id=trace_id)
+                # Agent 4 canonicalizes entities, then writes SQLite/vector/graph (K3).
+                episode = self.store.get(self.publisher.put_verified(episode, trace_id=trace_id),
+                                         trace_id=trace_id)
                 db.execute('''UPDATE review_items SET status='approved', decided_by=?, decided_at=?,
                               decision_note=?, updated_at=? WHERE item_id=? AND status='pending' ''',
                            (reviewer, decided.isoformat(), note, decided.isoformat(), item_id))
                 self._event(db, item_id, trace_id, reviewer, "APPROVED", {
                     "episode_id": episode.episode_id, "evidence_id": episode.record.evidence_id,
                     "reviewer_supplied_fields": supplied, "corrections": corrections or {},
+                    "entity_links": [f"{l.kind}:{l.field_path}={l.entity_id or l.status}"
+                                     for l in episode.provenance.entity_links],
                     "acknowledged_warnings": sorted({i.code for i in item.report.issues if i.severity == "warning"}),
                     "confidence": episode.record.confidence, "note": note})
             return episode

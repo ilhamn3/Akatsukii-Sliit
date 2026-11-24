@@ -69,11 +69,15 @@ def test_graph_paths_and_episode_scoping(store, episodes):
     graph = store.graph_snapshot(trace_id='TR-GRAPH')
     relations = {data['relation'] for _, _, data in graph.edges(data=True)}
     assert {'exhibited', 'caused_by', 'addressed_by', 'has_episode_warning'} <= relations
+    # Shared entity nodes (machine, asset, catalogue hazard) link episodes; all
+    # other nodes are scoped to one episode, and every edge names its episode.
+    from project.store.graph import SHARED
     for source, target, data in graph.edges(data=True):
-        if source[0] != 'machine':
+        if source[0] not in SHARED:
             assert source[1] == data['episode_id']
-        if target[0] != 'machine':
+        if target[0] not in SHARED:
             assert target[1] == data['episode_id']
+    assert ('asset', 'syn-cv-01') in graph
     graph.clear()
     assert store.graph_snapshot(trace_id='TR-NEW-SNAPSHOT').number_of_nodes() > 0
 

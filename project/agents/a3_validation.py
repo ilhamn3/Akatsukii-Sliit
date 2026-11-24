@@ -23,7 +23,10 @@ from project.core.extraction_schemas import DraftRepairRecord
 from project.core.registry import load_config
 from project.core.schemas import RepairRecord
 from project.core.state import create_initial_state
-from project.core.validation_schemas import ConfidenceBreakdown, ValidationIssue, ValidationReport
+from project.agents.a4_graph import ENTITY_CODES, default_resolver, entity_issues
+from project.core.validation_schemas import (  # ReviewBlocked re-exported for K4 callers
+    ConfidenceBreakdown, ReviewBlocked, ValidationIssue, ValidationReport,
+)
 from project.store.models import Provenance, VerifiedEpisode, label_key
 from project.store.vector_index import normalized
 
@@ -42,15 +45,6 @@ UNITS = (r"psi|bar|kpa|mpa|nm|n·m|n-m|ft-lbs?|lbf|mm|cm|rpm|kw|hz|°c|°f|degc|
          r"vac|vdc|amps?|volts?|litres?|liters?|ml")
 QUANTITY = re.compile(rf"(\d+(?:[.,]\d+)?)\s*({UNITS})?(?!\w)", re.IGNORECASE)
 NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
-
-
-class ReviewBlocked(ValueError):
-    """Approval refused because blocking issues remain unresolved."""
-
-    def __init__(self, issues: list[ValidationIssue]):
-        self.issues = issues
-        super().__init__("Unresolved blocking issues: " + ", ".join(
-            f"{i.code}@{i.field_path or '-'}" for i in issues))
 
 
 def episode_ids(draft: DraftRepairRecord) -> tuple[str, str]:
@@ -100,6 +94,9 @@ def static_issues(draft: DraftRepairRecord) -> list[ValidationIssue]:
             if getattr(attempt, child) is None:
                 issues.append(_issue("missing_required_fact", "blocking", f"failed_attempts.{index}.{child}",
                                      f"FailedAttempt requires {child}; the source draft does not state it"))
+    # K5 catalogue resolution; approval re-checks it on the reviewer-corrected values.
+    issues += entity_issues(default_resolver(), ex.machine_type and ex.machine_type.value,
+                            ex.machine_id and ex.machine_id.value)[0]
     fact_map = dict(facts(ex))
     for path, fact in fact_map.items():
         cited = spans.get(path)
@@ -250,15 +247,20 @@ def duplicate_issues(draft, fields, *, queue, store, trace_id, threshold, exclud
         issues.append(_issue("semantic_dedup_unavailable", "warning", None,
                              "No knowledge store configured; semantic duplicate check skipped"))
         return issues
-    text, machine = "\n".join(fields["symptoms"]), fields["machine_type"]
-    # Same normalized machine label only; K5 alias resolution will widen this.
+    resolver = default_resolver()
+
+    def machine_key(label):  # Catalogue ID when resolvable (K5), else normalized label.
+        return resolver.canonical_machine(label) or label_key(label)
+
+    text, machine = "\n".join(fields["symptoms"]), machine_key(fields["machine_type"])
+    # Verified episodes are stored with canonical machine IDs by A4.
     matches = [hit.episode_id for hit in store.search_symptoms(
         text, trace_id=trace_id, k=3, machine_type=machine, min_score=threshold) if hit.episode_id != episode_id]
     pending = [] if queue is None else [
         item for item in queue.list_items(status="pending")
         if item.item_id != exclude_item and item.source_sha256 != draft.source_sha256
         and item.draft.extraction.machine_type is not None and item.draft.extraction.symptoms
-        and label_key(item.draft.extraction.machine_type.value) == label_key(machine)]
+        and machine_key(item.draft.extraction.machine_type.value) == machine]
     if pending:
         texts = ["\n".join(f.value for f in item.draft.extraction.symptoms) for item in pending]
         vectors = normalized(store.embedder.encode([text] + texts), store.embedder.dimension)
@@ -299,7 +301,12 @@ def verify(draft, *, reviewer: str, verified_at, corrections=None):
     draft = DraftRepairRecord.model_validate(draft.model_dump(mode="json"))
     fields, supplied = apply_corrections(draft_fields(draft), corrections)
     static = static_issues(draft)
-    unresolved = [i for i in static if i.severity == "blocking" and not resolved(i, supplied)]
+    unresolved = [i for i in static if i.severity == "blocking" and i.code not in ENTITY_CODES
+                  and not resolved(i, supplied)]
+    # Entity checks are rerun on the corrected values: editing machine_type only
+    # helps if the new value maps to exactly one catalogue machine.
+    unresolved += [i for i in entity_issues(default_resolver(), fields["machine_type"], fields["machine_id"])[0]
+                   if i.severity == "blocking"]
     if unresolved:
         raise ReviewBlocked(unresolved)
     try:

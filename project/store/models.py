@@ -7,6 +7,25 @@ from project.core.extraction_schemas import EvidenceSpan, StrictModel
 from project.core.schemas import RepairRecord
 
 
+class EntityLink(StrictModel):
+    """A4 (K5) catalogue resolution of one record field. `raw` keeps the original text."""
+
+    field_path: str = Field(min_length=1)   # e.g. machine_type, machine_id, safety_warnings.0
+    kind: Literal["machine", "asset", "hazard"]
+    raw: str = Field(min_length=1)
+    entity_id: str | None = None             # Catalogue/canonical ID when resolved
+    status: Literal["resolved", "ambiguous", "unresolved", "conflict"]
+    method: str = Field(min_length=1)
+    candidates: list[str] = Field(default_factory=list)
+    resolver_version: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_status(self):
+        if (self.status == "resolved") != (self.entity_id is not None):
+            raise ValueError("Only resolved links carry an entity_id")
+        return self
+
+
 class Provenance(StrictModel):
     capture_id: str = Field(min_length=1)
     source_path: str = Field(min_length=1)
@@ -19,6 +38,8 @@ class Provenance(StrictModel):
     # Record fields whose values a human reviewer supplied or replaced (K4). These
     # have no transcript evidence; spans above still describe the original draft.
     reviewer_supplied_fields: list[str] = Field(default_factory=list)
+    # A4 (K5) entity resolution results; empty for episodes not written through A4.
+    entity_links: list[EntityLink] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_spans(self):

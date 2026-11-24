@@ -27,6 +27,9 @@ class BlackboardState(TypedDict, total=False):
     # A3 output (core.validation_schemas); every item awaits human review.
     validation_report: Optional[Dict[str, Any]]
     review_item_id: Optional[str]
+    # A4 (K5) approval-time output: canonical VerifiedEpisode and entity links.
+    verified_episode: Optional[Dict[str, Any]]
+    entity_links: List[Dict[str, Any]]
 
     # Diagnostic & Clarification State
     clarification_turns: int
