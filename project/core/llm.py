@@ -41,7 +41,7 @@ class GeminiLLMClient(LLMClient):
         api_key: Optional[str] = None,
         model: Optional[str] = None,
         temperature: float = 0.0,
-        timeout: float = 30.0,
+        timeout: Optional[float] = None,
         max_retries: int = 3,
     ):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY", "").strip()
@@ -50,8 +50,16 @@ class GeminiLLMClient(LLMClient):
         self.model = model or os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip()
         self.model_name = f"gemini:{self.model}"
         self.temperature = float(os.getenv("TEMPERATURE", str(temperature)))
-        self.timeout = timeout
+
+        # Configurable timeout: use explicit argument, or GEMINI_TIMEOUT_S env (default 60s)
+        if timeout is not None:
+            self.timeout = float(timeout)
+        else:
+            self.timeout = float(os.getenv("GEMINI_TIMEOUT_S", "60.0"))
+
         self.max_retries = max_retries
+        self.last_latency_ms: float = 0.0
+        self.last_token_count: Optional[int] = None
 
     def _get_client(self):
         try:
@@ -65,6 +73,23 @@ class GeminiLLMClient(LLMClient):
             api_key=self.api_key,
             http_options=types.HttpOptions(timeout=timeout_ms),
         )
+
+    def _get_thinking_config(self) -> Optional[Any]:
+        thinking_env = os.getenv("GEMINI_THINKING", "").strip().lower()
+        if not thinking_env or thinking_env == "default":
+            return None
+        from google.genai import types
+        if thinking_env == "off":
+            return types.ThinkingConfig(thinking_budget=0)
+        elif thinking_env == "minimal":
+            return types.ThinkingConfig(thinking_level=types.ThinkingLevel.MINIMAL)
+        elif thinking_env == "low":
+            return types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
+        elif thinking_env == "medium":
+            return types.ThinkingConfig(thinking_level=types.ThinkingLevel.MEDIUM)
+        elif thinking_env == "high":
+            return types.ThinkingConfig(thinking_level=types.ThinkingLevel.HIGH)
+        return None
 
     def _call_api_with_retry(
         self,
@@ -90,21 +115,39 @@ class GeminiLLMClient(LLMClient):
             config_kwargs["response_mime_type"] = "application/json"
             config_kwargs["response_schema"] = response_model
 
+        thinking_cfg = self._get_thinking_config()
+        if thinking_cfg is not None:
+            config_kwargs["thinking_config"] = thinking_cfg
+
         config = types.GenerateContentConfig(**config_kwargs)
 
         for attempt in range(self.max_retries):
+            t_start = time.perf_counter()
             try:
                 response = client.models.generate_content(
                     model=self.model,
                     contents=prompt,
                     config=config,
                 )
+                self.last_latency_ms = (time.perf_counter() - t_start) * 1000.0
+
+                usage = getattr(response, "usage_metadata", None)
+                if usage:
+                    self.last_token_count = getattr(usage, "total_token_count", None)
+
                 text = response.text or ""
                 # Verify JSON parseable if structured model was expected
                 if response_model is not None:
                     json.loads(text)
                 return text
             except Exception as e:
+                # If thinking_budget=0 is rejected by model with 400 Invalid Argument, fallback to MINIMAL
+                if "invalid argument" in str(e).lower() and config_kwargs.get("thinking_config"):
+                    try:
+                        config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_level=types.ThinkingLevel.MINIMAL)
+                        config = types.GenerateContentConfig(**config_kwargs)
+                    except Exception:
+                        pass
                 last_exception = e
                 wait_sec = (2 ** attempt) * 0.5
                 time.sleep(wait_sec)
@@ -141,6 +184,7 @@ class OpenAILLMClient(LLMClient):
         temperature: float = 0.0,
         timeout: float = 30.0,
         max_retries: int = 3,
+        base_url: Optional[str] = None,
     ):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
         if not self.api_key or self.api_key.startswith("your_"):
@@ -150,6 +194,9 @@ class OpenAILLMClient(LLMClient):
         self.temperature = float(os.getenv("TEMPERATURE", str(temperature)))
         self.timeout = timeout
         self.max_retries = max_retries
+        self.base_url = base_url or os.getenv("OPENAI_BASE_URL") or None
+        self.last_latency_ms: float = 0.0
+        self.last_token_count: Optional[int] = None
 
     def _call_api_with_retry(self, messages: List[Dict[str, str]], json_mode: bool = False) -> str:
         try:
@@ -157,10 +204,18 @@ class OpenAILLMClient(LLMClient):
         except ImportError:
             raise ImportError("openai package is required to run OpenAILLMClient.")
 
-        client = openai.OpenAI(api_key=self.api_key, timeout=self.timeout)
+        client_kwargs: Dict[str, Any] = {
+            "api_key": self.api_key,
+            "timeout": self.timeout,
+        }
+        if self.base_url:
+            client_kwargs["base_url"] = self.base_url
+
+        client = openai.OpenAI(**client_kwargs)
         last_exception = None
 
         for attempt in range(self.max_retries):
+            t_start = time.perf_counter()
             try:
                 kwargs: Dict[str, Any] = {
                     "model": self.model,
@@ -171,6 +226,9 @@ class OpenAILLMClient(LLMClient):
                     kwargs["response_format"] = {"type": "json_object"}
 
                 response = client.chat.completions.create(**kwargs)
+                self.last_latency_ms = (time.perf_counter() - t_start) * 1000.0
+                if getattr(response, "usage", None):
+                    self.last_token_count = getattr(response.usage, "total_tokens", None)
                 content = response.choices[0].message.content
                 return content or ""
             except Exception as e:

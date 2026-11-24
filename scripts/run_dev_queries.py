@@ -70,11 +70,11 @@ def run_dev_queries(force_fake: bool = False) -> List[Dict[str, Any]]:
     results = []
     # Print table header
     header = (
-        f"{'ID':<7} | {'Machine':<25} | {'Clarify?':<8} | {'Conf':<5} | "
-        f"{'Latency':<9} | {'Model':<18} | {'Top Fault Hypothesis / Question':<40}"
+        f"{'ID':<7} | {'Machine':<20} | {'Clarify?':<8} | {'Fallback?':<9} | {'Conf':<5} | "
+        f"{'Latency':<9} | {'Model':<15} | {'Error':<15} | {'Top Fault Hypothesis / Question':<35}"
     )
     print(header)
-    print("-" * 125)
+    print("-" * 140)
 
     for q in queries:
         qid = q["id"]
@@ -97,21 +97,37 @@ def run_dev_queries(force_fake: bool = False) -> List[Dict[str, Any]]:
         hypotheses = out_state.get("ranked_hypotheses", [])
         top_hyp = hypotheses[0] if hypotheses else None
 
+        # Determine fallback presence
+        decision = out_state.get("decision", "")
+        err_msg = out_state.get("error") or ""
+        if not err_msg and out_state.get("errors"):
+            err_msg = "; ".join(out_state["errors"])
+
+        is_fallback = (
+            decision == "FALLBACK_DIAGNOSIS"
+            or bool(err_msg)
+            or any("fallback" in (h.get("fault", "").lower()) for h in hypotheses)
+        )
+        fallback_str = "YES" if is_fallback else "NO"
+        err_display = (err_msg[:12] + "...") if len(err_msg) > 15 else (err_msg or "None")
+
         conf_str = f"{top_hyp['confidence']:.2f}" if top_hyp else "N/A"
         summary_text = (
             out_state.get("clarification_question")
             if clarify_needed
             else (top_hyp["fault"] if top_hyp else "None")
         )
-        if len(summary_text) > 40:
-            summary_text = summary_text[:37] + "..."
+        if len(summary_text) > 35:
+            summary_text = summary_text[:32] + "..."
 
-        m_display = machine if len(machine) <= 25 else machine[:22] + "..."
-        model_display = llm_backend if len(llm_backend) <= 18 else llm_backend[:15] + "..."
+        m_display = machine if len(machine) <= 20 else machine[:17] + "..."
+        model_display = llm_backend if len(llm_backend) <= 15 else llm_backend[:12] + "..."
+
+        tokens = out_state.get("tokens") or getattr(llm_client, "last_token_count", None)
 
         print(
-            f"{qid:<7} | {m_display:<25} | {clarify_str:<8} | {conf_str:<5} | "
-            f"{latency_ms:>7.1f}ms | {model_display:<18} | {summary_text:<40}"
+            f"{qid:<7} | {m_display:<20} | {clarify_str:<8} | {fallback_str:<9} | {conf_str:<5} | "
+            f"{latency_ms:>7.1f}ms | {model_display:<15} | {err_display:<15} | {summary_text:<35}"
         )
 
         results.append({
@@ -123,8 +139,21 @@ def run_dev_queries(force_fake: bool = False) -> List[Dict[str, Any]]:
             "ranked_hypotheses": hypotheses,
             "latency_ms": round(latency_ms, 2),
             "llm_backend": llm_backend,
-            "tokens_estimated": len(query_text.split()) + 45,  # Approx estimate
+            "is_fallback": is_fallback,
+            "error": err_msg or None,
+            "tokens": tokens,
         })
+
+    real_answers = sum(1 for r in results if not r["clarification_needed"] and not r["is_fallback"])
+    clarifications = sum(1 for r in results if r["clarification_needed"] and not r["is_fallback"])
+    fallbacks = sum(1 for r in results if r["is_fallback"])
+
+    print("-" * 140)
+    print(f"[*] SUMMARY: Real answers: {real_answers}/10 | Clarifications: {clarifications}/10 | Fallbacks: {fallbacks}/10")
+    print(f"[*] Results written to: {OUTPUT_LOG_PATH.resolve()}")
+    if llm_backend == "fake":
+        print("*** FAKE LLM - CANNED OUTPUT - NOT REAL DIAGNOSIS ***")
+    print("=" * 140)
 
     # Save output json
     OUTPUT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -135,18 +164,14 @@ def run_dev_queries(force_fake: bool = False) -> List[Dict[str, Any]]:
                 "llm_backend": llm_backend,
                 "is_fake": llm_backend == "fake",
                 "total_queries": len(results),
-                "clarifications_triggered": sum(1 for r in results if r["clarification_needed"]),
+                "real_answers": real_answers,
+                "clarifications": clarifications,
+                "fallbacks": fallbacks,
                 "results": results,
             },
             f,
             indent=2,
         )
-
-    print("-" * 105)
-    print(f"[*] Results written to: {OUTPUT_LOG_PATH.resolve()}")
-    if llm_backend == "fake":
-        print("*** FAKE LLM - CANNED OUTPUT - NOT REAL DIAGNOSIS ***")
-    print("=" * 105)
 
     return results
 
