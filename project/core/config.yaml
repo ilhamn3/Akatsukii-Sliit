@@ -124,6 +124,7 @@ pipelines:
   # Pipeline A: capture -> unverified draft -> A3 validation into the human review queue.
   # Only ReviewQueue.approve() publishes verified episodes, through A4 GraphAgent
   # (project.agents.a4_graph), which runs at approval time rather than as a node here.
+  # So this pipeline lists 3 nodes, but A4 is still a real, traced agent (docs/Workflow.md).
   A:
     name: "Ingestion Pipeline"
     entrypoint: "CaptureAgent"

@@ -39,6 +39,9 @@ class SQLiteStore:
                 actual = db.execute("SELECT value FROM store_meta WHERE key=?", (key,)).fetchone()[0]
                 if actual != value:
                     raise ValueError(f"Store {key} mismatch; explicit migration/reindex required")
+            # Monotonic data revision: bumped in every committing write, so any
+            # process can tell whether its cached projections are still current.
+            db.execute("INSERT OR IGNORE INTO store_meta VALUES ('revision', '0')")
 
     @contextmanager
     def connect(self):
@@ -52,6 +55,14 @@ class SQLiteStore:
             raise
         finally:
             db.close()
+
+    @staticmethod
+    def revision(db) -> int:
+        return int(db.execute("SELECT value FROM store_meta WHERE key='revision'").fetchone()[0])
+
+    @staticmethod
+    def bump_revision(db) -> None:
+        db.execute("UPDATE store_meta SET value = CAST(value AS INTEGER) + 1 WHERE key='revision'")
 
     @staticmethod
     def snapshot(db):
