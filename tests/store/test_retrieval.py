@@ -147,21 +147,22 @@ def test_agent_failure_is_traced_and_leaves_empty_evidence(isolated_trace):
 
 
 def test_pipeline_b_with_retrieval_node(store, monkeypatch):
-    """Ilham's Pipeline B with A6 inserted by config only (proposed I5 wiring)."""
+    """Ilham's Pipeline B with RetrievalNode using the real HybridRetriever backend (no stub)."""
+    monkeypatch.setenv("FACTORY_FAKE_LLM", "1")
+    monkeypatch.delenv("FACTORY_STUB_RETRIEVAL", raising=False)
     monkeypatch.setattr("project.agents.a6_retrieval.HybridRetriever", lambda: HybridRetriever(store))
     cfg = copy.deepcopy(load_config())
-    pipe = cfg["pipelines"]["B"]
-    pipe["agents"].append({"name": "RetrievalAgent", "module": "project.agents.a6_retrieval",
-                           "class": "RetrievalAgent", "enabled": True, "stub": False})
-    for edge in pipe["edges"]:
-        if edge["from"] == "DiagnosticAgent":
-            edge["on_false"] = "RetrievalAgent"
-    pipe["edges"].append({"from": "RetrievalAgent", "to": "DummyOrchestratorAgent"})
+    cfg["system"]["retrieval_backend"] = "real"
     state = create_initial_state("Drive belt slipping under load", machine_type="Conveyor Line", trace_id="TR-B-3")
     final = build_graph("B", config_override=cfg).invoke(state)
     senders = [m["sender"] for m in final["messages"]]
-    assert senders.index("RetrievalAgent") < senders.index("SafetyAgent")
+    assert senders[:4] == ["DiagnosticAgent", "RetrievalNode", "OrchestratorPlan", "SafetyAgent"]
+    assert senders[-1] == "OrchestratorFinalize"
+    assert final["evidence"][0]["metadata"]["record"]["machine_type"] == "conveyor_line"
     assert final["retrieved_episodes"][0]["metadata"]["record"]["machine_type"] == "conveyor_line"
+    assert not any(
+        ev.get("stub") for ev in final.get("audit_trace", []) if ev.get("agent") == "RetrievalNode"
+    )
 
 
 def test_dev_check_reports_code_computed_metrics(store):

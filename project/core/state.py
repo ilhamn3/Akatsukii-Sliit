@@ -41,9 +41,11 @@ class BlackboardState(TypedDict, total=False):
     selected_hypothesis: Optional[Dict[str, Any]]
 
     # Retrieval State
+    evidence: List[Dict[str, Any]]
     retrieved_episodes: List[Dict[str, Any]]
     graph_subgraph_nodes: List[str]
     failed_attempts_retrieved: List[str]
+    failed_attempts_to_avoid: List[str]
     retrieval_confidence: float
 
     # Safety Verification & Veto State
@@ -60,6 +62,7 @@ class BlackboardState(TypedDict, total=False):
     final_answer: Optional[Dict[str, Any]]
     abstained: bool
     escalated: bool
+    abstention_reason: Optional[str]
 
     # Messaging, Errors & Observability
     messages: List[Dict[str, Any]]
@@ -93,9 +96,11 @@ def create_initial_state(
         "clarification_question": None,
         "ranked_hypotheses": [],
         "selected_hypothesis": None,
+        "evidence": [],
         "retrieved_episodes": [],
         "graph_subgraph_nodes": [],
         "failed_attempts_retrieved": [],
+        "failed_attempts_to_avoid": [],
         "retrieval_confidence": 0.0,
         "candidate_steps": [],
         "safety_violations": [],
@@ -106,6 +111,7 @@ def create_initial_state(
         "final_answer": None,
         "abstained": False,
         "escalated": False,
+        "abstention_reason": None,
         "messages": [],
         "errors": [],
         "audit_trace": [],
