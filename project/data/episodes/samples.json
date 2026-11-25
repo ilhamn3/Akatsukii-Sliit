@@ -1,0 +1,1219 @@
+[
+  {
+    "narrative": {
+      "episode_id": "EP-0012",
+      "date": "2025-02-06",
+      "technician_id": "T01",
+      "shift": "day",
+      "machine_type": "air_compressor",
+      "machine_id": "CMP-01",
+      "source": "audio_debrief",
+      "narrative": "alright, got called to compressor one, the motor trips out on overload and hums when it starts. it was throwing the two two alarm. turned out, loose power terminal causing single sort of, phasing. so I have a look at the motor and starter terminals. and I tighten or swap like, out the burned terminal. should be okay now, keep an eye on it."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0012",
+      "fault_id": "A06",
+      "cause_family": "electrical",
+      "hazard_ids": [
+        "H02",
+        "H13"
+      ],
+      "record": {
+        "machine_type": "air_compressor",
+        "machine_id": "CMP-01",
+        "symptoms": [
+          "motor overload trips under load",
+          "motor hums",
+          "lights flicker when it starts",
+          "alarm ERR-A22"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "lock out and prove dead",
+            "timestamp": null,
+            "evidence_id": "EV-CMP-0012-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "inspect the motor and starter terminals",
+            "timestamp": "00:13",
+            "evidence_id": "EV-CMP-0012-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "tighten or replace the burned terminal",
+            "timestamp": "00:18",
+            "evidence_id": "EV-CMP-0012-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "check current balance on all phases",
+            "timestamp": null,
+            "evidence_id": "EV-CMP-0012-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "restart and monitor",
+            "timestamp": null,
+            "evidence_id": "EV-CMP-0012-S5"
+          }
+        ],
+        "tools": [
+          "multimeter",
+          "clamp meter",
+          "torque screwdriver"
+        ],
+        "parts": [
+          "terminal block"
+        ],
+        "root_cause": "loose power terminal causing single phasing",
+        "failed_attempts": [],
+        "safety_warnings": [
+          "Isolate, lock out and tag out the supply and prove dead before touching any electrical part.",
+          "Wait the drive's discharge time and measure DC bus voltage before touching drive or motor terminals."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-CMP-0012",
+        "source": "audio_debrief"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "motor hums"
+        ],
+        "error_code_mentioned": "ERR-A22",
+        "steps_mentioned": [
+          2,
+          3
+        ],
+        "steps_omitted": [
+          1,
+          4,
+          5
+        ],
+        "safety_step_mentioned": false,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": false,
+        "hazard_remark": null
+      }
+    }
+  },
+  {
+    "narrative": {
+      "episode_id": "EP-0002",
+      "date": "2025-01-07",
+      "technician_id": "T02",
+      "shift": "night",
+      "machine_type": "cnc_lathe",
+      "machine_id": "CNC-04",
+      "source": "shift_log",
+      "narrative": "CNC-04: tool marks repeating at regular spacing. Cause: turret not fully clamped because chips are packed under the clamp face. Fix: stop the spindle and LOTO; clean chips and old suds from the turret clamp face; check the turret seats flat with a feeler gauge; re-run a test cut. Tools: air gun with guard, brush, feeler gauge. OK, returned to production."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0002",
+      "fault_id": "L02",
+      "cause_family": "alignment",
+      "hazard_ids": [
+        "H06",
+        "H11"
+      ],
+      "record": {
+        "machine_type": "cnc_lathe",
+        "machine_id": "CNC-04",
+        "symptoms": [
+          "wavy surface finish on the part",
+          "loud chatter at the cut",
+          "tool marks repeating at regular spacing"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "stop the spindle and lock out",
+            "timestamp": null,
+            "evidence_id": "EV-CNC-0002-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "index the turret to a free station",
+            "timestamp": null,
+            "evidence_id": "EV-CNC-0002-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "clean chips and old coolant from the turret clamp face",
+            "timestamp": null,
+            "evidence_id": "EV-CNC-0002-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "check the turret seats flat with a feeler gauge",
+            "timestamp": null,
+            "evidence_id": "EV-CNC-0002-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "re-run a test cut",
+            "timestamp": null,
+            "evidence_id": "EV-CNC-0002-S5"
+          }
+        ],
+        "tools": [
+          "air gun with guard",
+          "brush",
+          "feeler gauge"
+        ],
+        "parts": [],
+        "root_cause": "turret not fully clamped because chips are packed under the clamp face",
+        "failed_attempts": [],
+        "safety_warnings": [
+          "Bring rotation to a full stop and lock out before reaching into the machine; no loose clothing or gloves near rotating parts.",
+          "Use hooks or brushes, not bare hands; wear cut-resistant gloves and eye protection."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-CNC-0002",
+        "source": "shift_log"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "tool marks repeating at regular spacing"
+        ],
+        "error_code_mentioned": null,
+        "steps_mentioned": [
+          1,
+          3,
+          4,
+          5
+        ],
+        "steps_omitted": [
+          2
+        ],
+        "safety_step_mentioned": true,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": false,
+        "hazard_remark": null
+      }
+    }
+  },
+  {
+    "narrative": {
+      "episode_id": "EP-0005",
+      "date": "2025-01-15",
+      "technician_id": "T03",
+      "shift": "day",
+      "machine_type": "hydraulic_press",
+      "machine_id": "HYD-01",
+      "source": "audio_debrief",
+      "narrative": "okay, quick one, this was on basically, press one, hydraulic oil is running hot and the temp alarm trips. also tank hot to touch, and oil looks thin and dark. it was throwing the three three alarm. turned out, oil cooler fan failed and cooler fins fouled. so I lock out the machine and let the oil cool. next you swap out the failed fan motor. so I clean the cooler fins with low-pressure air. next you run and make sure oil temperature stabilises. used multimeter, brush, air gun. ran it after, all good."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0005",
+      "fault_id": "P04",
+      "cause_family": "thermal",
+      "hazard_ids": [
+        "H02",
+        "H04"
+      ],
+      "record": {
+        "machine_type": "hydraulic_press",
+        "machine_id": "HYD-01",
+        "symptoms": [
+          "oil temperature alarm",
+          "tank hot to touch",
+          "oil looks thin and dark",
+          "alarm ERR-H33"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "lock out the machine and let the oil cool",
+            "timestamp": "00:18",
+            "evidence_id": "EV-HYD-0005-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "check the cooler fan rotation and motor",
+            "timestamp": null,
+            "evidence_id": "EV-HYD-0005-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "replace the failed fan motor",
+            "timestamp": "00:23",
+            "evidence_id": "EV-HYD-0005-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "clean the cooler fins with low-pressure air",
+            "timestamp": "00:26",
+            "evidence_id": "EV-HYD-0005-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "run and confirm oil temperature stabilises",
+            "timestamp": "00:30",
+            "evidence_id": "EV-HYD-0005-S5"
+          }
+        ],
+        "tools": [
+          "multimeter",
+          "brush",
+          "air gun"
+        ],
+        "parts": [
+          "cooler fan motor"
+        ],
+        "root_cause": "oil cooler fan failed and cooler fins fouled",
+        "failed_attempts": [],
+        "safety_warnings": [
+          "Isolate, lock out and tag out the supply and prove dead before touching any electrical part.",
+          "Let oil, gearbox or housing cool and wear heat-resistant gloves before draining or touching."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-HYD-0005",
+        "source": "audio_debrief"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "oil temperature alarm",
+          "tank hot to touch",
+          "oil looks thin and dark"
+        ],
+        "error_code_mentioned": "ERR-H33",
+        "steps_mentioned": [
+          1,
+          3,
+          4,
+          5
+        ],
+        "steps_omitted": [
+          2
+        ],
+        "safety_step_mentioned": true,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": false,
+        "hazard_remark": null
+      }
+    }
+  },
+  {
+    "narrative": {
+      "episode_id": "EP-0004",
+      "date": "2025-01-08",
+      "technician_id": "T04",
+      "shift": "swing",
+      "machine_type": "cnc_lathe",
+      "machine_id": "CNC-04",
+      "source": "audio_debrief",
+      "narrative": "right so, this was on lathe four, parts are coming off rough with a wavy finish and the cut sounds awful. so first thing I reduced you know, the feed rate. no luck, chatter stayed because the turret was still moving under load. problem was, turret not fully clamped because chips are packed under the left, sorry, the clamp face. so I stop the spindle and LOTO. so I clean chips and old suds from the turret clamp face. after that check the turret seats flat with a feeler uh, gauge. then I re-run a test cut. it's running fine now."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0004",
+      "fault_id": "L02",
+      "cause_family": "alignment",
+      "hazard_ids": [
+        "H06",
+        "H11"
+      ],
+      "record": {
+        "machine_type": "cnc_lathe",
+        "machine_id": "CNC-04",
+        "symptoms": [
+          "wavy surface finish on the part",
+          "loud chatter at the cut",
+          "tool marks repeating at regular spacing"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "stop the spindle and lock out",
+            "timestamp": "00:24",
+            "evidence_id": "EV-CNC-0004-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "index the turret to a free station",
+            "timestamp": null,
+            "evidence_id": "EV-CNC-0004-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "clean chips and old coolant from the turret clamp face",
+            "timestamp": "00:26",
+            "evidence_id": "EV-CNC-0004-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "check the turret seats flat with a feeler gauge",
+            "timestamp": "00:31",
+            "evidence_id": "EV-CNC-0004-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "re-run a test cut",
+            "timestamp": "00:36",
+            "evidence_id": "EV-CNC-0004-S5"
+          }
+        ],
+        "tools": [
+          "air gun with guard",
+          "brush",
+          "feeler gauge"
+        ],
+        "parts": [],
+        "root_cause": "turret not fully clamped because chips are packed under the clamp face",
+        "failed_attempts": [
+          {
+            "action": "reduced the feed rate",
+            "outcome": "no change",
+            "why_failed": "chatter stayed because the turret was still moving under load"
+          }
+        ],
+        "safety_warnings": [
+          "Bring rotation to a full stop and lock out before reaching into the machine; no loose clothing or gloves near rotating parts.",
+          "Use hooks or brushes, not bare hands; wear cut-resistant gloves and eye protection."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-CNC-0004",
+        "source": "audio_debrief"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "tool marks repeating at regular spacing"
+        ],
+        "error_code_mentioned": null,
+        "steps_mentioned": [
+          1,
+          3,
+          4,
+          5
+        ],
+        "steps_omitted": [
+          2
+        ],
+        "safety_step_mentioned": true,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": false,
+        "hazard_remark": null
+      }
+    }
+  },
+  {
+    "narrative": {
+      "episode_id": "EP-0009",
+      "date": "2025-01-21",
+      "technician_id": "T05",
+      "shift": "night",
+      "machine_type": "injection_moulding",
+      "machine_id": "INJ-04",
+      "source": "shift_log",
+      "narrative": "INJ-04: screw torque alarm at start; motor strains and stops. ERR-I33 active. tried forced the screw with higher torque - no good (can shear the screw). Cause: unmelted plastic frozen in the barrel after a cold start. Fix: LOTO the screw drive; bring the barrel up to temp and heat soak for the full soak time; retry screw rotation at low torque; purge the barrel with a purging compound; verify the melt temp is stable. Tools: purge compound, face shield, heat-resistant gloves. OK, returned to production."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0009",
+      "fault_id": "I04",
+      "cause_family": "thermal",
+      "hazard_ids": [
+        "H07",
+        "H02"
+      ],
+      "record": {
+        "machine_type": "injection_moulding",
+        "machine_id": "INJ-04",
+        "symptoms": [
+          "screw torque alarm at start",
+          "screw stuck after a cold start",
+          "motor strains and stops",
+          "alarm ERR-I33"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "lock out the screw drive",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0009-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "bring the barrel up to temperature and heat soak for the full soak time",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0009-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "retry screw rotation at low torque",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0009-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "purge the barrel with a purging compound",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0009-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "verify the melt temperature is stable",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0009-S5"
+          }
+        ],
+        "tools": [
+          "purge compound",
+          "face shield",
+          "heat-resistant gloves"
+        ],
+        "parts": [
+          "purging compound"
+        ],
+        "root_cause": "unmelted plastic frozen in the barrel after a cold start",
+        "failed_attempts": [
+          {
+            "action": "forced the screw with higher torque",
+            "outcome": "no change",
+            "why_failed": "can shear the screw"
+          }
+        ],
+        "safety_warnings": [
+          "Wear face shield and heat-resistant gloves; never face the nozzle when purging; let the barrel cool for non-heating work.",
+          "Isolate, lock out and tag out the supply and prove dead before touching any electrical part."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-INJ-0009",
+        "source": "shift_log"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "screw torque alarm at start",
+          "motor strains and stops"
+        ],
+        "error_code_mentioned": "ERR-I33",
+        "steps_mentioned": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "steps_omitted": [],
+        "safety_step_mentioned": true,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": false,
+        "hazard_remark": null
+      }
+    }
+  },
+  {
+    "narrative": {
+      "episode_id": "EP-0001",
+      "date": "2025-01-06",
+      "technician_id": "T06",
+      "shift": "day",
+      "machine_type": "conveyor_line",
+      "machine_id": "CNV-03",
+      "source": "audio_debrief",
+      "narrative": "alright, had a job on conveyor three, the sort of, chain keeps jumping on the um, sprocket and clicking. also chain jumps on the sprocket. problem was, stretched drive chain. so I stop and lock out the conveyor. then measure the chain elongation. so I replace the stretched chain. then check sprocket tooth wear. then I re-tension to spec and lubricate. had to grab drive chain from stores. it's running fine now."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0001",
+      "fault_id": "C06",
+      "cause_family": "wear",
+      "hazard_ids": [
+        "H08",
+        "H03"
+      ],
+      "record": {
+        "machine_type": "conveyor_line",
+        "machine_id": "CNV-03",
+        "symptoms": [
+          "chain jumps on the sprocket",
+          "clicking noise at the drive",
+          "slack hanging on the return side"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "stop and lock out the conveyor",
+            "timestamp": "00:12",
+            "evidence_id": "EV-CNV-0001-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "measure the chain elongation",
+            "timestamp": "00:15",
+            "evidence_id": "EV-CNV-0001-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "replace the stretched chain",
+            "timestamp": "00:17",
+            "evidence_id": "EV-CNV-0001-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "check sprocket tooth wear",
+            "timestamp": "00:19",
+            "evidence_id": "EV-CNV-0001-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "re-tension to spec and lubricate",
+            "timestamp": "00:21",
+            "evidence_id": "EV-CNV-0001-S5"
+          }
+        ],
+        "tools": [
+          "chain gauge",
+          "chain breaker",
+          "spanner set"
+        ],
+        "parts": [
+          "drive chain"
+        ],
+        "root_cause": "stretched drive chain",
+        "failed_attempts": [],
+        "safety_warnings": [
+          "Stop and lock out the conveyor; never clean, lubricate or clear jams on a running line.",
+          "Keep hands out of the die, mould, belt nip or ram path; block moving parts mechanically before entering."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-CNV-0001",
+        "source": "audio_debrief"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "clicking noise at the drive",
+          "chain jumps on the sprocket"
+        ],
+        "error_code_mentioned": null,
+        "steps_mentioned": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "steps_omitted": [],
+        "safety_step_mentioned": true,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": true,
+        "hazard_remark": null
+      }
+    }
+  },
+  {
+    "narrative": {
+      "episode_id": "EP-0006",
+      "date": "2025-01-18",
+      "technician_id": "T07",
+      "shift": "swing",
+      "machine_type": "cnc_lathe",
+      "machine_id": "CNC-03",
+      "source": "audio_debrief",
+      "narrative": "okay so, had a job on lathe three, parts are coming off rough with a wavy finish and the top, no, the cut sounds awful. also wavy surface finish on the part. problem was, turret not fully clamped because chips are packed under the clamp face. so I stop the yeah, spindle and lock out. next you clean chips and old coolant from the turret clamp face. after that check the turret seats flat with a feeler gauge. so I re-run a test cut. it's running fine now."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0006",
+      "fault_id": "L02",
+      "cause_family": "alignment",
+      "hazard_ids": [
+        "H06",
+        "H11"
+      ],
+      "record": {
+        "machine_type": "cnc_lathe",
+        "machine_id": "CNC-03",
+        "symptoms": [
+          "wavy surface finish on the part",
+          "loud chatter at the cut",
+          "tool marks repeating at regular spacing"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "stop the spindle and lock out",
+            "timestamp": "00:18",
+            "evidence_id": "EV-CNC-0006-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "index the turret to a free station",
+            "timestamp": null,
+            "evidence_id": "EV-CNC-0006-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "clean chips and old coolant from the turret clamp face",
+            "timestamp": "00:22",
+            "evidence_id": "EV-CNC-0006-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "check the turret seats flat with a feeler gauge",
+            "timestamp": "00:26",
+            "evidence_id": "EV-CNC-0006-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "re-run a test cut",
+            "timestamp": "00:31",
+            "evidence_id": "EV-CNC-0006-S5"
+          }
+        ],
+        "tools": [
+          "air gun with guard",
+          "brush",
+          "feeler gauge"
+        ],
+        "parts": [],
+        "root_cause": "turret not fully clamped because chips are packed under the clamp face",
+        "failed_attempts": [],
+        "safety_warnings": [
+          "Bring rotation to a full stop and lock out before reaching into the machine; no loose clothing or gloves near rotating parts.",
+          "Use hooks or brushes, not bare hands; wear cut-resistant gloves and eye protection."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-CNC-0006",
+        "source": "audio_debrief"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "loud chatter at the cut",
+          "wavy surface finish on the part"
+        ],
+        "error_code_mentioned": null,
+        "steps_mentioned": [
+          1,
+          3,
+          4,
+          5
+        ],
+        "steps_omitted": [
+          2
+        ],
+        "safety_step_mentioned": true,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": false,
+        "hazard_remark": null
+      }
+    }
+  },
+  {
+    "narrative": {
+      "episode_id": "EP-0040",
+      "date": "2025-03-26",
+      "technician_id": "T08",
+      "shift": "day",
+      "machine_type": "injection_moulding",
+      "machine_id": "INJ-04",
+      "source": "shift_log",
+      "narrative": "INJ-04: cushion position keeps changing; parts not filling completely. ERR-I11 active. Cause: worn check ring letting melt flow back. Fix: lock out and let the barrel cool to a safe temperature; pull the screw; inspect the check ring and seat; replace the worn check ring set; reinstall and make sure a steady cushion. Tools: screw puller, spanner set, brass brush. Parts: check ring set. OK, returned to production."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0040",
+      "fault_id": "I01",
+      "cause_family": "wear",
+      "hazard_ids": [
+        "H07",
+        "H01",
+        "H02"
+      ],
+      "record": {
+        "machine_type": "injection_moulding",
+        "machine_id": "INJ-04",
+        "symptoms": [
+          "parts not filling completely",
+          "cushion position keeps changing",
+          "shot size varies shot to shot",
+          "alarm ERR-I11"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "lock out and let the barrel cool to a safe temperature",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0040-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "pull the screw",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0040-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "inspect the check ring and seat",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0040-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "replace the worn check ring set",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0040-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "reinstall and confirm a steady cushion",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0040-S5"
+          }
+        ],
+        "tools": [
+          "screw puller",
+          "spanner set",
+          "brass brush"
+        ],
+        "parts": [
+          "check ring set"
+        ],
+        "root_cause": "worn check ring letting melt flow back",
+        "failed_attempts": [],
+        "safety_warnings": [
+          "Wear face shield and heat-resistant gloves; never face the nozzle when purging; let the barrel cool for non-heating work.",
+          "Depressurise the circuit and verify zero on the gauge before opening any line or fitting.",
+          "Isolate, lock out and tag out the supply and prove dead before touching any electrical part."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-INJ-0040",
+        "source": "shift_log"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "cushion position keeps changing",
+          "parts not filling completely"
+        ],
+        "error_code_mentioned": "ERR-I11",
+        "steps_mentioned": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "steps_omitted": [],
+        "safety_step_mentioned": true,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": true,
+        "hazard_remark": null
+      }
+    }
+  },
+  {
+    "narrative": {
+      "episode_id": "EP-0003",
+      "date": "2025-01-08",
+      "technician_id": "T09",
+      "shift": "night",
+      "machine_type": "injection_moulding",
+      "machine_id": "INJ-03",
+      "source": "audio_debrief",
+      "narrative": "okay, quick one, operator called um, me over, moulding machine three, parts are coming out incomplete and the shot size is all over the like, place. also shot size varies shot to shot, and cushion position keeps uh, changing. it was throwing the one one alarm. so first thing I increased the, uh, the shot size. didn't help, cushion still you know, varied. turned out, worn check ring letting melt flow I mean, back. so I lock out and let the barrel cool to a safe temperature. after that pull the screw. then inspect the check ring and seat. next you reinstall and sort of, confirm a steady cushion. had to grab check ring set from stores. tested it, no alarm since."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0003",
+      "fault_id": "I01",
+      "cause_family": "wear",
+      "hazard_ids": [
+        "H07",
+        "H01",
+        "H02"
+      ],
+      "record": {
+        "machine_type": "injection_moulding",
+        "machine_id": "INJ-03",
+        "symptoms": [
+          "parts not filling completely",
+          "cushion position keeps changing",
+          "shot size varies shot to shot",
+          "alarm ERR-I11"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "lock out and let the barrel cool to a safe temperature",
+            "timestamp": "00:29",
+            "evidence_id": "EV-INJ-0003-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "pull the screw",
+            "timestamp": "00:34",
+            "evidence_id": "EV-INJ-0003-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "inspect the check ring and seat",
+            "timestamp": "00:36",
+            "evidence_id": "EV-INJ-0003-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "replace the worn check ring set",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0003-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "reinstall and confirm a steady cushion",
+            "timestamp": "00:39",
+            "evidence_id": "EV-INJ-0003-S5"
+          }
+        ],
+        "tools": [
+          "screw puller",
+          "spanner set",
+          "brass brush"
+        ],
+        "parts": [
+          "check ring set"
+        ],
+        "root_cause": "worn check ring letting melt flow back",
+        "failed_attempts": [
+          {
+            "action": "increased the shot size",
+            "outcome": "no change",
+            "why_failed": "cushion still varied"
+          }
+        ],
+        "safety_warnings": [
+          "Wear face shield and heat-resistant gloves; never face the nozzle when purging; let the barrel cool for non-heating work.",
+          "Depressurise the circuit and verify zero on the gauge before opening any line or fitting.",
+          "Isolate, lock out and tag out the supply and prove dead before touching any electrical part."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-INJ-0003",
+        "source": "audio_debrief"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "parts not filling completely",
+          "shot size varies shot to shot",
+          "cushion position keeps changing"
+        ],
+        "error_code_mentioned": "ERR-I11",
+        "steps_mentioned": [
+          1,
+          2,
+          3,
+          5
+        ],
+        "steps_omitted": [
+          4
+        ],
+        "safety_step_mentioned": true,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": true,
+        "hazard_remark": null
+      }
+    }
+  },
+  {
+    "narrative": {
+      "episode_id": "EP-0025",
+      "date": "2025-02-27",
+      "technician_id": "T10",
+      "shift": "swing",
+      "machine_type": "injection_moulding",
+      "machine_id": "INJ-03",
+      "source": "audio_debrief",
+      "narrative": "okay, quick one, got called to moulding uh, machine three, one barrel zone keeps heating and the material is smoking. first I raised the setpoint. no luck, made the sort of, overheating worse. problem was, failed thermocouple reading um, low so the heater stays on. so I switch off the yeah, heaters and lock out. and I let the barrel I mean, cool. after that test the zone thermocouple against a reference. after that replace the failed thermocouple. had to grab thermocouple from stores. tested it, no alarm since."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0025",
+      "fault_id": "I03",
+      "cause_family": "sensor",
+      "hazard_ids": [
+        "H07",
+        "H02"
+      ],
+      "record": {
+        "machine_type": "injection_moulding",
+        "machine_id": "INJ-03",
+        "symptoms": [
+          "barrel temperature climbing above setpoint",
+          "one zone reads low but material is smoking",
+          "heater stays on continuously",
+          "alarm ERR-I27"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "switch off the heaters and lock out",
+            "timestamp": "00:18",
+            "evidence_id": "EV-INJ-0025-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "let the barrel cool",
+            "timestamp": "00:22",
+            "evidence_id": "EV-INJ-0025-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "test the zone thermocouple against a reference",
+            "timestamp": "00:25",
+            "evidence_id": "EV-INJ-0025-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "replace the failed thermocouple",
+            "timestamp": "00:28",
+            "evidence_id": "EV-INJ-0025-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "power up and watch the zone reach setpoint without overshoot",
+            "timestamp": null,
+            "evidence_id": "EV-INJ-0025-S5"
+          }
+        ],
+        "tools": [
+          "multimeter",
+          "reference thermometer",
+          "spanner set"
+        ],
+        "parts": [
+          "thermocouple"
+        ],
+        "root_cause": "failed thermocouple reading low so the heater stays on",
+        "failed_attempts": [
+          {
+            "action": "raised the setpoint",
+            "outcome": "no change",
+            "why_failed": "made the overheating worse"
+          }
+        ],
+        "safety_warnings": [
+          "Wear face shield and heat-resistant gloves; never face the nozzle when purging; let the barrel cool for non-heating work.",
+          "Isolate, lock out and tag out the supply and prove dead before touching any electrical part."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-INJ-0025",
+        "source": "audio_debrief"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "barrel temperature climbing above setpoint"
+        ],
+        "error_code_mentioned": null,
+        "steps_mentioned": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "steps_omitted": [
+          5
+        ],
+        "safety_step_mentioned": true,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": true,
+        "hazard_remark": null
+      }
+    }
+  },
+  {
+    "narrative": {
+      "episode_id": "EP-0011",
+      "date": "2025-02-02",
+      "technician_id": "T11",
+      "shift": "day",
+      "machine_type": "conveyor_line",
+      "machine_id": "CNV-02",
+      "source": "shift_log",
+      "narrative": "CNV-02: high pitched squeal from one roller; roller feels rough when spun. tried slackened the belt - no good (noise stayed). Cause: failed roller bearing with no grease. Fix: stop and LOTO the conveyor; identify the squealing roller by spinning by hand; replace the failed bearing; grease all bearings to schedule; restart and listen. Parts: roller bearing, grease. OK, returned to production."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0011",
+      "fault_id": "C08",
+      "cause_family": "lubrication",
+      "hazard_ids": [
+        "H08",
+        "H03"
+      ],
+      "record": {
+        "machine_type": "conveyor_line",
+        "machine_id": "CNV-02",
+        "symptoms": [
+          "high pitched squeal from one roller",
+          "roller feels rough when spun",
+          "heat at the roller end"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "stop and lock out the conveyor",
+            "timestamp": null,
+            "evidence_id": "EV-CNV-0011-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "identify the squealing roller by spinning by hand",
+            "timestamp": null,
+            "evidence_id": "EV-CNV-0011-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "replace the failed bearing",
+            "timestamp": null,
+            "evidence_id": "EV-CNV-0011-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "grease all bearings to schedule",
+            "timestamp": null,
+            "evidence_id": "EV-CNV-0011-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "restart and listen",
+            "timestamp": null,
+            "evidence_id": "EV-CNV-0011-S5"
+          }
+        ],
+        "tools": [
+          "grease gun",
+          "bearing puller"
+        ],
+        "parts": [
+          "roller bearing",
+          "grease"
+        ],
+        "root_cause": "failed roller bearing with no grease",
+        "failed_attempts": [
+          {
+            "action": "slackened the belt",
+            "outcome": "no change",
+            "why_failed": "noise stayed"
+          }
+        ],
+        "safety_warnings": [
+          "Stop and lock out the conveyor; never clean, lubricate or clear jams on a running line.",
+          "Keep hands out of the die, mould, belt nip or ram path; block moving parts mechanically before entering."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-CNV-0011",
+        "source": "shift_log"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "high pitched squeal from one roller",
+          "roller feels rough when spun"
+        ],
+        "error_code_mentioned": null,
+        "steps_mentioned": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "steps_omitted": [],
+        "safety_step_mentioned": true,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": true,
+        "hazard_remark": null
+      }
+    }
+  },
+  {
+    "narrative": {
+      "episode_id": "EP-0030",
+      "date": "2025-03-13",
+      "technician_id": "T12",
+      "shift": "night",
+      "machine_type": "air_compressor",
+      "machine_id": "CMP-02",
+      "source": "audio_debrief",
+      "narrative": "yeah so, this was on compressor two, the safety valve keeps blowing off. also safety valve lifts and vents. found it in the end, faulty pressure switch so the comp never unloads. so I vent to zero pressure. then test the left, sorry, the pressure switch against a calibrated like, gauge. so I swap out the faulty pressure switch. then I restart and confirm it I mean, unloads at cut-out. used calibrated gauge, spanner set. tested it, no alarm since."
+    },
+    "ground_truth": {
+      "episode_id": "EP-0030",
+      "fault_id": "A07",
+      "cause_family": "sensor",
+      "hazard_ids": [
+        "H14",
+        "H05",
+        "H02"
+      ],
+      "record": {
+        "machine_type": "air_compressor",
+        "machine_id": "CMP-02",
+        "symptoms": [
+          "safety valve lifts and vents",
+          "pressure goes above cut-out",
+          "loud blast of air"
+        ],
+        "steps": [
+          {
+            "step_number": 1,
+            "description": "stop and lock out the compressor",
+            "timestamp": null,
+            "evidence_id": "EV-CMP-0030-S1"
+          },
+          {
+            "step_number": 2,
+            "description": "vent to zero pressure",
+            "timestamp": "00:12",
+            "evidence_id": "EV-CMP-0030-S2"
+          },
+          {
+            "step_number": 3,
+            "description": "test the pressure switch against a calibrated gauge",
+            "timestamp": "00:15",
+            "evidence_id": "EV-CMP-0030-S3"
+          },
+          {
+            "step_number": 4,
+            "description": "replace the faulty pressure switch",
+            "timestamp": "00:20",
+            "evidence_id": "EV-CMP-0030-S4"
+          },
+          {
+            "step_number": 5,
+            "description": "restart and confirm it unloads at cut-out",
+            "timestamp": "00:23",
+            "evidence_id": "EV-CMP-0030-S5"
+          }
+        ],
+        "tools": [
+          "calibrated gauge",
+          "spanner set"
+        ],
+        "parts": [
+          "pressure switch"
+        ],
+        "root_cause": "faulty pressure switch so the compressor never unloads",
+        "failed_attempts": [],
+        "safety_warnings": [
+          "Never plug, gag or adjust a safety valve; never raise settings beyond rated pressure.",
+          "Vent the receiver and lines to zero pressure before servicing any pressurised component.",
+          "Isolate, lock out and tag out the supply and prove dead before touching any electrical part."
+        ],
+        "confidence": 1.0,
+        "evidence_id": "EV-CMP-0030",
+        "source": "audio_debrief"
+      },
+      "narrative_coverage": {
+        "symptoms_mentioned": [
+          "loud blast of air",
+          "safety valve lifts and vents"
+        ],
+        "error_code_mentioned": null,
+        "steps_mentioned": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "steps_omitted": [
+          1
+        ],
+        "safety_step_mentioned": false,
+        "failed_attempts_by_other_shift": [],
+        "parts_mentioned": false,
+        "hazard_remark": null
+      }
+    }
+  }
+]
