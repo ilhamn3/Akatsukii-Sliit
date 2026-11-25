@@ -20,6 +20,7 @@ from project.core.schemas import ActionStep
 logger = logging.getLogger(__name__)
 
 DEFAULT_RULES_YAML = Path(__file__).resolve().parent / "rules.yaml"
+DEFAULT_UNSAFE_PATTERNS_YAML = Path(__file__).resolve().parent / "unsafe_request_patterns.yaml"
 DEFAULT_HAZARDS_JSON = (
     Path(__file__).resolve().parent.parent.parent / "data" / "fault_catalogue" / "hazards.json"
 )
@@ -145,6 +146,59 @@ class RuleEngine:
         else:
             self.rules = load_safety_rules(rules_yaml_path, hazards_json_path)
             self.hazard_map = {r.hazard_id: r for r in self.rules if r.hazard_id}
+        self.unsafe_patterns = self._load_unsafe_patterns()
+
+    def _load_unsafe_patterns(self) -> List[Dict[str, Any]]:
+        if not DEFAULT_UNSAFE_PATTERNS_YAML.exists():
+            return []
+        try:
+            with open(DEFAULT_UNSAFE_PATTERNS_YAML, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+            return list(data.get("patterns") or [])
+        except Exception as e:
+            logger.warning("Failed to load unsafe_request_patterns.yaml: %s", e)
+            return []
+
+    def evaluate_unsafe_request(self, query: str) -> List[RuleHit]:
+        """Scan raw user query for requests to skip or bypass required safety controls (SR-X05)."""
+        if not query or not self.unsafe_patterns:
+            return []
+        q_lower = query.lower()
+        hits: List[RuleHit] = []
+        seen_controls = set()
+        for pat in self.unsafe_patterns:
+            regex = pat.get("regex", "")
+            if not regex or not re.search(regex, q_lower):
+                continue
+            control_label = pat.get("control_label", "required safety control")
+            if control_label in seen_controls:
+                continue
+            seen_controls.add(control_label)
+            hids = list(pat.get("hazard_ids") or [])
+            primary_hid = hids[0] if hids else None
+            cat_rule = self.hazard_map.get(primary_hid) if primary_hid else None
+            req_control = (
+                cat_rule.required_control
+                if cat_rule
+                else f"Enforce {control_label} before performing any work."
+            )
+            hid_label = ", ".join(hids) if hids else "SR-X05"
+            hits.append(
+                RuleHit(
+                    rule_id="SR-X05",
+                    hazard_id=primary_hid,
+                    name="Unsafe shortcut or safety-control bypass request",
+                    severity="critical",
+                    action="veto",
+                    reason=(
+                        f"Request to skip {control_label} refused. "
+                        f"Required control ({hid_label}): {req_control}"
+                    ),
+                    suggested_amendment=req_control,
+                    violating_step=query.strip(),
+                )
+            )
+        return hits
 
     def _normalize_steps(
         self,
@@ -183,6 +237,11 @@ class RuleEngine:
         combined_steps_text = " \n ".join(norm_steps).lower()
         context_hazard_ids = set(context.get("hazard_ids") or [])
         hits: List[RuleHit] = []
+
+        # 0. Cross-cutting SR-X05 check: Unsafe shortcut/bypass request in raw_query
+        raw_query = str(context.get("query") or "")
+        if raw_query:
+            hits.extend(self.evaluate_unsafe_request(raw_query))
 
         # 1. Cross-cutting SR-X04 check: Unknown or unclassified hazard class
         for hid in context_hazard_ids:

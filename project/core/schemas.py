@@ -143,6 +143,9 @@ class FinalAnswer(BaseModel):
     abstained: bool = False
     escalated: bool = False
     abstention_reason: Optional[str] = None
+    refusal: Optional[str] = None
+    alternative_hypotheses: List[Dict[str, Any]] = Field(default_factory=list)
+    escalation_ticket_id: Optional[str] = None
     trace_id: str = Field(..., min_length=1, description="Trace ID linking this answer to the audit log")
 
     @model_validator(mode="after")

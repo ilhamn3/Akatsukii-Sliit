@@ -3,11 +3,14 @@
 import json
 from pathlib import Path
 from project.core.schemas import Evidence
-from project.store.embeddings import MiniLMEmbedder, storage_root
+from project.store.embeddings import MiniLMEmbedder, get_cached_embedder, storage_root
 from project.store.graph import KnowledgeGraph
 from project.store.models import VerifiedEpisode, label_key, symptom_text
 from project.store.sqlite_db import SQLiteStore
 from project.store.vector_index import VectorIndex, normalized
+
+
+_SNAPSHOT_CACHE: dict[Path, tuple[list, dict]] = {}
 
 
 class KnowledgeStore:
@@ -18,7 +21,7 @@ class KnowledgeStore:
     """
 
     def __init__(self, db_path: Path | None = None, *, embedder=None):
-        self.embedder = embedder if embedder is not None else MiniLMEmbedder()
+        self.embedder = embedder if embedder is not None else get_cached_embedder()
         self.db = SQLiteStore(db_path or storage_root() / "store" / "repairs.sqlite3",
                               model_id=self.embedder.model_id, dimension=self.embedder.dimension)
 
@@ -63,6 +66,7 @@ class KnowledgeStore:
                 KnowledgeGraph(episodes)
                 self.db.audit(db, trace_id, "STORE_UPSERT", {"episode_id": episode.episode_id,
                               "evidence_id": episode.record.evidence_id, "embedding_model": self.embedder.model_id})
+            _SNAPSHOT_CACHE.pop(self.db.path.resolve(), None)
             return episode.episode_id
         except Exception as exc:
             with self.db.connect() as db:
@@ -71,12 +75,16 @@ class KnowledgeStore:
 
     def _snapshot(self, trace_id, operation):
         self._trace(trace_id)
+        cache_key = self.db.path.resolve()
+        cached = _SNAPSHOT_CACHE.get(cache_key)
         with self.db.connect() as db:
-            # One SELECT supplies a consistent snapshot; release its read lock
-            # before appending the audit event, avoiding read-to-write lock upgrades.
-            episodes, vectors = self.db.snapshot(db)
+            if cached is not None:
+                episodes, vectors = cached
+            else:
+                episodes, vectors = self.db.snapshot(db)
+                _SNAPSHOT_CACHE[cache_key] = (episodes, vectors)
             self.db.audit(db, trace_id, operation, {"episode_count": len(episodes)})
-        return episodes, vectors
+        return [e.model_copy(deep=True) for e in episodes], {k: v.copy() for k, v in vectors.items()}
 
     def snapshot(self, *, trace_id: str, operation: str = "STORE_SNAPSHOT"):
         """One consistent committed read: (episodes, {episode_id: unit vector}).
