@@ -16,6 +16,9 @@ class Provenance(StrictModel):
     evidence_spans: list[EvidenceSpan] = Field(min_length=1)
     extraction_model: str | None = None
     prompt_version: str | None = None
+    # Record fields whose values a human reviewer supplied or replaced (K4). These
+    # have no transcript evidence; spans above still describe the original draft.
+    reviewer_supplied_fields: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_spans(self):

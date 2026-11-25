@@ -25,7 +25,9 @@ The additive envelope preserves the capture ID, source path/hash/type, original
 draft evidence spans, extraction model/prompt version when available, reviewer and
 verification timestamp. Span paths retain their draft-field meaning; A3 must preserve
 the mapping through conversion. Overall outcome is a separate nullable envelope field
-because the shared RepairRecord does not currently define it. K5 owns alias/catalogue
+because the shared RepairRecord does not currently define it. K4 adds the optional
+`provenance.reviewer_supplied_fields` list naming record fields a human reviewer
+supplied or replaced (no transcript evidence); it defaults to empty. K5 owns alias/catalogue
 resolution; the store only normalizes case and whitespace for category comparison.
 
 ## Architecture and consistency

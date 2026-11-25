@@ -24,6 +24,9 @@ class BlackboardState(TypedDict, total=False):
     capture_request: Dict[str, Any]
     capture_result: Optional[Dict[str, Any]]
     draft_record: Optional[Dict[str, Any]]
+    # A3 output (core.validation_schemas); every item awaits human review.
+    validation_report: Optional[Dict[str, Any]]
+    review_item_id: Optional[str]
 
     # Diagnostic & Clarification State
     clarification_turns: int
