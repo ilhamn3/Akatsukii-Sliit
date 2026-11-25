@@ -14,5 +14,5 @@ for how to run a session.
 
 Packet assignment: P01 and P06 get A, P02 and P07 get B, P03 gets C, P04 gets D, P05 gets E.
 
-Completed sheets go in `project/human_study/results/` (next step). Signed consent forms
+Completed sheets go in `project/human_study/results/`, named `P01_packet_A.csv` and `P01_extraction.csv`, with the filled `participants.csv` beside them. Then run `python project/human_study/build_grading.py` (see `../grading/README.md`). Signed consent forms
 **never** go in the repository. Keep them in `project/human_study/private/`, which Git ignores.
