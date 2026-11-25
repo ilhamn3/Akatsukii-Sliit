@@ -29,11 +29,19 @@ def instantiate_agent(agent_cfg: Dict[str, Any]) -> BaseAgent:
     """Dynamically load and instantiate an agent class defined in config.yaml."""
     module_name = agent_cfg["module"]
     class_name = agent_cfg["class"]
+    params = agent_cfg.get("params", {})
+    name = agent_cfg.get("name")
 
     try:
         mod = importlib.import_module(module_name)
         cls = getattr(mod, class_name)
-        agent = cls()
+        init_params = dict(params)
+        if name and "name" not in init_params:
+            import inspect
+            sig = inspect.signature(cls.__init__)
+            if "name" in sig.parameters:
+                init_params["name"] = name
+        agent = cls(**init_params)
         if agent_cfg.get("stub", False) or "stubs" in module_name:
             agent.is_stub = True
         return agent
@@ -127,6 +135,50 @@ def build_graph(
                     {
                         "clarify": true_target,
                         "continue": false_target,
+                    },
+                )
+            elif cond_type == "check_abstention":
+                raw_true = edge.get("on_true", "__end__")
+                raw_false = edge.get("on_false", "__end__")
+                true_target = END if raw_true in ("__end__", "END") else raw_true
+                false_target = END if raw_false in ("__end__", "END") else raw_false
+
+                def route_abstention(state: BlackboardState) -> str:
+                    return "abstain" if state.get("abstained") else "proceed"
+
+                builder.add_conditional_edges(
+                    src,
+                    route_abstention,
+                    {
+                        "abstain": true_target,
+                        "proceed": false_target,
+                    },
+                )
+            elif cond_type == "check_safety_verdict":
+                raw_approve = edge.get("on_approve", "__end__")
+                raw_revise = edge.get("on_revise", "__end__")
+                raw_exhausted = edge.get("on_exhausted", "__end__")
+                max_loops = int(cfg.get("system", {}).get("safety_max_revision_loops", 2))
+
+                approve_target = END if raw_approve in ("__end__", "END") else raw_approve
+                revise_target = END if raw_revise in ("__end__", "END") else raw_revise
+                exhausted_target = END if raw_exhausted in ("__end__", "END") else raw_exhausted
+
+                def route_safety(state: BlackboardState) -> str:
+                    if state.get("safety_approved"):
+                        return "approve"
+                    loop_count = int(state.get("safety_loop_count", 0))
+                    if loop_count < max_loops and not state.get("escalated_to_supervisor"):
+                        return "revise"
+                    return "exhausted"
+
+                builder.add_conditional_edges(
+                    src,
+                    route_safety,
+                    {
+                        "approve": approve_target,
+                        "revise": revise_target,
+                        "exhausted": exhausted_target,
                     },
                 )
         else:

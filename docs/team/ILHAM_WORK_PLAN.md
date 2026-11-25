@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 23 / 30 points · 77% complete**
+**Overall: 26 / 30 points · 87% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP1 | Foundation and architecture | 12 | 12 | 100% |
-| WP5 | Assistance agents 5, 7 and 8 | 18 | 11 | 61% |
+| WP5 | Assistance agents 5, 7 and 8 | 18 | 14 | 78% |
 <!-- PROGRESS:END -->
 
 **How to update:** edit only the **Done %** column below (0-100). Points earned = Pts x Done %. A subtask is 100% only when it meets its "done when" in section 3 and has been reviewed. Partial progress is fine (25 / 50 / 75%).
@@ -40,7 +40,7 @@
 | 5.2 | Diagnostic agent: clarifying-question flow | 2 | 24 Nov | 100% |
 | 5.3 | Safety rule base (from Tharshanth's hazard list) | 3 | 24 Nov | 100% |
 | 5.4 | Safety Verification agent: approve / amend / veto with reason | 3 | 26 Nov | 100% |
-| 5.5 | Orchestrator: task delegation and adaptive routing | 3 | 26 Nov | 0% |
+| 5.5 | Orchestrator: task delegation and adaptive routing | 3 | 26 Nov | 100% |
 | 5.6 | Orchestrator: conflict ranking, veto loop (max 2), abstention, human escalation | 3 | 26 Nov | 0% |
 | 5.7 | End-to-end integration run and adversarial safety tests | 1 | 28 Nov | 0% |
 
@@ -165,5 +165,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | I3b | 24 Nov | [WP5] Add GeminiLLMClient via google-genai and finish subtask 5.1 | 5.1 (60->100%) | llm.py (GeminiLLMClient via google-genai + OpenAILLMClient + FakeLLM), provider routing (LLM_PROVIDER), 10 dev queries verified against live gemini-3.5-flash API, 13 diagnostic tests (65 total in repo) | 53% -> 57% | Kavibarath S |
 | I3b-fix | 24 Nov | [WP5] Fix Gemini latency via minimal thinking and add fallback diagnostics | 5.1 (100%), 5.2 (100%) | GEMINI_THINKING (minimal/off/low), GEMINI_TIMEOUT_S, token & latency logging in trace, dev query evaluation with fallback honesty (0 fallbacks on gemini-3.5-flash-lite, 2.93s median latency), PR 7 compatibility check | 57% -> 57% | Kavibarath S |
 | I4 | 24 Nov | [WP5] Safety rule base and Safety Verification agent | 5.3 (0->100%), 5.4 (0->100%) | Deterministic safety rules (SR-H01..SR-H16 + SR-X01..SR-X04), rule_engine.py with runtime hazards.json sync, a7_safety.py with immutable rule veto priority, adversarial safety benchmark (100% hazard recall across 24 cases), 27 safety tests (105 total in repo) | 57% -> 77% | Kavibarath S |
+| I5a | 25 Nov | [WP5] Orchestrator: routing, step synthesis, conflict ranking and abstention | 5.5 (0->100%) | a8_orchestrator.py, retrieval_node.py stub, orchestration_helpers.py, orchestrator_v1.md prompt, dynamic parameters in registry.py, evidence metadata contract, 8 orchestrator unit tests (60 total in repo), verified with live Gemini CLI runs | 77% -> 87% | Kavibarath S |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
