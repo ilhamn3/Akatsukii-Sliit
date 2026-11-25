@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 6.8 / 20 points · 34% complete**
+**Overall: 7.5 / 20 points · 38% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP2 | Synthetic data and test set | 12 | 6.8 | 56% |
+| WP2 | Synthetic data and test set | 12 | 7.5 | 62% |
 | WP8 | Human baseline study | 5 | 0 | 0% |
 | WP9 | Documentation (Tharshanth's part) | 3 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -33,7 +33,7 @@
 | 2.4 | Audio subset for the speech-to-text path | 1 | 26 Nov | 0% |
 | 2.5 | 60 held-out queries in 4 tiers, gold answers, dev split, frozen with hash | 2 | 24 Nov | 75% |
 | 2.6 | Expanded stores for scalability tests (100 / 400 / 2,000 records) | 1 | 26 Nov | 0% |
-| 2.7 | Synthetic-data disclosure text | 1 | 29 Nov | 0% |
+| 2.7 | Synthetic-data disclosure text | 1 | 29 Nov | 75% |
 
 #### WP8 – Human baseline study (5 pts)
 
