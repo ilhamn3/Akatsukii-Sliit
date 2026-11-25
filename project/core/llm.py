@@ -465,6 +465,29 @@ class FakeLLM(LLMClient):
                     "reason": "Simulated FakeLLM safety check: Procedure satisfies standard safety controls.",
                 })
 
+        if response_model.__name__ in ("OrchestrationPlanOutput", "OrchestratorPlanOutput"):
+            import re
+            eids = list(dict.fromkeys(re.findall(r"EV-[A-Za-z0-9-]+", prompt)))
+            steps = []
+            if eids:
+                for idx, eid in enumerate(eids[:4], 1):
+                    steps.append({
+                        "step_number": idx,
+                        "instruction": f"Simulated repair instruction grounded in retrieved evidence {eid}.",
+                        "evidence_ids": [eid],
+                    })
+            else:
+                steps.append({
+                    "step_number": 1,
+                    "instruction": "Inspect machine assembly according to standard operating procedure.",
+                    "evidence_ids": ["EV-CNC-0014-S1"],
+                })
+            return response_model.model_validate({
+                "diagnosed_cause": "Simulated root cause diagnosis via FakeLLM.",
+                "steps": steps,
+                "safety_warnings": ["Ensure personal protective equipment (PPE) is worn."],
+            })
+
         if response_model.__name__ == "SafetyVerdict":
             p_lower = prompt.lower()
             if "veto" in p_lower or "danger" in p_lower:
