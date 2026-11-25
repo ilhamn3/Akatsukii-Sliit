@@ -1,0 +1,64 @@
+[
+  {
+    "episode_id": "SYN-CONVEYOR-01",
+    "status": "verified",
+    "verified_by": "synthetic-fixture-author",
+    "verified_at": "2026-11-24T00:00:00Z",
+    "outcome": "Belt ran without slipping during the test",
+    "record": {
+      "machine_type": "conveyor_line",
+      "machine_id": "SYN-CV-01",
+      "symptoms": ["Drive belt slipping under load"],
+      "steps": [{"step_number": 1, "description": "Isolated power and replaced the worn drive belt", "timestamp": "00:05", "evidence_id": "S1"}],
+      "tools": ["spanner"],
+      "parts": ["drive belt", "sensor from failed attempt"],
+      "root_cause": "Technician confirmed a worn drive belt caused slipping",
+      "failed_attempts": [{"action": "Replaced the sensor", "outcome": "Belt still slipped", "why_failed": "The worn drive belt, not the sensor, caused slipping"}],
+      "safety_warnings": ["Isolate electrical power before repair"],
+      "confidence": 0.9,
+      "evidence_id": "EV-SYN-CONVEYOR-01",
+      "source": "synthetic_fixture"
+    },
+    "provenance": {
+      "capture_id": "CAP-SYN-CONVEYOR-01",
+      "source_path": "synthetic-fixture-only-conveyor.txt",
+      "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_type": "synthetic_fixture",
+      "evidence_spans": [
+        {"field_path": "root_cause", "evidence_id": "S0", "quote": "Technician confirmed a worn drive belt caused slipping", "start_seconds": 0, "end_seconds": 4},
+        {"field_path": "steps.0", "evidence_id": "S1", "quote": "Isolated power and replaced the worn drive belt", "start_seconds": 5, "end_seconds": 9}
+      ]
+    }
+  },
+  {
+    "episode_id": "SYN-COMPRESSOR-01",
+    "status": "verified",
+    "verified_by": "synthetic-fixture-author",
+    "verified_at": "2026-11-24T00:00:00Z",
+    "outcome": "Temperature returned to normal in a test run",
+    "record": {
+      "machine_type": "air_compressor",
+      "machine_id": "SYN-AC-01",
+      "symptoms": ["Compressor overheating and high temperature alarm"],
+      "steps": [{"step_number": 1, "description": "Isolated equipment and cleared the obstructed cooling vent", "timestamp": "00:05", "evidence_id": "S1"}],
+      "tools": ["brush"],
+      "parts": [],
+      "root_cause": "Technician confirmed an obstructed cooling vent caused overheating",
+      "failed_attempts": [],
+      "safety_warnings": ["Release stored pressure under the approved isolation procedure"],
+      "confidence": 0.9,
+      "evidence_id": "EV-SYN-COMPRESSOR-01",
+      "source": "synthetic_fixture"
+    },
+    "provenance": {
+      "capture_id": "CAP-SYN-COMPRESSOR-01",
+      "source_path": "synthetic-fixture-only-compressor.txt",
+      "source_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "source_type": "synthetic_fixture",
+      "evidence_spans": [
+        {"field_path": "root_cause", "evidence_id": "S0", "quote": "Technician confirmed an obstructed cooling vent caused overheating", "start_seconds": 0, "end_seconds": 4},
+        {"field_path": "steps.0", "evidence_id": "S1", "quote": "Isolated equipment and cleared the obstructed cooling vent", "start_seconds": 5, "end_seconds": 9}
+      ]
+    }
+  }
+]
