@@ -78,6 +78,14 @@ class KnowledgeStore:
             self.db.audit(db, trace_id, operation, {"episode_count": len(episodes)})
         return episodes, vectors
 
+    def snapshot(self, *, trace_id: str, operation: str = "STORE_SNAPSHOT"):
+        """One consistent committed read: (episodes, {episode_id: unit vector}).
+
+        K6 hybrid retrieval scores vectors and graph paths from this single
+        snapshot so both signals describe the same data.
+        """
+        return self._snapshot(trace_id, operation)
+
     def get(self, episode_id: str, *, trace_id: str) -> VerifiedEpisode | None:
         """Return the verified record and complete provenance, or None."""
         episodes, _ = self._snapshot(trace_id, "STORE_GET")

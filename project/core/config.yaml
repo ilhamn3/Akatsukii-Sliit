@@ -10,6 +10,14 @@ system:
   abstention_similarity_threshold: 0.55
   log_path: "logs/audit_trace.jsonl"
 
+# Agent 6 hybrid retrieval (K6). score = 1 - (1-cosine)(1-graph_weight*graph)(1-asset_weight*asset):
+# graph/asset evidence only adds support, so the abstention threshold stays on the cosine scale.
+# Development defaults chosen before evaluation; not tuned on any test data.
+retrieval:
+  k: 3
+  graph_weight: 0.5
+  asset_weight: 0.1
+
 conflict_ranking_weights:
   outcome_worked: 0.40
   outcome_failed: -0.50

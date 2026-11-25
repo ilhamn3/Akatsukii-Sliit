@@ -78,6 +78,8 @@ events = store.audit_events()
 ```
 
 `get` returns a VerifiedEpisode or None; `by_machine` returns VerifiedEpisodes.
+`snapshot(trace_id=...)` (added for K6) returns one consistent `(episodes, vectors)`
+read; the K6 `HybridRetriever` in docs/RETRIEVAL.md implements the shared contract.
 Vector/graph queries return the shared Evidence schema with source type, episode ID,
 primary evidence ID, full repair record, failed attempts, outcome and provenance.
 Machine filtering precedes top-k selection. Graph labels match exactly after
