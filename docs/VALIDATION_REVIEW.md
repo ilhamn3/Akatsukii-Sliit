@@ -48,8 +48,11 @@ A caller cannot bypass review:
 | `failed_attempt_conflicts_with_step` | warning, raises priority | The same action is recorded as both failed and completed. |
 | `repeated_fact`, `steps_out_of_source_order`, `orphan_evidence`, `outcome_unknown`, `capture_quality_flags`, `offline_fixture_output`, `semantic_dedup_unavailable` | warning | Shown to the reviewer and recorded as acknowledged on approval. |
 
-Machine labels are compared after case/whitespace normalization only, so "conveyor"
-and "conveyor_line" do not match yet. K5 entity resolution will widen dedup.
+K5 adds blocking `machine_type_unresolved` / `machine_type_ambiguous` /
+`asset_type_conflict` checks and an `asset_id_unresolved` warning. These are
+re-checked on the corrected values at approval. Duplicate detection compares
+canonical catalogue machine IDs, so "conveyor" and "conveyor belt" are compared.
+See `docs/ENTITY_GRAPH.md`.
 
 ## Confidence (`rule_based_v1_uncalibrated`)
 
@@ -110,8 +113,9 @@ the reviewer re-enters it, which records it as reviewer-supplied. Other keys
 (e.g. `status`) are refused.
 
 Decisions are serialized (`BEGIN IMMEDIATE`). Approved and rejected items are final.
-On approval, the verified episode is written to the store **before** the item is
-marked approved. If the store write fails, the item stays pending and an
+On approval, the verified episode goes through Agent 4 (K5 `GraphAgent`, which
+resolves catalogue entities) and is written to the store **before** the item is
+marked approved. `approve()` returns the stored, canonical episode. If the store write fails, the item stays pending and an
 APPROVE_FAILED event records the error type. The queue lives in
 `<storage root>/review/review_queue.sqlite3`, separate from the verified store.
 
@@ -150,5 +154,5 @@ These are smoke checks on a synthetic fixture, not an accuracy evaluation.
 - Ilham's review. Kajanan's UI integration against this API.
 - Representative recordings and drafts from the team, plus evaluation of the score
   and duplicate threshold on labelled data.
-- K5 entity resolution before persistence (the queue accepts any object with
-  `put_verified`/`get`, so K5 can wrap the store). Automatic promotion is a team decision.
+- Automatic promotion is a team decision. (K5 entity resolution before persistence is
+  now in `wp3/graph-agent`.)

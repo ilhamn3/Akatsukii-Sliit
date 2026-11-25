@@ -23,6 +23,15 @@ class ValidationIssue(StrictModel):
     related_ids: list[str] = Field(default_factory=list)
 
 
+class ReviewBlocked(ValueError):
+    """A verification/publication step refused because blocking issues remain."""
+
+    def __init__(self, issues: list[ValidationIssue]):
+        self.issues = issues
+        super().__init__("Unresolved blocking issues: " + ", ".join(
+            f"{i.code}@{i.field_path or '-'}" for i in issues))
+
+
 class ConfidenceBreakdown(StrictModel):
     method: Literal["rule_based_v1_uncalibrated"] = CONFIDENCE_METHOD
     required_completeness: float = Field(ge=0, le=1)

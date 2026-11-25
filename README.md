@@ -116,6 +116,7 @@ For Agent 1 development, see [Capture setup and handoff contract](docs/CAPTURE_S
 For Agent 2, see [Extraction setup and draft contract](docs/EXTRACTION_SETUP.md).
 For K3, see [Verified knowledge store and retrieval interface](docs/KNOWLEDGE_STORE.md).
 For K4, see [Agent 3 validation and review-queue backend](docs/VALIDATION_REVIEW.md).
+For K5, see [Agent 4 entity resolution and graph writes](docs/ENTITY_GRAPH.md).
 
 - Python 3.10, 3.11, or 3.12
 - Git

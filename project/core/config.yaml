@@ -64,7 +64,8 @@ pipelines:
         to: "__end__"
 
   # Pipeline A: capture -> unverified draft -> A3 validation into the human review queue.
-  # Only ReviewQueue.approve() publishes verified episodes; A4 (K5) follows later.
+  # Only ReviewQueue.approve() publishes verified episodes, through A4 GraphAgent
+  # (project.agents.a4_graph), which runs at approval time rather than as a node here.
   A:
     name: "Ingestion Pipeline"
     entrypoint: "CaptureAgent"
