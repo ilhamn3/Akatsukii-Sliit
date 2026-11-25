@@ -1,0 +1,7 @@
+# K3 local store and semantic retrieval. Downloads/cache use E: activation script.
+pydantic>=2.5.0,<3
+numpy>=1.24.0
+faiss-cpu>=1.7.4
+networkx>=3.1
+sentence-transformers>=2.2.2
+pytest>=8.0.0,<10

@@ -239,14 +239,19 @@ def test_video_result_includes_sampled_frame_evidence(tmp_path, recording, respo
 
 
 def test_graph_preserves_capture_request_and_result(monkeypatch, tmp_path, recording, response):
-    from project.core.registry import build_graph
+    from project.core.registry import build_graph, load_config
     monkeypatch.setattr(CaptureAgent, "_transcribe", lambda *args: response)
     monkeypatch.setattr(TraceLogger, "_instance", TraceLogger(str(tmp_path / "graph.jsonl")))
     state = create_initial_state("")
     state["capture_request"] = {"source_path": str(recording)}
-    result = build_graph("A").invoke(state)
+    # Isolate capture; test_extraction covers the full A1 -> A2 handoff.
+    config = load_config()
+    config['pipelines']['A']['agents'] = config['pipelines']['A']['agents'][:1]
+    config['pipelines']['A']['edges'] = [{'from': 'CaptureAgent', 'to': '__end__'}]
+    result = build_graph("A", config_override=config).invoke(state)
+    assert not result['errors']
     assert result["capture_result"]["segments"][0]["text"] == "The conveyor stopped."
-    assert result["messages"][-1]["sender"] == "CaptureAgent"
+    assert result["messages"][0]["sender"] == "CaptureAgent"
 
 
 def test_cli_writes_capture_json(monkeypatch, tmp_path, recording, response):

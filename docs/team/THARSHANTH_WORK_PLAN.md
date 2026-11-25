@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 6.5 / 20 points · 32% complete**
+**Overall: 8 / 20 points · 40% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP2 | Synthetic data and test set | 12 | 6.5 | 54% |
+| WP2 | Synthetic data and test set | 12 | 8 | 67% |
 | WP8 | Human baseline study | 5 | 0 | 0% |
 | WP9 | Documentation (Tharshanth's part) | 3 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -31,7 +31,7 @@
 | 2.2 | Seeded generator script (reproducible) | 2 | 23 Nov | 75% |
 | 2.3 | ~400 repair episodes, 12 technicians, spoken-style narratives, ground-truth labels | 2 | 24 Nov | 75% |
 | 2.4 | Audio subset for the speech-to-text path | 1 | 26 Nov | 50% |
-| 2.5 | 60 held-out queries in 4 tiers, gold answers, dev split, frozen with hash | 2 | 24 Nov | 0% |
+| 2.5 | 60 held-out queries in 4 tiers, gold answers, dev split, frozen with hash | 2 | 24 Nov | 75% |
 | 2.6 | Expanded stores for scalability tests (100 / 400 / 2,000 records) | 1 | 26 Nov | 75% |
 | 2.7 | Synthetic-data disclosure text | 1 | 29 Nov | 0% |
 
@@ -175,7 +175,8 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
 | #6 | 23 Nov | [WP2] Fault catalogue with hazards | 2.1 (0->75%) | 40 failure modes across 5 machine types, hazards.json, build and validate scripts | 0% -> 11% | Kajanan K |
-| #16 | 25 Nov | [WP2] Seeded generator, 400 episodes and narratives | 2.2 (0->75%), 2.3 (0->75%) | Seeded stdlib generator, 400 episodes from 12 simulated technicians (audio debriefs and shift logs), separate ground truth validated against RepairRecord, samples.json for hand-off, 8 tests | 11% -> 26% | Kajanan K |
-| #19 | 26 Nov | [WP2] Audio subset and expanded stores | 2.4 (0->50%), 2.6 (0->75%) | 12 synthetic audio clips (7.3 min, 5 machines, 6 clean / 6 with plant noise, reference transcripts); nested stores n100 / n400 / n2000 as VerifiedEpisode envelopes, all 2,500 validated against the store model; 7 tests. Pending: Agent 1 transcription check (Kavibarath) and a real load once PR #12 merges | 26% -> 32% | Kajanan K |
+| #16 | 25 Nov | [WP2] Seeded generator, 400 episodes and narratives | 2.2 (0->75%), 2.3 (0->75%) | Seeded stdlib generator, 400 episodes from 12 simulated technicians (audio debriefs and shift logs), separate ground truth validated against RepairRecord, samples.json for hand-off, 8 tests | 11% -> 26% | Ilham MM |
+| #17 | 25 Nov | [WP2] Frozen 60-query test set and dev split | 2.5 (0->75%) | 60 test queries (20 easy / 20 medium / 10 hard / 10 adversarial) with gold answers, separate 20-query dev split, FROZEN.sha256 with --verify and an overwrite guard, no-tuning rule in README, 9 tests | 26% -> 34% | Ilham MM |
+| #19 | 26 Nov | [WP2] Audio subset and expanded stores | 2.4 (0->50%), 2.6 (0->75%) | 12 synthetic audio clips (7.3 min, 5 machines, 6 clean / 6 with plant noise, reference transcripts); nested stores n100 / n400 / n2000 as VerifiedEpisode envelopes, all 2,500 validated against the store model; 7 tests. Pending: Agent 1 transcription check (Kavibarath) and a real load once PR #12 merges | 34% -> 40% | Ilham MM |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*

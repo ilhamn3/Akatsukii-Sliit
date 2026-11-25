@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 3 / 30 points · 10% complete**
+**Overall: 18.2 / 30 points · 61% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP3 | Ingestion agents 1-4 and review queue | 18 | 3 | 17% |
-| WP4 | Knowledge store and retrieval | 10 | 0 | 0% |
+| WP3 | Ingestion agents 1-4 and review queue | 18 | 10.8 | 60% |
+| WP4 | Knowledge store and retrieval | 10 | 7.5 | 75% |
 | WP10 | Hardening and unit tests | 2 | 0 | 0% |
 <!-- PROGRESS:END -->
 
@@ -29,21 +29,21 @@
 |---|---|---|---|---|
 | 3.1 | Agent 1: Whisper transcription (timestamped transcript) | 3 | 24 Nov | 75% |
 | 3.2 | Agent 1: video frame sampling and unclear-audio flagging | 1 | 24 Nov | 75% |
-| 3.3 | Agent 2: structured extraction (steps, tools, root cause, failed attempts, warnings) | 4 | 24 Nov | 0% |
-| 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 0% |
-| 3.5 | Agent 4: entity resolution and graph writes | 3 | 26 Nov | 0% |
-| 3.6 | Review-queue backend for low-confidence records | 2 | 26 Nov | 0% |
+| 3.3 | Agent 2: structured extraction (steps, tools, root cause, failed attempts, warnings) | 4 | 24 Nov | 50% |
+| 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 50% |
+| 3.5 | Agent 4: entity resolution and graph writes | 3 | 26 Nov | 75% |
+| 3.6 | Review-queue backend for low-confidence records | 2 | 26 Nov | 75% |
 | 3.7 | Extraction precision / recall / F1 numbers exported to the harness | 1 | 27 Nov | 0% |
 
 #### WP4 – Knowledge store and retrieval (10 pts)
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 4.1 | SQLite tables for verified records | 2 | 26 Nov | 0% |
-| 4.2 | Vector index (ChromaDB or FAISS) | 2 | 26 Nov | 0% |
-| 4.3 | Knowledge graph (NetworkX) of machines, faults, causes, fixes, hazards | 2 | 26 Nov | 0% |
-| 4.4 | Agent 6: hybrid vector + graph retrieval | 3 | 27 Nov | 0% |
-| 4.5 | Retrieval returns failed attempts and outcomes | 1 | 27 Nov | 0% |
+| 4.1 | SQLite tables for verified records | 2 | 26 Nov | 75% |
+| 4.2 | Vector index (ChromaDB or FAISS) | 2 | 26 Nov | 75% |
+| 4.3 | Knowledge graph (NetworkX) of machines, faults, causes, fixes, hazards | 2 | 26 Nov | 75% |
+| 4.4 | Agent 6: hybrid vector + graph retrieval | 3 | 27 Nov | 75% |
+| 4.5 | Retrieval returns failed attempts and outcomes | 1 | 27 Nov | 75% |
 
 #### WP10 – Hardening and unit tests (2 pts)
 
@@ -104,12 +104,14 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 - **Branch:** `wp3/validation-review-queue` · **Merge by:** 26 Nov · **Subtasks:** 3.4, 3.6 · **Reviewer:** Ilham MM
 - **Summary:** Implements Agent 3 and the review-queue backend. (Team checkpoint is 25 Nov.)
 - **Done when:** Inconsistent or duplicate records are caught; each record has a confidence score; low-confidence records land in the queue and can be approved/rejected through the backend API for Kajanan's UI.
+- **K2 review follow-up:** A3 must map `DraftRepairRecord` to the shared `RepairRecord` while retaining evidence spans and provenance. Missing required facts must remain reviewable rather than being invented to satisfy the target schema.
 
 ### K5: [WP3] Agent 4: entity resolution and graph writes
 
 - **Branch:** `wp3/graph-agent` · **Merge by:** 26 Nov · **Subtasks:** 3.5 · **Reviewer:** Ilham MM
 - **Summary:** Implements Agent 4: resolves aliases (e.g. "hyd. press 3" = "Press-03") and writes verified records into the graph and indexes.
 - **Done when:** Alias test cases resolve to one entity; graph shows linked machine -> fault -> cause -> fix -> hazard; in-memory NetworkX is enough (no Neo4j needed).
+- **K2 review follow-up:** Resolve A2's free-text `machine_type` to catalogue IDs: `cnc_lathe`, `hydraulic_press`, `injection_moulding`, `conveyor_line`, `air_compressor`.
 
 ### K6: [WP4] Agent 6: hybrid retrieval including failed attempts
 
@@ -168,12 +170,26 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 - Never cut: trace logging of every handoff from your agents.
 - Original work built during the competition; reused components and pre-existing code must be disclosed.
 - Declare every AI model, service and coding assistant you use (send your list to Tharshanth for `docs/PROJECT_DETAILS.md`).
+- **K2 review follow-up:** The final benchmark must use one team-agreed LLM provider/model. Continue using `get_llm_client()`; the Groq development smoke tests do not select the final benchmark provider.
 - Everyone must be able to explain the full architecture and benchmark method at the finale Q&A, not only their own modules.
 
 ## 7. PR log (add one row per PR, newest at the bottom)
 
+K2 review (24 Nov): Ilham reported 76 passing tests and approved the code subject
+to adding the PR #7 row below. Approval explicitly covers the additive
+`state.py` draft_record and `config.yaml` Capture -> Extraction handoff changes.
+The required log row is now included. Representative team-sample validation is
+still pending, so subtask 3.3 stays at 50%. Non-blocking follow-ups are recorded
+under K4, K5 and the benchmark rules above.
+After merging origin/main at f735884, all 80 tests and pip check passed locally.
+
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
 | [#5](https://github.com/ilhamn3/Akatsukii-Sliit/pull/5) (K1 draft) | 22 Nov 2026 | [WP3] Agent 1: Whisper transcription and frame sampling | 3.1 (0->75%), 3.2 (0->75%) | Capture implementation, schemas, registry handoff and local setup; 52 tests pass plus actual Whisper/FFmpeg checks on synthetic speech, video and silence. Evidence: docs/CAPTURE_SETUP.md and local logs/capture_smoke/. Team samples and review pending | 0% -> 10% (3/30 pts) | Ilham MM (pending) |
+| [#7](https://github.com/ilhamn3/Akatsukii-Sliit/pull/7) (K2) | 24 Nov 2026 | [WP3] Agent 2: source-linked knowledge extraction | 3.3 (0->50%) | Draft schema, extraction agent, quote/timestamp provenance, A1 -> A2 handoff, traced failures, API diagnostics and setup docs; 76 tests passed before main sync and in Ilham's review. Live Groq 120B / prompt v3 synthetic smoke check passed. Evidence: docs/EXTRACTION_SETUP.md; representative samples pending | 10% -> 17% (3/30 -> 5/30 pts) | Ilham MM (code approved; requested log row added) |
+| [#12](https://github.com/ilhamn3/Akatsukii-Sliit/pull/12) (K3) | 24 Nov 2026 | [WP4] Verified knowledge store and query interface | 4.1, 4.2, 4.3 (0->75% each) | SQLite envelopes/provenance and audit events, FAISS symptom search, episode-scoped NetworkX graph, atomic writes and documented K4-K6 interface. 95 tests passed at ed90444; after merging main 6c5fd72 on 25 Nov, 126 tests and pip check pass and the cached MiniLM synthetic demo reproduces. Base is main (K2 merged). Evidence: docs/KNOWLEDGE_STORE.md. Integration, representative data and reviewer acceptance pending | 17% -> 32% (5/30 -> 9.5/30 pts) | Ilham MM (pending) |
+| [#13](https://github.com/ilhamn3/Akatsukii-Sliit/pull/13) (K4; builds on #12) | 25 Nov 2026 | [WP3] Agent 3: validation, dedup, confidence and review-queue backend | 3.4 (0->50%), 3.6 (0->75%) | Rule-based A3 (grounding, quantity/unit, consistency, exact and semantic dedup), uncalibrated transparent confidence, Pipeline A handoff, SQLite review queue with audited approve/reject and reviewer corrections, publishing to K3. Every draft needs human approval. 150 tests and pip check pass; cached-MiniLM synthetic queue -> approve -> search run passes. Evidence: docs/VALIDATION_REVIEW.md. Score calibration, representative data, UI integration and review pending | 32% -> 43% (9.5/30 -> 13/30 pts) | Ilham MM (pending) |
+| [#14](https://github.com/ilhamn3/Akatsukii-Sliit/pull/14) (K5; builds on #13) | 25 Nov 2026 | [WP3] Agent 4: entity resolution and graph writes | 3.5 (0->75%) | Deterministic machine/asset/hazard resolution from a curated vocabulary plus SafetyAgent rule keywords; unknown, ambiguous and conflicting labels stay blocked in review; approvals publish through traced GraphAgent with canonical IDs and raw text kept in provenance; shared asset and catalogue-hazard graph nodes; A3 dedup uses canonical machines. 183 tests and pip check pass; cached-MiniLM synthetic approve -> canonical store/graph run passes. Evidence: docs/ENTITY_GRAPH.md. Vocabulary check on team recordings/asset names and review pending | 43% -> 51% (13/30 -> 15.25/30 pts) | Ilham MM (pending) |
+| K6 (PR number pending; builds on #14) | 25 Nov 2026 | [WP4] Agent 6: hybrid retrieval including failed attempts | 4.4 (0->75%), 4.5 (0->75%) | RetrievalEngine contract: K5 machine resolution and filter-before-rank, MiniLM/FAISS symptom cosine fused (support-only) with NetworkX traversal and alarm-code/asset hops; Evidence carries failed attempts, outcome, step-level evidence IDs, verification and provenance; RetrievalAgent node and proven Pipeline B wiring. 195 tests and pip check pass; code-computed synthetic catalogue check hybrid hit@1 0.975 / hit@3 1.0 (not a benchmark). Evidence: docs/RETRIEVAL.md. Orchestrator integration, real-episode evaluation and review pending | 51% -> 61% (15.25/30 -> 18.25/30 pts) | Ilham MM (pending) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*

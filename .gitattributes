@@ -1,5 +1,6 @@
 # Generated data is hashed byte-for-byte; keep LF on every OS.
 project/data/episodes/** text eol=lf
+project/data/test_set/** text eol=lf
 project/data/expanded/** text eol=lf
 project/data/audio/** text eol=lf
 *.wav binary

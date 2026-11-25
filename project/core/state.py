@@ -23,6 +23,13 @@ class BlackboardState(TypedDict, total=False):
     # Pipeline A capture handoff (validated by core.capture_schemas).
     capture_request: Dict[str, Any]
     capture_result: Optional[Dict[str, Any]]
+    draft_record: Optional[Dict[str, Any]]
+    # A3 output (core.validation_schemas); every item awaits human review.
+    validation_report: Optional[Dict[str, Any]]
+    review_item_id: Optional[str]
+    # A4 (K5) approval-time output: canonical VerifiedEpisode and entity links.
+    verified_episode: Optional[Dict[str, Any]]
+    entity_links: List[Dict[str, Any]]
 
     # Diagnostic & Clarification State
     clarification_turns: int
@@ -34,9 +41,11 @@ class BlackboardState(TypedDict, total=False):
     selected_hypothesis: Optional[Dict[str, Any]]
 
     # Retrieval State
+    evidence: List[Dict[str, Any]]
     retrieved_episodes: List[Dict[str, Any]]
     graph_subgraph_nodes: List[str]
     failed_attempts_retrieved: List[str]
+    failed_attempts_to_avoid: List[str]
     retrieval_confidence: float
 
     # Safety Verification & Veto State
@@ -53,6 +62,7 @@ class BlackboardState(TypedDict, total=False):
     final_answer: Optional[Dict[str, Any]]
     abstained: bool
     escalated: bool
+    abstention_reason: Optional[str]
 
     # Messaging, Errors & Observability
     messages: List[Dict[str, Any]]
@@ -86,9 +96,11 @@ def create_initial_state(
         "clarification_question": None,
         "ranked_hypotheses": [],
         "selected_hypothesis": None,
+        "evidence": [],
         "retrieved_episodes": [],
         "graph_subgraph_nodes": [],
         "failed_attempts_retrieved": [],
+        "failed_attempts_to_avoid": [],
         "retrieval_confidence": 0.0,
         "candidate_steps": [],
         "safety_violations": [],
@@ -99,6 +111,7 @@ def create_initial_state(
         "final_answer": None,
         "abstained": False,
         "escalated": False,
+        "abstention_reason": None,
         "messages": [],
         "errors": [],
         "audit_trace": [],

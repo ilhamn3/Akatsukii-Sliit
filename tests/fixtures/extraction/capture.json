@@ -1,0 +1,31 @@
+{
+  "capture_id": "CAP-SYNTHETIC",
+  "source_path": "synthetic-test-only.wav",
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "media_type": "audio",
+  "language": "en",
+  "text": "The conveyor stopped. Replacing the sensor did not help. The connector was loose. We secured the connector and the conveyor ran again. There was a warning about stored energy.",
+  "segments": [
+    {
+      "evidence_id": "S0",
+      "start_seconds": 0,
+      "end_seconds": 4,
+      "text": "The conveyor stopped. Replacing the sensor did not help."
+    },
+    {
+      "evidence_id": "S1",
+      "start_seconds": 5,
+      "end_seconds": 9,
+      "text": "The connector was loose. We secured the connector and the conveyor ran again."
+    },
+    {
+      "evidence_id": "S2",
+      "start_seconds": 10,
+      "end_seconds": 14,
+      "text": "There was a warning about stored energy."
+    }
+  ],
+  "frames": [],
+  "quality_flags": [],
+  "review_required": false
+}

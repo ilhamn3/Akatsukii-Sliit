@@ -17,8 +17,9 @@ def test_load_default_config():
     assert cfg["system"]["safety_max_revision_loops"] == 2
 
 
-def test_build_and_run_two_agent_graph(tmp_path):
+def test_build_and_run_two_agent_graph(tmp_path, monkeypatch):
     """Verify that a two-agent dummy graph executes sequentially and logs trace lines."""
+    monkeypatch.setenv("FACTORY_STUB_RETRIEVAL", "1")
     log_file = tmp_path / "test_trace.jsonl"
     logger = TraceLogger.get_instance(str(log_file))
 
@@ -41,7 +42,7 @@ def test_build_and_run_two_agent_graph(tmp_path):
     assert len(final_state["messages"]) >= 2
     senders = [m["sender"] for m in final_state["messages"]]
     assert "DiagnosticAgent" in senders
-    assert "DummySafetyAgent" in senders
+    assert any(s in senders for s in ("SafetyAgent", "DummySafetyAgent"))
 
 
 def test_add_third_agent_via_config_only(tmp_path):
@@ -61,10 +62,11 @@ def test_add_third_agent_via_config_only(tmp_path):
     }
     custom_cfg["pipelines"]["B"]["agents"].append(audit_agent_entry)
 
-    # Rewire edges: Diagnostic -> Safety -> Audit -> END
+    # Rewire edges: Diagnostic -> SecondAgent -> Audit -> END
+    second_agent = custom_cfg["pipelines"]["B"]["agents"][1]["name"]
     custom_cfg["pipelines"]["B"]["edges"] = [
-        {"from": "DiagnosticAgent", "to": "DummySafetyAgent"},
-        {"from": "DummySafetyAgent", "to": "DummyAuditAgent"},
+        {"from": "DiagnosticAgent", "to": second_agent},
+        {"from": second_agent, "to": "DummyAuditAgent"},
         {"from": "DummyAuditAgent", "to": "__end__"},
     ]
 
@@ -84,7 +86,7 @@ def test_add_third_agent_via_config_only(tmp_path):
     assert "DummyAuditAgent" in senders
 
 
-def test_stub_agent_trace_flag_and_pipeline_detection(tmp_path):
+def test_stub_agent_trace_flag_and_pipeline_detection(tmp_path, monkeypatch):
     """Verify that stub agents are detected and write 'stub': true to trace logs."""
     from project.core.registry import is_pipeline_stub
     from project.core.stubs.dummy_agents import DummyDiagnosticAgent, DummySafetyAgent
@@ -94,8 +96,24 @@ def test_stub_agent_trace_flag_and_pipeline_detection(tmp_path):
     assert diag.is_stub is True, "DummyDiagnosticAgent must have is_stub=True"
     assert safety.is_stub is True, "DummySafetyAgent must have is_stub=True"
 
-    # Verify pipeline detection
-    assert is_pipeline_stub("B") is True, "Pipeline B with dummy agents must be flagged as stub"
+    # Verify pipeline detection: default Pipeline B uses real retrieval (not stub),
+    # whereas FACTORY_STUB_RETRIEVAL=1 flips RetrievalNode to stub.
+    monkeypatch.delenv("FACTORY_STUB_RETRIEVAL", raising=False)
+    assert is_pipeline_stub("B") is False, "Default Pipeline B with real retrieval must not be flagged as stub"
+    monkeypatch.setenv("FACTORY_STUB_RETRIEVAL", "1")
+    assert is_pipeline_stub("B") is True, "Pipeline B with FACTORY_STUB_RETRIEVAL=1 must be flagged as stub"
+    monkeypatch.delenv("FACTORY_STUB_RETRIEVAL", raising=False)
+    real_override = {
+        "pipelines": {
+            "B": {
+                "agents": [
+                    {"name": "DiagnosticAgent", "module": "project.agents.a5_diagnostic", "stub": False, "enabled": True},
+                    {"name": "SafetyAgent", "module": "project.agents.a7_safety", "stub": False, "enabled": True},
+                ]
+            }
+        }
+    }
+    assert is_pipeline_stub("B", config_override=real_override) is False, "Pipeline with only real agents must not be stub"
 
     # Test trace log entries contain 'stub': True
     log_file = tmp_path / "stub_trace.jsonl"
