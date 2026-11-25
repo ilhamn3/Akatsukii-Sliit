@@ -166,6 +166,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
-|   |   |   |   |   |   |   |
+| #10 | 25 Nov | [WP6] Streamlit UI skeleton and pages on mock data | 6.1-6.4 (0->75%) | Chat, mock citations, review queue, and trace viewer | 0% -> 30% | Tharshanth A |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*

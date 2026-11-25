@@ -13,7 +13,7 @@ if "messages" not in st.session_state:
 def show_answer(result: dict):
     st.write(result["answer"])
     st.write(
-        f"🚫 **MOCK safety status (not checked):** {result['safety_verdict']} · "
+        "🚫 **MOCK safety: NOT CHECKED (no safety evaluation was run).** · "
         f"**MOCK confidence (not validated):** {result['confidence']:.0%}"
     )
 
