@@ -15,9 +15,11 @@ class Embedder(Protocol):
 
 def storage_root() -> Path:
     configured = os.getenv("FACTORY_MEMORY_STORAGE")
-    if not configured:
-        raise RuntimeError("Run scripts/Activate-FactoryMemory.ps1 to configure E: storage first")
-    return Path(configured)
+    if configured:
+        return Path(configured)
+    root = Path(__file__).resolve().parents[2] / ".factory_memory"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
 
 
 class MiniLMEmbedder:

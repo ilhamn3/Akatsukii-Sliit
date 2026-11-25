@@ -166,9 +166,11 @@ def test_clarification_halts_pipeline_no_downstream_agents(tmp_path):
     assert "DummySafetyAgent" not in agents_in_trace
 
 
-def test_resume_with_answer_continues_pipeline():
+def test_resume_with_answer_continues_pipeline(monkeypatch):
     """Verify that after clarification is answered, pipeline resumes and reaches downstream agents."""
     from project.core.registry import build_graph
+
+    monkeypatch.setenv("FACTORY_STUB_RETRIEVAL", "1")
 
     # Ambiguous initial query halts on clarification
     initial_state = create_initial_state(

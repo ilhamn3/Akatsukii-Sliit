@@ -8,23 +8,33 @@ Tests verify:
 5. Full graph integration with Pipeline B via LangGraph.
 """
 
+import copy
+import json
 import os
 from typing import Any, Dict, List
+from unittest.mock import Mock
 import pytest
 
+from project.agents.a4_graph import FAULTS, HAZARDS, GraphAgent
+from project.agents.a6_retrieval import HybridRetriever
 from project.agents.a8_orchestrator import OrchestratorAgent
 from project.core.llm import FakeLLM
 from project.core.orchestration_helpers import (
     calculate_conflict_ranking,
     check_energy_loto_compliance,
     evaluate_adaptive_routing,
+    extract_valid_evidence_ids,
+    normalize_evidence,
     parse_energy_thresholds,
     validate_and_filter_citations,
 )
-from project.core.registry import build_graph
+from project.core.registry import build_graph, load_config
 from project.core.state import create_initial_state
 from project.core.stubs.retrieval_node import RetrievalNode
-from project.core.trace import TraceLogger
+from project.core.trace import TraceLogger, read_trace
+from project.store.knowledge_store import KnowledgeStore
+from scripts.retrieval_dev_eval import catalogue_episodes
+from tests.validation_helpers import HashEmbedder
 
 
 @pytest.fixture(autouse=True)
@@ -251,8 +261,9 @@ def test_orchestrator_abstains_on_low_retrieval_similarity():
     assert len(updates["candidate_steps"]) == 0
 
 
-def test_pipeline_b_graph_execution_with_stub_retrieval():
+def test_pipeline_b_graph_execution_with_stub_retrieval(monkeypatch):
     """Verify end-to-end LangGraph Pipeline B execution from Diagnostic to FinalAnswer."""
+    monkeypatch.setenv("FACTORY_STUB_RETRIEVAL", "1")
     graph = build_graph(pipeline="B")
 
     state = create_initial_state(
@@ -317,3 +328,185 @@ def test_pipeline_b_abstention_bypasses_safety_verification():
     assert final_ans["abstained"] is True
     assert len(final_ans["steps"]) == 0
     assert "Low retrieval similarity" in final_ans["abstention_reason"]
+
+
+def test_real_backend_failure_does_not_fallback_and_abstains(tmp_path, monkeypatch):
+    """(a) Real backend failure must NOT silently fall back to stub; logs AGENT_ERROR and abstains."""
+    log_file = tmp_path / "err_trace.jsonl"
+    logger = TraceLogger.get_instance(str(log_file))
+    monkeypatch.delenv("FACTORY_STUB_RETRIEVAL", raising=False)
+
+    failing_retriever = Mock()
+    failing_retriever.retrieve.side_effect = RuntimeError("SQLite store locked or missing")
+
+    node = RetrievalNode(backend="real", trace_logger=logger, retriever=failing_retriever)
+    assert node.is_stub is False
+
+    state = create_initial_state(
+        query="Spindle overheating alarm ALM-410",
+        machine_type="CNC Lathe",
+        trace_id="TR-REAL-FAIL-01",
+    )
+    state["evidence"] = [{"evidence_id": "STALE", "content": "stale"}]
+    out_state = node.run(state)
+
+    assert out_state["evidence"] == []
+    assert out_state["retrieved_episodes"] == []
+    assert out_state["retrieval_confidence"] == 0.0
+    assert any("RuntimeError: SQLite store locked or missing" in e for e in out_state["errors"])
+
+    trace_events = read_trace(str(log_file))
+    assert any(
+        ev["agent"] == "RetrievalNode" and ev["event"] == "AGENT_ERROR" and not ev["stub"]
+        for ev in trace_events
+    )
+
+    orch = OrchestratorAgent(phase="plan", llm_client=FakeLLM(), trace_logger=logger)
+    plan_updates = orch.process(out_state)
+    assert plan_updates["abstained"] is True
+    assert plan_updates["candidate_steps"] == []
+
+
+def test_exhausted_veto_finalize_abstains_and_escalates():
+    """(b) Exhausted veto / unapproved safety => abstained=True, escalated=True, steps=[]."""
+    state = create_initial_state(
+        query="Hydraulic ram creeping down",
+        machine_type="Hydraulic Press",
+        trace_id="TR-VETO-EXHAUST-01",
+    )
+    state["candidate_steps"] = [
+        {"step_number": 1, "instruction": "Work under ram directly.", "evidence_ids": ["EV-HYD-01"]}
+    ]
+    state["abstained"] = False
+    state["safety_approved"] = False
+    state["safety_loop_count"] = 2
+    state["safety_violations"] = ["Missing mechanical safety block under ram (SR-H03)."]
+    state["safety_verdict"] = {
+        "verdict": "veto",
+        "reason": "Critical crush hazard: safety block missing.",
+        "rule_ids": ["SR-H03"],
+        "suggested_amendments": [],
+    }
+
+    orch_fin = OrchestratorAgent(phase="finalize")
+    updates = orch_fin.process(state)
+    final_ans = updates["final_answer"]
+
+    assert final_ans["abstained"] is True
+    assert final_ans["escalated"] is True
+    assert final_ans["steps"] == []
+    assert "Critical crush hazard" in final_ans["abstention_reason"]
+    assert "Missing mechanical safety block under ram (SR-H03)." in final_ans["safety_warnings"]
+
+
+def test_revise_amendments_carry_no_borrowed_evidence_ids_and_veto_escalates():
+    """(c) Amendment steps carry evidence_ids=[]; veto with no amendments escalates immediately."""
+    state = create_initial_state(
+        query="Replace hydraulic hose",
+        machine_type="Hydraulic Press",
+        trace_id="TR-REVISE-01",
+    )
+    state["candidate_steps"] = [
+        {"step_number": 1, "instruction": "Disconnect hose fitting.", "evidence_ids": ["EV-HYD-01"]}
+    ]
+    state["safety_loop_count"] = 1
+    state["safety_verdict"] = {
+        "verdict": "amend",
+        "reason": "Missing depressurisation step.",
+        "suggested_amendments": ["Depressurise circuit to 0 bar and verify gauge."],
+    }
+
+    orch_rev = OrchestratorAgent(phase="revise")
+    rev_updates = orch_rev.process(state)
+    amended = rev_updates["candidate_steps"]
+
+    assert amended[0]["instruction"].startswith("[SAFETY AMENDMENT]")
+    assert amended[0]["evidence_ids"] == []
+    assert amended[1]["evidence_ids"] == ["EV-HYD-01"]
+
+    # Now test hard veto with NO suggested_amendments -> immediate escalation
+    state["safety_verdict"] = {
+        "verdict": "veto",
+        "reason": "Unknown hazard class.",
+        "suggested_amendments": [],
+    }
+    veto_updates = orch_rev.process(state)
+    assert veto_updates["escalated_to_supervisor"] is True
+    assert veto_updates["decision"] == "ESCALATED"
+
+
+def test_normalize_evidence_and_routing_on_real_a6_evidence(tmp_path):
+    """(d) normalize_evidence + FAST/FULL routing on real A6 Evidence built from store fixture."""
+    faults = json.loads(FAULTS.read_text(encoding="utf-8"))
+    hazards = json.loads(HAZARDS.read_text(encoding="utf-8"))
+    store = KnowledgeStore(tmp_path / "repairs.sqlite3", embedder=HashEmbedder())
+    writer = GraphAgent(store)
+    for ep in catalogue_episodes(faults[:5], hazards):
+        writer.put_verified(ep, trace_id="TR-NORM-LOAD")
+
+    hits = HybridRetriever(store).retrieve(
+        "spindle housing too hot, thermal alarm", "CNC Lathe (Turning Center)", k=2
+    )
+    assert len(hits) >= 1
+    ev_dict = hits[0].model_dump(mode="json")
+
+    norm = normalize_evidence(ev_dict)
+    assert norm["verified"] is True
+    assert norm["outcome_class"] == "worked"
+    assert norm["recorded_at"] == ev_dict["metadata"]["verified_at"]
+    assert isinstance(norm["steps"], list) and len(norm["steps"]) >= 1
+    assert isinstance(norm["hazards"], list)
+
+    # Multi-episode / hazard-tagged A6 evidence triggers FULL routing
+    conflicts, failed = calculate_conflict_ranking([ev_dict])
+    route, _ = evaluate_adaptive_routing([ev_dict], conflicts, similarity_threshold=0.85)
+    assert route == "FULL"
+    assert len(failed) >= 1
+
+    # Single clean episode without hazards and >= 0.85 similarity triggers FAST with metadata.steps
+    clean_ev = copy.deepcopy(ev_dict)
+    clean_ev["similarity_score"] = 0.92
+    clean_ev["metadata"]["catalogue_hazards"] = []
+    clean_conflicts, _ = calculate_conflict_ranking([clean_ev])
+    fast_route, _ = evaluate_adaptive_routing([clean_ev], clean_conflicts, similarity_threshold=0.85)
+    assert fast_route == "FAST"
+
+    orch = OrchestratorAgent(phase="plan", llm_client=FakeLLM())
+    st = create_initial_state("spindle hot", machine_type="cnc_lathe")
+    st["evidence"] = [clean_ev]
+    st["retrieval_confidence"] = 0.92
+    plan = orch.process(st)
+    # FAST path builds individual steps from metadata.steps, not the whole summary blob
+    assert len(plan["candidate_steps"]) == len(clean_ev["metadata"]["steps"])
+    assert plan["candidate_steps"][0]["evidence_ids"] == [clean_ev["metadata"]["steps"][0]["evidence_id"]]
+
+
+def test_step_level_evidence_ids_accepted_unknown_dropped():
+    """(e) Citations to real steps[].evidence_id are accepted; unknown IDs are dropped."""
+    evidence_list = [
+        {
+            "evidence_id": "EV-SYN-CAT-L01",
+            "episode_id": "SYN-CAT-L01",
+            "content": "Summary text",
+            "similarity_score": 0.90,
+            "metadata": {
+                "steps": [
+                    {"step_number": 1, "description": "Stop spindle", "evidence_id": "SYN-L01-S1"},
+                    {"step_number": 2, "description": "Clean fan", "evidence_id": "SYN-L01-S2"},
+                ]
+            },
+        }
+    ]
+    valid_ids = extract_valid_evidence_ids(evidence_list)
+    assert valid_ids == {"EV-SYN-CAT-L01", "SYN-L01-S1", "SYN-L01-S2"}
+
+    raw_steps = [
+        {"step_number": 1, "instruction": "Stop spindle", "evidence_ids": ["SYN-L01-S1"]},
+        {"step_number": 2, "instruction": "Bogus step", "evidence_ids": ["EV-MADE-UP-99"]},
+        {"step_number": 3, "instruction": "Clean fan", "evidence_ids": ["SYN-L01-S2", "EV-FAKE"]},
+    ]
+    filtered, coverage = validate_and_filter_citations(raw_steps, valid_ids)
+    assert len(filtered) == 2
+    assert filtered[0]["evidence_ids"] == ["SYN-L01-S1"]
+    assert filtered[1]["evidence_ids"] == ["SYN-L01-S2"]
+    assert coverage == pytest.approx(2 / 3, abs=1e-3)

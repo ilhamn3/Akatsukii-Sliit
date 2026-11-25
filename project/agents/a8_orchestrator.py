@@ -2,7 +2,8 @@
 
 Synthesizes safe, grounded repair action steps by reconciling diagnostic hypotheses
 with retrieved historical evidence chunks. Enforces adaptive routing (FAST vs FULL),
-cross-episode conflict ranking, strict citation validation, and safe abstention.
+cross-episode conflict ranking, strict citation validation, safety-wins finalization,
+and safe abstention.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from project.core.orchestration_helpers import (
     calculate_conflict_ranking,
     check_energy_loto_compliance,
     evaluate_adaptive_routing,
+    extract_valid_evidence_ids,
     validate_and_filter_citations,
 )
 from project.core.registry import load_config
@@ -51,6 +53,45 @@ class OrchestrationPlanOutput(BaseModel):
     safety_warnings: List[str] = Field(
         default_factory=list, description="Critical warnings or safety prerequisites"
     )
+
+
+def _steps_from_evidence(evidence_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Build ordered grounded steps from evidence metadata.steps (or content fallback for stubs)."""
+    steps: List[Dict[str, Any]] = []
+    has_structured_steps = any(bool((ev.get("metadata") or {}).get("steps")) for ev in evidence_list)
+
+    if has_structured_steps:
+        for ev in evidence_list:
+            ep_eid = ev.get("evidence_id")
+            meta_steps = list((ev.get("metadata") or {}).get("steps") or [])
+            meta_steps.sort(key=lambda s: int(s.get("step_number", 999)) if isinstance(s, dict) else 999)
+            for s in meta_steps:
+                if not isinstance(s, dict):
+                    continue
+                desc = str(s.get("description") or "").strip()
+                if not desc:
+                    continue
+                eid = s.get("evidence_id") or ep_eid
+                steps.append({
+                    "step_number": len(steps) + 1,
+                    "instruction": desc,
+                    "evidence_ids": [eid] if eid else [],
+                })
+        return steps
+
+    # Stub / flat evidence fallback (no metadata.steps)
+    sorted_ev = sorted(
+        evidence_list,
+        key=lambda x: int((x.get("metadata") or {}).get("step_order", 99)),
+    )
+    for i, ev in enumerate(sorted_ev):
+        eid = ev.get("evidence_id")
+        steps.append({
+            "step_number": i + 1,
+            "instruction": ev.get("content", ""),
+            "evidence_ids": [eid] if eid else [],
+        })
+    return steps
 
 
 class OrchestratorAgent(BaseAgent):
@@ -111,7 +152,6 @@ class OrchestratorAgent(BaseAgent):
         evidence_list = state.get("evidence") or []
         retrieval_conf = float(state.get("retrieval_confidence", 0.0))
 
-        # 0. Load thresholds from configuration
         cfg: Dict[str, Any] = {}
         try:
             cfg = load_config()
@@ -200,20 +240,8 @@ class OrchestratorAgent(BaseAgent):
         is_llm_fallback = False
 
         if routing == "FAST":
-            # Direct evidence mapping without LLM
-            # Prefer sorting by step_order if available in metadata
-            sorted_ev = sorted(
-                evidence_list,
-                key=lambda x: int((x.get("metadata") or {}).get("step_order", 99)),
-            )
-            for i, ev in enumerate(sorted_ev):
-                candidate_steps.append({
-                    "step_number": i + 1,
-                    "instruction": ev.get("content", ""),
-                    "evidence_ids": [ev.get("evidence_id")] if ev.get("evidence_id") else [],
-                })
+            candidate_steps = _steps_from_evidence(evidence_list)
         else:
-            # FULL path: Synthesize via LLM
             llm_client = self._get_llm()
             self.llm_name = getattr(llm_client, "model_name", "unknown")
             system_prompt = self._load_system_prompt()
@@ -230,6 +258,13 @@ class OrchestratorAgent(BaseAgent):
                     f"- [{ev.get('evidence_id')}] (Episode: {ev.get('episode_id')}, "
                     f"Sim: {ev.get('similarity_score')}): {ev.get('content')}\n"
                 )
+                meta_steps = (ev.get("metadata") or {}).get("steps") or []
+                if meta_steps:
+                    user_prompt += "  Documented Steps with Evidence IDs:\n"
+                    for st in meta_steps:
+                        if isinstance(st, dict):
+                            st_eid = st.get("evidence_id") or ev.get("evidence_id")
+                            user_prompt += f"    * Step {st.get('step_number')} [{st_eid}]: {st.get('description')}\n"
 
             if failed_attempts_to_avoid:
                 user_prompt += "\nDocumented Past Failed Attempts to Avoid:\n"
@@ -238,7 +273,7 @@ class OrchestratorAgent(BaseAgent):
 
             user_prompt += (
                 "\nSynthesize actionable, sequential steps for the technician. "
-                "Every step must strictly cite the valid evidence_id(s) from the retrieved evidence above."
+                "Every step must strictly cite the valid evidence_id(s) from the retrieved evidence or step IDs above."
             )
 
             try:
@@ -256,18 +291,10 @@ class OrchestratorAgent(BaseAgent):
             except Exception as e:
                 logger.warning("LLM step synthesis failed: %s; falling back to grounded evidence", e)
                 is_llm_fallback = True
-                # Grounded fallback: use direct evidence steps
-                for i, ev in enumerate(evidence_list):
-                    candidate_steps.append({
-                        "step_number": i + 1,
-                        "instruction": ev.get("content", ""),
-                        "evidence_ids": [ev.get("evidence_id")] if ev.get("evidence_id") else [],
-                    })
+                candidate_steps = _steps_from_evidence(evidence_list)
 
-        # 6. Citation Integrity Validation
-        valid_evidence_ids: Set[str] = {
-            e.get("evidence_id") for e in evidence_list if e.get("evidence_id")
-        }
+        # 6. Citation Integrity Validation (accepts both episode-level and step-level evidence_ids)
+        valid_evidence_ids: Set[str] = extract_valid_evidence_ids(evidence_list)
         valid_steps, citation_coverage = validate_and_filter_citations(candidate_steps, valid_evidence_ids)
 
         self.trace_logger.log(
@@ -286,7 +313,6 @@ class OrchestratorAgent(BaseAgent):
             stub=self.is_stub,
         )
 
-        # If no valid cited steps remain, abstain
         if not valid_steps:
             abstain_reason = "No candidate repair steps with valid evidence citations remained after citation integrity check."
             return {
@@ -318,9 +344,9 @@ class OrchestratorAgent(BaseAgent):
         current_steps = list(state.get("candidate_steps") or [])
         safety_verdict = state.get("safety_verdict") or {}
         violations = state.get("safety_violations") or []
-        amendments = safety_verdict.get("suggested_amendments") or []
+        amendments = list(safety_verdict.get("suggested_amendments") or [])
+        verdict = str(safety_verdict.get("verdict") or "").lower()
 
-        # Read revision loop limits from config
         cfg: Dict[str, Any] = {}
         try:
             cfg = load_config()
@@ -329,18 +355,34 @@ class OrchestratorAgent(BaseAgent):
         max_loops = int(cfg.get("system", {}).get("safety_max_revision_loops", 2))
         loop_count = int(state.get("safety_loop_count", 0))
 
-        # Apply amendments if present
+        # Hard veto with no suggested amendments cannot be fixed by looping: escalate immediately.
+        if verdict == "veto" and not amendments:
+            self.trace_logger.log(
+                agent=self.name,
+                event="PLAN_ESCALATED",
+                input_data={"safety_loop_count": loop_count, "verdict": verdict, "violations": violations},
+                output_data={"escalated": True, "reason": "veto with no suggested amendments"},
+                decision="ESCALATED",
+                trace_id=state.get("trace_id", "TR-UNKNOWN"),
+                session_id=state.get("session_id", "SES-UNKNOWN"),
+                stub=self.is_stub,
+            )
+            return {
+                "candidate_steps": current_steps,
+                "escalated_to_supervisor": True,
+                "escalated": True,
+                "decision": "ESCALATED",
+            }
+
         revised_steps: List[Dict[str, Any]] = []
         if amendments:
-            # Prepend safety requirement as Step 1
-            # Preserve valid citations from step 1 or note rule requirement
-            first_amendment = amendments[0]
-            existing_eids = current_steps[0].get("evidence_ids", []) if current_steps else []
-            revised_steps.append({
-                "step_number": 1,
-                "instruction": f"MANDATORY SAFETY AMENDMENT: {first_amendment}",
-                "evidence_ids": existing_eids,
-            })
+            # Prepend safety amendments with empty evidence_ids (never borrow another step's IDs).
+            for am in amendments:
+                revised_steps.append({
+                    "step_number": len(revised_steps) + 1,
+                    "instruction": f"[SAFETY AMENDMENT] {am}",
+                    "evidence_ids": [],
+                })
             for s in current_steps:
                 s_copy = dict(s)
                 s_copy["step_number"] = len(revised_steps) + 1
@@ -365,23 +407,23 @@ class OrchestratorAgent(BaseAgent):
             "candidate_steps": revised_steps,
             "escalated_to_supervisor": escalated,
             "escalated": escalated,
-            "decision": "PLAN_REVISED",
+            "decision": "ESCALATED" if escalated else "PLAN_REVISED",
         }
 
     def _process_finalize(self, state: BlackboardState) -> Dict[str, Any]:
-        """Phase 3: Assemble the FinalAnswer contract for technician delivery."""
+        """Phase 3: Assemble the FinalAnswer contract. Safety outcome always wins."""
         raw_query = state.get("raw_query", "")
         machine_type = state.get("machine_type", "unspecified")
         selected_hyp = state.get("selected_hypothesis") or {}
-        abstained = bool(state.get("abstained", False))
-        escalated = bool(state.get("escalated_to_supervisor", False) or state.get("escalated", False))
-        abstention_reason = state.get("abstention_reason")
+        plan_abstained = bool(state.get("abstained", False))
+        safety_approved = bool(state.get("safety_approved", False))
+        safety_verdict = state.get("safety_verdict") or {}
         trace_id = state.get("trace_id", "TR-UNKNOWN")
 
         safety_warnings = list(state.get("safety_violations") or [])
         failed_attempts = list(state.get("failed_attempts_to_avoid") or [])
 
-        if abstained:
+        if plan_abstained:
             final_ans = FinalAnswer(
                 machine_type=machine_type,
                 symptoms=[raw_query],
@@ -390,8 +432,27 @@ class OrchestratorAgent(BaseAgent):
                 safety_warnings=safety_warnings,
                 failed_attempts_to_avoid=failed_attempts,
                 abstained=True,
-                escalated=escalated,
-                abstention_reason=abstention_reason or "Abstained during orchestration.",
+                escalated=bool(state.get("escalated_to_supervisor", False) or state.get("escalated", False)),
+                abstention_reason=state.get("abstention_reason") or "Abstained during orchestration.",
+                trace_id=trace_id,
+            )
+        elif not safety_approved:
+            # Safety outcome wins: never emit steps that were not approved by SafetyAgent.
+            safety_reason = (
+                safety_verdict.get("reason")
+                or state.get("abstention_reason")
+                or "Safety verification did not approve the candidate procedure."
+            )
+            final_ans = FinalAnswer(
+                machine_type=machine_type,
+                symptoms=[raw_query],
+                diagnosed_cause=selected_hyp.get("fault", "Safety verification failed"),
+                steps=[],
+                safety_warnings=safety_warnings,
+                failed_attempts_to_avoid=failed_attempts,
+                abstained=True,
+                escalated=True,
+                abstention_reason=safety_reason,
                 trace_id=trace_id,
             )
         else:
@@ -412,7 +473,7 @@ class OrchestratorAgent(BaseAgent):
                 safety_warnings=safety_warnings,
                 failed_attempts_to_avoid=failed_attempts,
                 abstained=False,
-                escalated=escalated,
+                escalated=bool(state.get("escalated_to_supervisor", False) or state.get("escalated", False)),
                 abstention_reason=None,
                 trace_id=trace_id,
             )
@@ -435,5 +496,8 @@ class OrchestratorAgent(BaseAgent):
 
         return {
             "final_answer": final_ans.model_dump(),
+            "abstained": final_ans.abstained,
+            "escalated": final_ans.escalated,
+            "abstention_reason": final_ans.abstention_reason,
             "decision": "FINALIZED",
         }

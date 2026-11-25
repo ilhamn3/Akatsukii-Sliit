@@ -3,9 +3,10 @@
 # ==============================================================================
 
 system:
-  retrieval_backend: "stub"
+  retrieval_backend: "real"
   safety_max_revision_loops: 2
   confidence_threshold_review: 0.75
+  # A3 semantic near-duplicate warning (symptom cosine, same machine label). Uncalibrated.
   duplicate_similarity_threshold: 0.90
   abstention_similarity_threshold: 0.55
   log_path: "logs/audit_trace.jsonl"
@@ -47,7 +48,7 @@ pipelines:
         module: "project.core.stubs.retrieval_node"
         class: "RetrievalNode"
         enabled: true
-        stub: true
+        stub: false
         order: 2
 
       - name: "OrchestratorPlan"
@@ -93,6 +94,7 @@ pipelines:
         order: 6
 
     # Graph edge definitions (src -> dst). Use '__end__' to terminate.
+    # Conditional routing: specify condition: "check_clarification", on_true, on_false
     edges:
       - from: "DiagnosticAgent"
         condition: "check_clarification"

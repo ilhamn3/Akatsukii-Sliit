@@ -6,6 +6,7 @@ class and edge definitions in YAML—no graph code edits required.
 """
 
 import importlib
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import yaml
@@ -42,7 +43,7 @@ def instantiate_agent(agent_cfg: Dict[str, Any]) -> BaseAgent:
             if "name" in sig.parameters:
                 init_params["name"] = name
         agent = cls(**init_params)
-        if agent_cfg.get("stub", False) or "stubs" in module_name:
+        if agent_cfg.get("stub", False) or ("stubs" in module_name and class_name != "RetrievalNode"):
             agent.is_stub = True
         return agent
     except (ImportError, AttributeError) as e:
@@ -59,9 +60,17 @@ def is_pipeline_stub(
     """Check if the specified pipeline contains any stub / mock agents."""
     cfg = config_override if config_override is not None else load_config(config_path)
     pipe_cfg = cfg.get("pipelines", {}).get(pipeline, {})
+    retrieval_backend = (
+        "stub"
+        if os.getenv("FACTORY_STUB_RETRIEVAL") == "1"
+        else cfg.get("system", {}).get("retrieval_backend", "real")
+    )
     for a in pipe_cfg.get("agents", []):
         if a.get("enabled", True):
-            if a.get("stub", False) or "stubs" in a.get("module", ""):
+            if a.get("class") == "RetrievalNode":
+                if a.get("stub", False) or retrieval_backend == "stub":
+                    return True
+            elif a.get("stub", False) or "stubs" in a.get("module", ""):
                 return True
     return False
 

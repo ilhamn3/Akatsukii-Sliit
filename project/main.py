@@ -244,9 +244,16 @@ def main():
         print(f"  • Abstained:       {final_answer.abstained}")
         if final_answer.abstained:
             print(f"  • Reason:          {final_answer.abstention_reason}")
-        print(f"  • Safety Warnings: {len(final_answer.safety_warnings)} verified")
+        if final_answer.escalated:
+            print(f"  • Escalated:       True (supervisor review required)")
+        print(f"  • Safety notes:    {len(final_answer.safety_warnings)} (rule/advisory)")
         for w in final_answer.safety_warnings:
             print(f"    - {w}")
+
+        if final_answer.failed_attempts_to_avoid:
+            print(f"  • Failed Attempts to Avoid: {len(final_answer.failed_attempts_to_avoid)}")
+            for fa in final_answer.failed_attempts_to_avoid:
+                print(f"    - DO NOT REPEAT: {fa}")
 
         evidence_map = {
             e.get("evidence_id"): e.get("content", "")

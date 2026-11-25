@@ -1,6 +1,7 @@
 """Helper utilities for Orchestrator Agent (PR I5).
 
-Contains energy threshold parsing, LOTO / isolation compliance checks,
+Contains evidence normalisation for K6 HybridRetriever & stub evidence,
+energy threshold parsing, LOTO / isolation compliance checks,
 conflict ranking with per-term breakdown, adaptive routing evaluation,
 and strict citation validation.
 """
@@ -23,6 +24,88 @@ ISOLATION_PATTERN = re.compile(
     r"\b(loto|lockout|lock[- ]out|tag[- ]out|isolate|isolation|disconnect switch|bleed|depressuri[sz]e|zero[- ]energy|safety block)\b",
     re.IGNORECASE,
 )
+
+# Documented keyword rules for classifying free-text outcome descriptions.
+FAILED_OUTCOME_KEYWORDS = (
+    "failed",
+    "unsuccessful",
+    "not resolved",
+    "recurred",
+    "ineffective",
+    "persisted",
+)
+WORKED_OUTCOME_KEYWORDS = (
+    "worked",
+    "success",
+    "completed",
+    "resolved",
+    "restored",
+    "returned to production",
+    "fault cleared",
+)
+
+
+def classify_outcome(outcome_text: Optional[str]) -> str:
+    """Classify free-text outcome into 'worked', 'failed', or 'unknown'."""
+    if not outcome_text:
+        return "unknown"
+    text = str(outcome_text).strip().lower()
+    if any(kw in text for kw in FAILED_OUTCOME_KEYWORDS):
+        return "failed"
+    if any(kw in text for kw in WORKED_OUTCOME_KEYWORDS):
+        return "worked"
+    return "unknown"
+
+
+def normalize_evidence(ev: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize an Evidence dict from either real K6 HybridRetriever or stub retrieval.
+
+    Handles both K6 metadata (`verified_by`, `verified_at`, `catalogue_hazards`,
+    `steps`, `failed_attempts`, `outcome`, `record`) and stub metadata (`verified`,
+    `recorded_at`, `hazards`, `outcome`). Missing keys default safely.
+    """
+    meta = ev.get("metadata") or {}
+    verified = bool(meta.get("verified_by")) if "verified_by" in meta else bool(meta.get("verified", False))
+    recorded_at = meta.get("verified_at") or meta.get("recorded_at")
+    outcome_raw = meta.get("outcome")
+    outcome_class = classify_outcome(outcome_raw)
+    hazards = list(meta.get("catalogue_hazards") or meta.get("hazards") or [])
+    failed_attempts = list(meta.get("failed_attempts") or [])
+    steps = list(meta.get("steps") or [])
+    safety_warnings = list(meta.get("safety_warnings") or [])
+
+    return {
+        "evidence_id": ev.get("evidence_id"),
+        "episode_id": ev.get("episode_id", "EP-UNKNOWN"),
+        "similarity_score": float(ev.get("similarity_score", 0.0)),
+        "content": ev.get("content", ""),
+        "verified": verified,
+        "recorded_at": recorded_at,
+        "outcome_raw": outcome_raw,
+        "outcome_class": outcome_class,
+        "hazards": hazards,
+        "failed_attempts": failed_attempts,
+        "steps": steps,
+        "safety_warnings": safety_warnings,
+        "kind": meta.get("kind"),
+        "step_order": meta.get("step_order"),
+    }
+
+
+def extract_valid_evidence_ids(evidence_list: List[Dict[str, Any]]) -> Set[str]:
+    """Collect all valid citation IDs: episode-level evidence_id plus every non-null step evidence_id."""
+    valid_ids: Set[str] = set()
+    for ev in evidence_list:
+        eid = ev.get("evidence_id")
+        if eid:
+            valid_ids.add(str(eid))
+        meta = ev.get("metadata") or {}
+        for step in meta.get("steps") or []:
+            if isinstance(step, dict):
+                step_eid = step.get("evidence_id")
+                if step_eid:
+                    valid_ids.add(str(step_eid))
+    return valid_ids
 
 
 def parse_energy_thresholds(text: str) -> Dict[str, Any]:
@@ -65,21 +148,24 @@ def parse_energy_thresholds(text: str) -> Dict[str, Any]:
 def check_energy_loto_compliance(
     context_text: str, evidence_list: List[Dict[str, Any]]
 ) -> Tuple[bool, Optional[str]]:
-    """Verify that dangerous high energy (>50V or >10 bar) is preceded by verified LOTO/bleed steps.
-
-    Returns:
-        (is_compliant, abstention_reason_or_none)
-    """
+    """Verify that dangerous high energy (>50V or >10 bar) is preceded by verified LOTO/bleed steps."""
     energy = parse_energy_thresholds(context_text)
     if not (energy["high_voltage"] or energy["high_pressure"]):
         return True, None
 
-    # High energy is detected. Check if any retrieved evidence contains isolation/LOTO/bleed.
     has_isolation = False
     for ev in evidence_list:
         content = ev.get("content", "")
         if ISOLATION_PATTERN.search(content):
             has_isolation = True
+            break
+        norm = normalize_evidence(ev)
+        for st in norm["steps"]:
+            desc = st.get("description", "") if isinstance(st, dict) else str(st)
+            if ISOLATION_PATTERN.search(desc):
+                has_isolation = True
+                break
+        if has_isolation:
             break
 
     if not has_isolation:
@@ -103,7 +189,7 @@ def calculate_conflict_ranking(
     weights: Optional[Dict[str, float]] = None,
     ref_date_iso: Optional[str] = None,
 ) -> Tuple[List[Dict[str, Any]], List[str]]:
-    """Score and rank cross-episode evidence according to outcome, seniority verification, recency, and vector similarity.
+    """Score and rank cross-episode evidence according to outcome, verification, recency, and vector similarity.
 
     Also extracts documented failed actions into failed_attempts_to_avoid using exact evidence text.
     """
@@ -118,32 +204,32 @@ def calculate_conflict_ranking(
         except Exception:
             pass
 
-    # Group evidence items by episode_id
     episodes: Dict[str, List[Dict[str, Any]]] = {}
     for ev in evidence_list:
-        ep_id = ev.get("episode_id", "EP-UNKNOWN")
-        episodes.setdefault(ep_id, []).append(ev)
+        norm = normalize_evidence(ev)
+        ep_id = norm["episode_id"]
+        episodes.setdefault(ep_id, []).append(norm)
 
     conflicts: List[Dict[str, Any]] = []
     failed_attempts_to_avoid: List[str] = []
 
     for ep_id, items in episodes.items():
-        meta = items[0].get("metadata") or {}
-        outcome = str(meta.get("outcome", "")).lower()
-        verified = bool(meta.get("verified", False))
+        first = items[0]
+        outcome_class = first["outcome_class"]
+        verified = first["verified"]
 
         # 1. Outcome term
         outcome_term = 0.0
-        if "worked" in outcome or "success" in outcome:
+        if outcome_class == "worked":
             outcome_term = float(w.get("outcome_worked", 0.40))
-        elif "failed" in outcome or "ineffective" in outcome:
+        elif outcome_class == "failed":
             outcome_term = float(w.get("outcome_failed", -0.50))
 
         # 2. Senior verification term
         verified_term = float(w.get("verified_by_senior", 0.25)) if verified else 0.0
 
         # 3. Recency decay term
-        rec_str = meta.get("recorded_at")
+        rec_str = first["recorded_at"]
         recency_factor = 0.5
         if rec_str:
             try:
@@ -155,12 +241,12 @@ def calculate_conflict_ranking(
         recency_term = round(recency_factor * float(w.get("recency_decay", 0.15)), 4)
 
         # 4. Vector similarity term
-        sim = max(float(e.get("similarity_score", 0.0)) for e in items)
+        sim = max(item["similarity_score"] for item in items)
         similarity_term = round(sim * float(w.get("vector_similarity", 0.20)), 4)
 
         total_score = round(outcome_term + verified_term + recency_term + similarity_term, 4)
 
-        conflict_entry = {
+        conflicts.append({
             "episode_id": ep_id,
             "total_score": total_score,
             "breakdown": {
@@ -169,32 +255,34 @@ def calculate_conflict_ranking(
                 "recency_term": round(recency_term, 4),
                 "similarity_term": round(similarity_term, 4),
             },
-            "outcome": outcome,
+            "outcome": outcome_class,
             "verified": verified,
             "top_similarity": round(sim, 4),
-            "evidence_ids": [e.get("evidence_id") for e in items if e.get("evidence_id")],
-        }
-        conflicts.append(conflict_entry)
+            "evidence_ids": [item["evidence_id"] for item in items if item["evidence_id"]],
+        })
 
-    # Sort descending by total_score
     conflicts.sort(key=lambda x: x["total_score"], reverse=True)
 
-    # Extract exact failed attempts from evidence
+    # Extract exact failed attempts from normalized evidence
     for ev in evidence_list:
-        ev_meta = ev.get("metadata") or {}
-        ev_outcome = str(ev_meta.get("outcome", "")).lower()
-        ev_kind = str(ev_meta.get("kind", "")).lower()
-        if "failed" in ev_outcome or "failed" in ev_kind:
-            content = ev.get("content")
+        norm = normalize_evidence(ev)
+        ev_kind = str(norm.get("kind") or "").lower()
+        if norm["outcome_class"] == "failed" or "failed" in ev_kind:
+            content = norm["content"]
             if content and content not in failed_attempts_to_avoid:
                 failed_attempts_to_avoid.append(content)
 
-        # Also inspect metadata.failed_attempts list if present
-        for fa in ev_meta.get("failed_attempts", []):
+        for fa in norm["failed_attempts"]:
             if isinstance(fa, dict):
-                act = fa.get("action") or fa.get("why_failed")
-                if act and act not in failed_attempts_to_avoid:
-                    failed_attempts_to_avoid.append(act)
+                action = fa.get("action", "")
+                outcome = fa.get("outcome", "")
+                why = fa.get("why_failed", "")
+                if action and why:
+                    text = f"{action} -> {outcome}; failed because {why}" if outcome else f"{action} (failed: {why})"
+                else:
+                    text = action or why
+                if text and text not in failed_attempts_to_avoid:
+                    failed_attempts_to_avoid.append(text)
             elif isinstance(fa, str) and fa not in failed_attempts_to_avoid:
                 failed_attempts_to_avoid.append(fa)
 
@@ -217,8 +305,9 @@ def evaluate_adaptive_routing(
     if not evidence_list:
         return "FULL", "No evidence retrieved; proceeding with full synthesis path."
 
-    top_sim = max(float(e.get("similarity_score", 0.0)) for e in evidence_list)
-    unique_episodes = {e.get("episode_id") for e in evidence_list if e.get("episode_id")}
+    norms = [normalize_evidence(ev) for ev in evidence_list]
+    top_sim = max(n["similarity_score"] for n in norms)
+    unique_episodes = {n["episode_id"] for n in norms if n["episode_id"]}
 
     has_conflict = False
     for c in conflicts:
@@ -226,16 +315,11 @@ def evaluate_adaptive_routing(
             has_conflict = True
             break
     if len(conflicts) > 1:
-        outcomes = {c.get("outcome") for c in conflicts if c.get("outcome")}
+        outcomes = {c.get("outcome") for c in conflicts if c.get("outcome") in ("worked", "failed")}
         if "worked" in outcomes and "failed" in outcomes:
             has_conflict = True
 
-    has_hazards = False
-    for ev in evidence_list:
-        hazards = ev.get("metadata", {}).get("hazards") or []
-        if hazards:
-            has_hazards = True
-            break
+    has_hazards = any(bool(n["hazards"]) for n in norms)
 
     if top_sim >= similarity_threshold and len(unique_episodes) <= 1 and not has_conflict and not has_hazards:
         return (
@@ -260,7 +344,7 @@ def validate_and_filter_citations(
     steps: List[Dict[str, Any]],
     valid_evidence_ids: Set[str],
 ) -> Tuple[List[Dict[str, Any]], float]:
-    """Filter citations to only valid retrieved evidence IDs.
+    """Filter citations to only valid retrieved evidence IDs (episode or step level).
 
     Drops steps that have no valid citations, renumbers remaining steps,
     and returns (filtered_steps, citation_coverage).
