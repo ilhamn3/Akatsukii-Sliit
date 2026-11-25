@@ -98,6 +98,7 @@ class TraceLogger:
         stub: bool = False,
         llm: Optional[str] = None,
         tokens: Optional[int] = None,
+        confidence: Optional[float] = None,
     ) -> Dict[str, Any]:
         """Append a single structured JSONL line to the audit trail."""
         record: Dict[str, Any] = {
@@ -113,17 +114,18 @@ class TraceLogger:
             "latency_ms": round(float(latency_ms), 2),
             "error": error,
         }
+        if confidence is not None:
+            try:
+                record["confidence"] = round(float(confidence), 4)
+            except (TypeError, ValueError):
+                pass
         if llm is not None:
             record["llm"] = llm
         if tokens is not None:
-<<<<<<< Updated upstream
             try:
                 record["tokens"] = int(tokens)
             except (TypeError, ValueError):
                 pass
-=======
-            record["tokens"] = int(tokens)
->>>>>>> Stashed changes
 
         line = json.dumps(record, default=str)
         with self._file_lock:

@@ -111,9 +111,13 @@ def test_full_graph_capture_to_extraction(monkeypatch, tmp_path, payload, state)
     monkeypatch.setattr(CaptureAgent, 'process', lambda self,s: {'capture_result':state['capture_result']})
     monkeypatch.setattr('project.agents.a2_extraction.get_llm_client', lambda: FakeLLM(canned_response=ExtractedRepair.model_validate(payload)))
     monkeypatch.setattr(TraceLogger, '_instance', TraceLogger(str(tmp_path/'graph.jsonl')))
+    # A3 writes its review queue under the storage root; keep it in tmp_path.
+    monkeypatch.setenv('FACTORY_MEMORY_STORAGE', str(tmp_path))
     result = build_graph('A').invoke(create_initial_state(''))
     assert result['draft_record']['extraction']['failed_attempts']
-    assert [m['sender'] for m in result['messages']] == ['CaptureAgent','ExtractionAgent']
+    assert [m['sender'] for m in result['messages']] == ['CaptureAgent','ExtractionAgent','ValidationAgent']
+    assert result['review_item_id'] and result['validation_report']['human_review_required']
+    assert (tmp_path / 'review' / 'review_queue.sqlite3').exists()
 
 
 def test_offline_cli(tmp_path, monkeypatch):

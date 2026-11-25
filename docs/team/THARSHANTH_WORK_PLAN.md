@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 2.2 / 20 points · 11% complete**
+**Overall: 6.8 / 20 points · 34% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP2 | Synthetic data and test set | 12 | 2.2 | 19% |
+| WP2 | Synthetic data and test set | 12 | 6.8 | 56% |
 | WP8 | Human baseline study | 5 | 0 | 0% |
 | WP9 | Documentation (Tharshanth's part) | 3 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -28,10 +28,10 @@
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
 | 2.1 | Fault catalogue (~40 failure modes) with hazards across 5 machine types | 3 | 23 Nov | 75% |
-| 2.2 | Seeded generator script (reproducible) | 2 | 23 Nov | 0% |
-| 2.3 | ~400 repair episodes, 12 technicians, spoken-style narratives, ground-truth labels | 2 | 24 Nov | 0% |
+| 2.2 | Seeded generator script (reproducible) | 2 | 23 Nov | 75% |
+| 2.3 | ~400 repair episodes, 12 technicians, spoken-style narratives, ground-truth labels | 2 | 24 Nov | 75% |
 | 2.4 | Audio subset for the speech-to-text path | 1 | 26 Nov | 0% |
-| 2.5 | 60 held-out queries in 4 tiers, gold answers, dev split, frozen with hash | 2 | 24 Nov | 0% |
+| 2.5 | 60 held-out queries in 4 tiers, gold answers, dev split, frozen with hash | 2 | 24 Nov | 75% |
 | 2.6 | Expanded stores for scalability tests (100 / 400 / 2,000 records) | 1 | 26 Nov | 0% |
 | 2.7 | Synthetic-data disclosure text | 1 | 29 Nov | 0% |
 
@@ -174,6 +174,7 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
-|   |   |   |   |   |   |   |
+| #6 | 23 Nov | [WP2] Fault catalogue with hazards | 2.1 (0->75%) | 40 failure modes across 5 machine types, hazards.json, build and validate scripts | 0% -> 11% | Kajanan K |
+
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*

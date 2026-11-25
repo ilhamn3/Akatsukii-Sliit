@@ -1,0 +1,35 @@
+{
+  "synthetic": true,
+  "disclosure": "All episodes are synthetic, generated from the team's fault catalogue. No real technicians, machines or incidents are described.",
+  "generator_version": "1.0.0",
+  "seed": 42,
+  "catalogue_sha256": "c79b18353d5c1cb245720a699efd8a2ba527469ab62c4a1d9938251f0f054db6",
+  "stats": {
+    "episodes": 400,
+    "technicians": 12,
+    "faults_covered": 40,
+    "by_machine": {
+      "air_compressor": 52,
+      "cnc_lathe": 89,
+      "conveyor_line": 75,
+      "hydraulic_press": 94,
+      "injection_moulding": 90
+    },
+    "by_source": {
+      "audio_debrief": 292,
+      "shift_log": 108
+    },
+    "with_failed_attempts": 145,
+    "safety_step_omitted": 127,
+    "date_range": [
+      "2025-01-06",
+      "2026-11-16"
+    ]
+  },
+  "files_sha256": {
+    "narratives.jsonl": "49c8866df49391cc2e3abe71220ca6f482917b5ac12242a4e48ca6966a437eaa",
+    "ground_truth.jsonl": "472d17fc6b1ace4633b2a558ab43aa495a75937a0fd7b550eeaddebbe89a548a",
+    "technicians.json": "2df3c2bcebb1c65631586c60c04c19b5a857e5cf83ed9945e96e744121688243",
+    "samples.json": "a1d4a3f98925934a3a38bcfef68d87aa28e8001fd97f304eb7c12f0cc546250a"
+  }
+}
