@@ -115,7 +115,11 @@ class GeminiLLMClient(LLMClient):
 
         if response_model is not None:
             config_kwargs["response_mime_type"] = "application/json"
-            config_kwargs["response_schema"] = response_model
+            schema_dict = response_model.model_json_schema()
+            if "additionalProperties" in json.dumps(schema_dict):
+                config_kwargs["response_json_schema"] = schema_dict
+            else:
+                config_kwargs["response_schema"] = response_model
 
         thinking_cfg = self._get_thinking_config()
         if thinking_cfg is not None:

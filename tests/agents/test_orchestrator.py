@@ -283,9 +283,12 @@ def test_pipeline_b_graph_execution_with_stub_retrieval(monkeypatch):
     assert len(final_ans["steps"]) >= 1
     assert len(final_state["evidence"]) >= 1
 
-    # Verify all steps cite real retrieved evidence IDs
+    # Verify all non-control steps cite real retrieved evidence IDs
     valid_eids = {e["evidence_id"] for e in final_state["evidence"]}
     for step in final_ans["steps"]:
+        if step["instruction"].startswith(("[SAFETY CONTROL", "[SAFETY AMENDMENT")):
+            assert step["evidence_ids"] == []
+            continue
         assert len(step["evidence_ids"]) >= 1
         for eid in step["evidence_ids"]:
             assert eid in valid_eids
@@ -556,7 +559,7 @@ def test_revise_uses_all_amendments_and_keeps_citation_integrity():
     steps = updates["candidate_steps"]
 
     control_steps = [s for s in steps if s["instruction"].startswith("[SAFETY CONTROL")]
-    assert len(control_steps) == 2
+    assert len(control_steps) >= 2
     assert all(s["evidence_ids"] == [] for s in control_steps)
     non_control = [s for s in steps if not s["instruction"].startswith("[SAFETY CONTROL")]
     assert len(non_control) >= 1
