@@ -561,9 +561,6 @@ def get_llm(
         if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
             return FakeLLM()
         raise ValueError("OPENAI_API_KEY not set; set it in .env, or pass --fake-llm for offline demo")
-        if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
-            return FakeLLM()
-        raise ValueError("OPENAI_API_KEY not set; set it in .env, or pass --fake-llm for offline demo")
 
     else:
         raise ValueError(f"Unsupported LLM_PROVIDER '{provider}'. Supported providers are: 'gemini', 'openai'.")

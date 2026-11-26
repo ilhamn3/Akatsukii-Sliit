@@ -1,0 +1,4 @@
+{"step": 1, "agent": "Diagnostic Agent", "action": "Read the question and proposed hypotheses", "output": "Hypothesis 1: worn hydraulic seal", "confidence": 0.82}
+{"step": 2, "agent": "Retrieval Agent", "action": "Searched past repairs", "output": "Found REP-014 and REP-102", "confidence": 0.78}
+{"step": 3, "agent": "Safety Agent", "action": "Checked the draft answer", "output": "MOCK: not really checked", "confidence": 0.0}
+{"step": 4, "agent": "Orchestrator", "action": "Built the final answer with citations", "output": "Final answer sent to the user", "confidence": 0.8}
