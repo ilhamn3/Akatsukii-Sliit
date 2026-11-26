@@ -286,6 +286,9 @@ def score_predictions(predictions: list[dict], data: dict, *, threshold=DEFAULT_
         **(meta or {}),
         "n_episodes": len(rows), "episodes": [r["episode_id"] for r in rows],
         "failed_episodes": [r["episode_id"] for r in rows if r["error"] or r["primary"] is None],
+        # Infrastructure failures (quota, timeout, network, auth) are scored as misses
+        # but listed separately; a report with any is not a valid prompt/model comparison.
+        "provider_failed_episodes": [r["episode_id"] for r in rows if failure_kind(r["error"]) == "provider"],
         "matching": {"method": "greedy one-to-one token Dice", "threshold": threshold,
                      "machine_type": "K5 resolver to catalogue ID"},
         "fields_scored": list(FIELDS),
@@ -303,6 +306,11 @@ def compare_reports(baseline: dict, candidate: dict) -> dict:
         raise ValueError("Reports cover different episodes; compare runs on the same split")
     if baseline["matching"] != candidate["matching"] or baseline["schema_version"] != candidate["schema_version"]:
         raise ValueError("Reports used different scoring settings")
+    incomplete = [name for name, report in (("baseline", baseline), ("candidate", candidate))
+                  if report.get("provider_failed_episodes")]
+    if incomplete:
+        raise ValueError(f"Provider failures in {', '.join(incomplete)} (quota/timeout/network); "
+                         "re-run with --retry-errors before comparing")
 
     def f1(report, key):
         block = report["primary"]["micro"] if key == "micro" else report["primary"]["fields"][key]
@@ -333,8 +341,34 @@ class ProviderAuthError(RuntimeError):
     """The provider rejected the credentials; every further call would fail too."""
 
 
+class ProviderRateLimitError(RuntimeError):
+    """Quota or rate limit reached (e.g. tokens per day); further calls fail too."""
+
+
 _AUTH_ERROR = re.compile(r"\b401\b|invalid api key|authenticationerror|unauthori[sz]ed|permission denied",
                          re.IGNORECASE)
+_RATE_LIMIT = re.compile(r"\b429\b|rate.?limit|quota", re.IGNORECASE)
+_PROVIDER_FAILURE = re.compile(r"\b429\b|rate.?limit|quota|timeout|timed out|connection|\b5\d\d\b|"
+                               r"api call failed after|service unavailable", re.IGNORECASE)
+
+
+def _tokens(client) -> int | None:
+    """Last call's token count when the shared client reports one (an int)."""
+    value = getattr(client, "last_token_count", None)
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+
+def failure_kind(error: str | None) -> str | None:
+    """'provider' = the model was not reached or refused (quota, timeout, network,
+    auth): an infrastructure failure, not an extraction mistake. 'output' = the
+    model answered but its output was invalid or ungrounded."""
+    if not error:
+        return None
+    # A2 (K8) wraps every invalid-output failure in this message; its text may quote
+    # raw model output ("loose connection"), so it must not be pattern-matched.
+    if "Extraction output invalid after" in error or "No timestamped speech" in error:
+        return "output"
+    return "provider" if (_PROVIDER_FAILURE.search(error) or _AUTH_ERROR.search(error)) else "output"
 
 
 def run_extraction(episode_ids: list[str], data: dict, predictions_path: Path, client=None,
@@ -361,14 +395,18 @@ def run_extraction(episode_ids: list[str], data: dict, predictions_path: Path, c
             row = {"episode_id": eid, "model": draft["model"] if draft else agent.llm_name,
                    "prompt_version": draft["prompt_version"] if draft else None,
                    "prediction": prediction_from_draft(draft) if draft else None,
-                   "draft": draft, "error": None if draft else "; ".join(result.get("errors") or ["no draft"])}
+                   "draft": draft, "error": None if draft else "; ".join(result.get("errors") or ["no draft"]),
+                   "tokens": _tokens(client)}  # For quota budgeting.
+            row["failure_kind"] = failure_kind(row["error"])
             out.write(json.dumps(row) + "\n")
             out.flush()
             done[eid] = row
+            # Stop instead of burning retries on every episode; rows are kept and
+            # re-run later with --retry-errors once the key/quota is fixed.
             if row["error"] and _AUTH_ERROR.search(row["error"]):
-                # Stop instead of burning retries on every episode; rows are kept
-                # and re-run later with --retry-errors once the key is fixed.
                 raise ProviderAuthError(f"Provider rejected the credentials on {eid}: {row['error'][-120:]}")
+            if row["error"] and _RATE_LIMIT.search(row["error"]):
+                raise ProviderRateLimitError(f"Provider rate limit/quota reached on {eid}: {row['error'][-160:]}")
     return [done[eid] for eid in episode_ids]
 
 
@@ -453,6 +491,11 @@ def main(argv=None):
         print(f"{exc}\nNo metrics written. Check or replace the API key, then re-run with --retry-errors.",
               file=sys.stderr)
         return 2
+    except ProviderRateLimitError as exc:
+        print(f"{exc}\nNo metrics written. Wait for the provider quota to reset (or use the team's "
+              "agreed account), then re-run the same command with --retry-errors; finished episodes are kept.",
+              file=sys.stderr)
+        return 3
     except (OSError, ValueError, KeyError) as exc:
         print(f"{type(exc).__name__}: {exc}", file=sys.stderr)
         return 1

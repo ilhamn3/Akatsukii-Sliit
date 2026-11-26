@@ -203,6 +203,43 @@ These findings come from inspecting the eval misses. The reported numbers above 
    in a narrated replace/install step also count" needs team agreement and a check on
    the dev split before any re-scoring. Until then, v1 stands.
 
+## Prompt development on the dev split (26 Nov 2026)
+
+Goal: fix the root causes v3 left empty, using **only** the 12 dev episodes. The eval
+split stays untouched until a prompt is final. The prompt is selected with
+`EXTRACTION_PROMPT`; the default is still `extraction_v3`. Every prompt version stays
+fixed once it has been run, so recorded results always name an exact prompt.
+
+| Prompt | Change | Dev result |
+|---|---|---|
+| v3 (baseline, with the K8 retry) | none | micro F1 **0.887** (P 0.870, R 0.905), root cause F1 0.957, 0 failures |
+| v4 | Any wording presenting a cause as the finding counts ("problem was", "turned out", "Cause:"); use the corrected statement after self-corrections; quotes must be exact. Unstated or hedged causes stay null | **Invalid run.** 8 of 12 calls hit Groq's free-tier daily token limit (429, 200k tokens/day). On the 4 episodes both prompts completed, root cause improved (EP-0003: null -> "worn check ring") but steps fell (0.92 -> 0.74) |
+| v5 | v4, plus: values are cleaned of fillers while quotes stay exact (v4 had leaked "you know", "uh" into values); an action that didn't help goes only in failed_attempts, never also in steps | not run yet |
+
+The v4 step losses came from two general issues, not episode-specific wording: fillers
+copied into values, and a failed attempt repeated as a step. v5 addresses both.
+
+The example causes in v4/v5 were chosen so they don't resemble any catalogue root
+cause (token Dice < 0.5, enforced by a test). My first draft's examples were too close
+to real causes and were replaced before any run.
+
+**Tooling added after the invalid run:**
+- Quota, timeout, network and auth failures are labelled `provider` failures, separate
+  from `output` failures (invalid or ungrounded model output).
+- Reports list `provider_failed_episodes`, and `compare` refuses any run that has them.
+- A rate limit now stops the run, like a rejected key (exit code 3). Finished episodes
+  are kept for `--retry-errors`.
+- Each prediction row records the call's `tokens`, for budgeting the provider quota.
+
+**Next:**
+1. Run v5 on dev and `compare` it with v3's dev run.
+2. Only if v5 improves root cause without losing more elsewhere, make it the default
+   and run the eval split **once** for the reported number.
+
+Each episode costs roughly 3k tokens. Groq's free tier allows 200k tokens per day, so
+dev (12) and eval (50) runs may need separate days, or the team's agreed provider
+account.
+
 ## Limits
 - Matching on token overlap is a documented approximation of semantic equivalence. It
   can under-credit heavy paraphrase and over-credit items that share words.

@@ -178,13 +178,14 @@ def test_prompt_version_is_selectable_recorded_and_kept_apart(monkeypatch, tmp_p
 
 def test_v4_keeps_the_unstated_cause_safeguard_and_leaks_no_catalogue_causes(data):
     import re
-    text = (km.ROOT / "project/core/prompts/extraction_v4.md").read_text(encoding="utf-8")
-    assert "requires root_cause=null" in text and "The connector was loose" in text
-    assert "suspected, hedged" in text
-    examples = re.findall(r'"([^"]{6,80})"', text.split("root_cause is the fault")[1].split("parts means")[0])
     causes = [f["root_cause"] for f in data["faults"].values()]
-    for example in examples:  # Wording examples must not hint at real catalogue answers.
-        assert max(km.dice(km.tokens(example), km.tokens(c)) for c in causes) < 0.5, example
+    for version in ("extraction_v4", "extraction_v5"):
+        text = (km.ROOT / f"project/core/prompts/{version}.md").read_text(encoding="utf-8")
+        assert "requires root_cause=null" in text and "The connector was loose" in text
+        assert "suspected, hedged" in text
+        section = text.split("root_cause is the fault")[1].split("parts means")[0]
+        for example in re.findall(r'"([^"]{6,80})"', section):  # Must not hint at real catalogue answers.
+            assert max(km.dice(km.tokens(example), km.tokens(c)) for c in causes) < 0.5, (version, example)
 
 
 def test_compare_reports_field_deltas_on_the_same_split_only(data):
@@ -199,6 +200,48 @@ def test_compare_reports_field_deltas_on_the_same_split_only(data):
     other, _ = km.score_predictions(gold[:3], data, system="v4")
     with pytest.raises(ValueError, match="different episodes"):
         km.compare_reports(a, other)
+
+
+@pytest.mark.parametrize("error,kind", [
+    ("[ExtractionAgent] RuntimeError: OpenAI API call failed after 3 retries: Error code: 429 - Rate limit "
+     "reached for model on tokens per day (TPD)", "provider"),
+    ("[ExtractionAgent] TimeoutError: simulated", "provider"),
+    ("[ExtractionAgent] RuntimeError: Error code: 401 - Invalid API Key", "provider"),
+    ("[ExtractionAgent] ValueError: Extraction output invalid after 2 attempt(s): Raw: loose connection timeout",
+     "output"),
+    ("[ExtractionAgent] ValueError: Source quote does not match segment for tools.1", "output"),
+    (None, None),
+])
+def test_failures_are_classified_as_provider_or_output(error, kind):
+    assert km.failure_kind(error) == kind
+
+
+def test_rate_limit_stops_the_run_and_blocks_comparison(monkeypatch, tmp_path, data):
+    client = Mock()
+    client.model_name = "test-quota"
+    client.last_token_count = None
+    client.generate_structured.side_effect = RuntimeError(
+        "OpenAI API call failed after 3 retries: Error code: 429 - Rate limit reached ... tokens per day (TPD)")
+    monkeypatch.setattr("project.core.llm.get_llm_client", lambda: client)
+    ids = km.select_episodes(data, "dev")[:3]
+    assert km.main(["run", "--episodes", *ids, "--output-dir", str(tmp_path)]) == 3
+    assert client.generate_structured.call_count == 1 and not list(tmp_path.glob("extraction_metrics_*.json"))
+    [row] = [json.loads(l) for l in (tmp_path / "predictions_custom_extraction_v3.jsonl").read_text().splitlines()]
+    assert row["failure_kind"] == "provider" and "tokens" in row
+    gold = [{"episode_id": e, "prediction": km.gold_for(e, data)} for e in ids]
+    partial = [{**g, "prediction": None, "error": row["error"]} if g["episode_id"] == ids[0] else g for g in gold]
+    good, _ = km.score_predictions(gold, data, system="a")
+    hit, _ = km.score_predictions(partial, data, system="b")
+    assert hit["provider_failed_episodes"] == [ids[0]]
+    with pytest.raises(ValueError, match="Provider failures"):
+        km.compare_reports(good, hit)
+
+
+def test_v5_separates_clean_values_from_exact_quotes():
+    text = (km.ROOT / "project/core/prompts/extraction_v5.md").read_text(encoding="utf-8")
+    assert "A value is clean" in text and "A quote is exact" in text
+    assert "belongs only in failed_attempts, never also in steps" in text
+    assert "requires root_cause=null" in text  # v3/v4 safeguard kept.
 
 
 def test_live_run_refuses_the_offline_fake_llm(monkeypatch, tmp_path):
