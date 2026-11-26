@@ -119,6 +119,7 @@ For K4, see [Agent 3 validation and review-queue backend](docs/VALIDATION_REVIEW
 For K5, see [Agent 4 entity resolution and graph writes](docs/ENTITY_GRAPH.md).
 For K6, see [Agent 6 hybrid retrieval](docs/RETRIEVAL.md).
 For K7, see [Extraction precision/recall/F1 export](docs/EXTRACTION_METRICS.md).
+For K8, see [Retries, timeouts, fallbacks and tests](docs/HARDENING.md).
 
 - Python 3.10, 3.11, or 3.12
 - Git

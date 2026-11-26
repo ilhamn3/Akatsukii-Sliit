@@ -65,6 +65,16 @@ local file path. Use only data permitted for that provider. Shared timeouts/retr
 apply. On CLI failure, inspect the JSONL trace; an output from an earlier successful
 run may still exist, so check the exit code. Runtime files under logs are ignored.
 
+## Invalid-output retry (K8)
+
+If the model returns invalid JSON or schema, or a quote that doesn't match its segment,
+A2 makes **one corrective retry**: two calls in total, configurable with
+`EXTRACTION_MAX_ATTEMPTS` (1-5). The retry sends the validator's message back as data,
+alongside the same segments. Drafts that needed the retry carry the review reason
+`extraction_retried_after_invalid_output`. Transport errors and timeouts are retried
+only by the shared LLM client. See docs/HARDENING.md. The K7 development numbers (26 Nov)
+were measured **before** this retry existed.
+
 ## Validation status
 
 On 24 Nov 2026, the repository suite passed all 76 tests and `pip check` reported

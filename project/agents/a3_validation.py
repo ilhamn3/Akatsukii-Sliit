@@ -236,8 +236,13 @@ def duplicate_issues(draft, fields, *, queue, store, trace_id, threshold, exclud
     episode_id, issues = episode_ids(draft)[0], []
     related = [] if queue is None else [i.item_id for i in queue.active_by_source(draft.source_sha256)
                                         if i.item_id != exclude_item]
-    if store is not None and store.get(episode_id, trace_id=trace_id) is not None:
-        related.append(episode_id)
+    try:
+        if store is not None and store.get(episode_id, trace_id=trace_id) is not None:
+            related.append(episode_id)
+    except Exception as exc:  # K8 fallback: approval re-checks the store before publishing.
+        issues.append(_issue("store_dedup_unavailable", "warning", None,
+                             f"Verified-store duplicate check failed ({type(exc).__name__}); "
+                             "approval re-checks it before publishing"))
     if related:
         issues.append(_issue("duplicate_source", "blocking", None,
                              "This recording is already pending review or verified", related))
@@ -247,6 +252,18 @@ def duplicate_issues(draft, fields, *, queue, store, trace_id, threshold, exclud
         issues.append(_issue("semantic_dedup_unavailable", "warning", None,
                              "No knowledge store configured; semantic duplicate check skipped"))
         return issues
+    try:
+        return issues + _semantic_duplicates(draft, fields, episode_id, queue=queue, store=store,
+                                             trace_id=trace_id, threshold=threshold, exclude_item=exclude_item)
+    except Exception as exc:
+        # K8 fallback: an unavailable embedding model or store must not stop the draft
+        # from reaching human review; the reviewer sees that the check did not run.
+        return issues + [_issue("semantic_dedup_unavailable", "warning", None,
+                                f"Semantic duplicate check failed ({type(exc).__name__}); review manually")]
+
+
+def _semantic_duplicates(draft, fields, episode_id, *, queue, store, trace_id, threshold, exclude_item):
+    issues = []
     resolver = default_resolver()
 
     def machine_key(label):  # Catalogue ID when resolvable (K5), else normalized label.
@@ -339,6 +356,10 @@ class ValidationAgent(BaseAgent):
 
     def process(self, state):
         payload = state.get("draft_record")
+        if not payload and state.get("errors"):
+            # Upstream failure (e.g. provider timeout) is already traced; skip without
+            # adding a derivative error so the trace shows the real cause.
+            return {"decision": "SKIPPED_UPSTREAM_FAILURE"}
         if not payload:
             raise ValueError("No extraction draft to validate; Agent 2 did not produce one")
         draft = DraftRepairRecord.model_validate(payload)
