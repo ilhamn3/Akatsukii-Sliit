@@ -356,6 +356,13 @@ def validate_and_filter_citations(
     total_steps = len(steps)
 
     for step in steps:
+        instr = str(step.get("instruction") or "").strip()
+        if instr.lower().startswith(("[safety control", "[safety amendment")):
+            step_copy = dict(step)
+            step_copy["evidence_ids"] = []
+            step_copy["step_number"] = len(valid_steps) + 1
+            valid_steps.append(step_copy)
+            continue
         raw_eids = step.get("evidence_ids") or []
         filtered_eids = [eid for eid in raw_eids if eid in valid_evidence_ids]
         if filtered_eids:

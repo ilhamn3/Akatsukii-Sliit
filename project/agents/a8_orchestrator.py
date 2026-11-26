@@ -191,6 +191,55 @@ def _is_safety_control_step(instruction: str) -> bool:
     return low.startswith("[safety control") or low.startswith("[safety amendment")
 
 
+def _ensure_catalogue_controls(
+    steps: List[Dict[str, Any]],
+    hazard_ids: List[str],
+    extra_rule_ids: Optional[List[str]] = None,
+) -> List[Dict[str, Any]]:
+    """Deterministically prepend any missing required controls from RuleEngine before intrusive steps."""
+    if not hazard_ids and not extra_rule_ids:
+        return steps
+    try:
+        engine = RuleEngine()
+    except Exception:
+        return steps
+
+    rule_by_id = {r.id: r for r in engine.rules}
+    target_rules = []
+    seen = set()
+    for hid in hazard_ids:
+        r = engine.hazard_map.get(hid)
+        if r and r.id not in seen:
+            target_rules.append(r)
+            seen.add(r.id)
+    for rid in (extra_rule_ids or []):
+        r = rule_by_id.get(rid)
+        if r and r.id not in seen:
+            target_rules.append(r)
+            seen.add(r.id)
+
+    if not target_rules:
+        return steps
+
+    import re
+    norm_text = " \n ".join(str(s.get("instruction") or "").lower() for s in steps)
+    prepended: List[Dict[str, Any]] = []
+    for r in target_rules:
+        satisfied = any(re.search(pat, norm_text) for pat in (r.required_step_patterns or []))
+        if not satisfied and r.required_control:
+            tag = r.hazard_id or r.id
+            prepended.append({
+                "step_number": 0,
+                "instruction": f"[SAFETY CONTROL {tag}] {r.required_control}",
+                "evidence_ids": [],
+            })
+
+    combined = prepended + list(steps)
+    for idx, s in enumerate(combined, 1):
+        s["step_number"] = idx
+    return combined
+
+
 def _write_escalation_ticket(
     *,
     trace_id: str,
@@ -441,10 +490,12 @@ class OrchestratorAgent(BaseAgent):
                 is_llm_fallback = True
                 candidate_steps = _steps_from_evidence(evidence_list)
 
-        # 7. Filter Failed Attempts & Validate Citation Integrity
+        # 7. Filter Failed Attempts, Validate Citations, and Ensure Required Catalogue Controls First
         candidate_steps = _filter_failed_attempts(candidate_steps, evidence_list)
         valid_evidence_ids: Set[str] = extract_valid_evidence_ids(evidence_list)
         valid_steps, citation_coverage = validate_and_filter_citations(candidate_steps, valid_evidence_ids)
+        if valid_steps:
+            valid_steps = _ensure_catalogue_controls(valid_steps, hazard_ids)
 
         self.trace_logger.log(
             agent=self.name,
@@ -607,6 +658,14 @@ class OrchestratorAgent(BaseAgent):
                         s_copy["evidence_ids"] = filtered_eids
                         s_copy["step_number"] = len(revised_steps) + 1
                         revised_steps.append(s_copy)
+
+        # Ensure any deterministic rule controls triggered in SafetyAgent are present at the front
+        if revised_steps:
+            revised_steps = _ensure_catalogue_controls(
+                revised_steps,
+                list(state.get("hazard_ids") or []),
+                extra_rule_ids=rule_ids,
+            )
 
         escalated = (loop_count >= max_loops)
 

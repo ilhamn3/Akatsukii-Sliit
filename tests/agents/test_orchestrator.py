@@ -283,9 +283,12 @@ def test_pipeline_b_graph_execution_with_stub_retrieval(monkeypatch):
     assert len(final_ans["steps"]) >= 1
     assert len(final_state["evidence"]) >= 1
 
-    # Verify all steps cite real retrieved evidence IDs
+    # Verify all non-control steps cite real retrieved evidence IDs
     valid_eids = {e["evidence_id"] for e in final_state["evidence"]}
     for step in final_ans["steps"]:
+        if step["instruction"].startswith(("[SAFETY CONTROL", "[SAFETY AMENDMENT")):
+            assert step["evidence_ids"] == []
+            continue
         assert len(step["evidence_ids"]) >= 1
         for eid in step["evidence_ids"]:
             assert eid in valid_eids
@@ -556,7 +559,7 @@ def test_revise_uses_all_amendments_and_keeps_citation_integrity():
     steps = updates["candidate_steps"]
 
     control_steps = [s for s in steps if s["instruction"].startswith("[SAFETY CONTROL")]
-    assert len(control_steps) == 2
+    assert len(control_steps) >= 2
     assert all(s["evidence_ids"] == [] for s in control_steps)
     non_control = [s for s in steps if not s["instruction"].startswith("[SAFETY CONTROL")]
     assert len(non_control) >= 1
@@ -696,7 +699,7 @@ def test_diagnosis_taken_from_top_episode_and_disagreement_traced(tmp_path):
 
 def test_knowledge_store_snapshot_cache_invalidation_on_put_verified(tmp_path):
     """Verify KnowledgeStore caches snapshots and invalidates cache on put_verified."""
-    from project.store.knowledge_store import _SNAPSHOT_CACHE
+    from project.store.knowledge_store import _CACHE
 
     faults = json.loads(FAULTS.read_text(encoding="utf-8"))
     hazards = json.loads(HAZARDS.read_text(encoding="utf-8"))
@@ -708,13 +711,16 @@ def test_knowledge_store_snapshot_cache_invalidation_on_put_verified(tmp_path):
 
     snap1, _ = store.snapshot(trace_id="TR-CACHE-2")
     assert len(snap1) == 1
-    assert store.db.path.resolve() in _SNAPSHOT_CACHE
+    assert store._cache_key in _CACHE
+    rev1 = _CACHE[store._cache_key].revision
 
-    # Second read hits cache
+    # Second read hits cache (same revision)
     snap2, _ = store.snapshot(trace_id="TR-CACHE-3")
     assert len(snap2) == 1
+    assert _CACHE[store._cache_key].revision == rev1
 
-    # Write second episode -> must invalidate cache and return 2 episodes
+    # Write second episode -> must invalidate cache and bump revision
     writer.put_verified(eps[1], trace_id="TR-CACHE-4")
     snap3, _ = store.snapshot(trace_id="TR-CACHE-5")
     assert len(snap3) == 2
+    assert _CACHE[store._cache_key].revision > rev1

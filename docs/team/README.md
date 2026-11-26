@@ -11,11 +11,11 @@ This directory contains individual work plans, allocations, reviewers, subtasks,
 <!-- ROLLUP:START -->
 | Member | Share (pts) | Earned | Member % |
 |---|---:|---:|---:|
-| Ilham MM | 30 | 28.6 | 95% |
-| Kavibarath S | 30 | 18.2 | 61% |
-| Tharshanth A | 20 | 6.8 | 34% |
+| Ilham MM | 30 | 30 | 100% |
+| Kavibarath S | 30 | 20.8 | 69% |
+| Tharshanth A | 20 | 8.2 | 41% |
 | Kajanan K | 20 | 3 | 15% |
-| **Team** | **100** | **56.5** | **57%** |
+| **Team** | **100** | **62** | **62%** |
 <!-- ROLLUP:END -->
 
 ---
