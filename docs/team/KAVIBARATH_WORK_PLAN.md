@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 20.9 / 30 points · 70% complete**
+**Overall: 21.2 / 30 points · 71% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP3 | Ingestion agents 1-4 and review queue | 18 | 11.2 | 62% |
+| WP3 | Ingestion agents 1-4 and review queue | 18 | 11.5 | 64% |
 | WP4 | Knowledge store and retrieval | 10 | 9.7 | 97% |
 | WP10 | Hardening and unit tests | 2 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -33,7 +33,7 @@
 | 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 50% |
 | 3.5 | Agent 4: entity resolution and graph writes | 3 | 26 Nov | 75% |
 | 3.6 | Review-queue backend for low-confidence records | 2 | 26 Nov | 75% |
-| 3.7 | Extraction precision / recall / F1 numbers exported to the harness | 1 | 27 Nov | 50% |
+| 3.7 | Extraction precision / recall / F1 numbers exported to the harness | 1 | 27 Nov | 75% |
 
 #### WP4 – Knowledge store and retrieval (10 pts)
 
@@ -193,6 +193,6 @@ After merging origin/main at f735884, all 80 tests and pip check passed locally.
 | [#15](https://github.com/ilhamn3/Akatsukii-Sliit/pull/15) (K6) | 25 Nov 2026 | [WP4] Agent 6: hybrid retrieval including failed attempts | 4.4 (0->75%), 4.5 (0->75%) | RetrievalEngine contract: K5 machine resolution and filter-before-rank, MiniLM/FAISS symptom cosine fused (support-only) with NetworkX traversal and alarm-code/asset hops; Evidence carries failed attempts, outcome, step-level evidence IDs, verification and provenance; RetrievalAgent node and proven Pipeline B wiring. 195 tests and pip check pass. The synthetic catalogue check in this PR was later withdrawn (its queries resembled the test set's easy tier); see the follow-up row. Evidence: docs/RETRIEVAL.md | 51% -> 61% (15.25/30 -> 18.25/30 pts) | Ilham MM (approved, merged) |
 | [#21](https://github.com/ilhamn3/Akatsukii-Sliit/pull/21) (K3-K6 review follow-ups) | 25 Nov 2026 | [WP4] Review follow-ups: store caching, flat evidence metadata, dev-split retrieval evaluation | 4.1-4.3 (75->100% each), 4.4 (75->100%), 4.5 (75->100%) | Addresses Ilham's #12-#15 reviews. Revision-keyed projection cache: 2,000 writes in ~31 s instead of ~444 ms per write and rising; queries ~40-70 ms steady instead of 665 ms. Flat `verified`, `recorded_at` (+source), `root_cause`, `outcome_status` (A8's own rules), `kind`/`step_order` metadata, checked against A8's normalize_evidence. Dev-split-only evaluation (test split refused) over an oracle store: hybrid hit@1 20/20, single signals 19/20 (synthetic, not a benchmark). A4 note in Workflow.md. 230 tests pass with and without FACTORY_MEMORY_STORAGE. Done-when criteria met and #12/#15 approved | 61% -> 69% (18.25/30 -> 20.75/30 pts) | Ilham MM (approved, merged; asked 4.4 -> 90%, see next row) |
 | [#22](https://github.com/ilhamn3/Akatsukii-Sliit/pull/22) (4.4 tracker correction) | 26 Nov 2026 | [WP4] Set 4.4 to 90% per #21 review | 4.4 (100->90%) | Reviewer correction: hybrid retrieval has only been evaluated on the synthetic oracle store, not yet through the real pipeline (Pipeline A ingestion -> verified store -> Pipeline B). Remaining 10%: retrieval evaluated on episodes ingested by the real pipeline. Progress recomputed with scripts/progress.py | 69% -> 68% (20.75/30 -> 20.45/30 pts) | Ilham MM (requested) |
-| K7 (PR number pending; builds on #22) | 26 Nov 2026 | [WP3] Extraction P/R/F1 export for the benchmark harness | 3.7 (0->50%) | Code-driven field-level precision/recall/F1 (8 O1 fields): gold = what each synthetic narrative says (narrative_coverage); deterministic one-to-one token-Dice matching (0.5, plus exact), K5 machine resolution; narrative-to-capture adapter (new `text` media type); resumable Agent 2 runner on shared get_llm_client() that refuses FakeLLM; seeded dev/eval splits; human-form scoring; `extraction_metrics/v1` JSON + per-episode JSONL for the harness. 241 tests pass; oracle check F1 1.0 on 400 episodes. Evidence: docs/EXTRACTION_METRICS.md. Live run with the team's model and harness ingestion pending, so no F1 is claimed yet | 68% -> 70% (20.45/30 -> 20.95/30 pts) | Ilham MM (pending) |
+| K7 (PR number pending; builds on #22) | 26 Nov 2026 | [WP3] Extraction P/R/F1 export for the benchmark harness | 3.7 (0->75%) | Code-driven field-level precision/recall/F1 (8 O1 fields): gold = what each synthetic narrative says (narrative_coverage); deterministic one-to-one token-Dice matching (0.5, plus exact), K5 machine resolution; narrative-to-capture adapter (new `text` media type); resumable Agent 2 runner on shared get_llm_client() that refuses FakeLLM; seeded dev/eval splits; human-form scoring; `extraction_metrics/v1` JSON + per-episode JSONL for the harness. 243 tests pass; oracle check F1 1.0 on 400 episodes. Development live run (Groq gpt-oss-120b, prompt v3, eval split of 50): micro F1 0.833 (P 0.848, R 0.818) at threshold 0.5, exact-match F1 0.606, 3 episodes failed A2's own checks and count as misses; outputs committed under project/evaluation/results/ for the harness. The run stops on a rejected key and never reports an all-failed run. Evidence: docs/EXTRACTION_METRICS.md. Harness ingestion, final team model and review pending | 68% -> 71% (20.45/30 -> 21.2/30 pts) | Ilham MM (pending) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*

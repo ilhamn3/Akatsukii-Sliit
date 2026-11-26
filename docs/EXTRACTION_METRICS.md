@@ -96,7 +96,11 @@ The steps:
 If the run is interrupted, re-run the same command: finished episodes are kept. Add
 `--retry-errors` to retry episodes that failed with a transient provider error.
 
-Outputs go to `logs/extraction_eval/` (git-ignored):
+If the provider rejects the key (401), the run stops after the first episode instead of
+retrying every one. A run where every episode fails writes no metrics.
+
+Outputs go to `logs/extraction_eval/` (git-ignored). Copy a run you want to share into
+`project/evaluation/results/<date>_<split>_<model>_<prompt>/` with a README:
 
 | File | Content |
 |---|---|
@@ -145,11 +149,61 @@ Per-episode rows carry `participant_code`.
 - `precision` is `null` when nothing was predicted. `f1` is `2TP/(2TP+FP+FN)`, which
   is `null` only when there was nothing to find and nothing was predicted.
 
-## Status and limits
+## Development result (26 Nov 2026)
 
-- The scorer, runner, splits and export are built and tested. **No live numbers are
-  reported yet.** They need a run with the team's real model (the command above). Until
-  then, no F1 is claimed.
+Run details:
+- **Model and split:** `openai/gpt-oss-120b` via Groq, prompt `extraction_v3`, eval split (50 episodes).
+- **Scorer:** `extraction_metrics/v1`, commit `ba6b3d6`.
+- **Files:** `project/evaluation/results/2026-11-26_eval_groq-gpt-oss-120b_v3/`.
+- **Status:** a development configuration. The final benchmark model is a team decision.
+
+Three episodes failed Agent 2's own checks and count as complete misses:
+- EP-0150 and EP-0199: a quote didn't match its segment.
+- EP-0336: invalid structured output.
+
+| | Precision | Recall | F1 |
+|---|---:|---:|---:|
+| **Micro, threshold 0.5 (O1 headline)** | 0.848 | 0.818 | **0.833** |
+| Macro F1 over the 8 fields | | | 0.829 |
+| Micro, exact normalized match | 0.617 | 0.596 | 0.606 |
+| Audio debriefs (39) | 0.838 | 0.815 | 0.826 |
+| Shift logs (11) | 0.898 | 0.832 | 0.863 |
+
+| Field | P | R | F1 |
+|---|---:|---:|---:|
+| machine_type | 0.881 | 0.740 | 0.804 |
+| symptoms | 0.899 | 0.795 | 0.844 |
+| root_cause | 1.000 | 0.760 | 0.864 |
+| steps | 0.827 | 0.889 | 0.857 |
+| tools | 0.889 | 0.738 | 0.807 |
+| parts | 0.596 | 0.778 | 0.675 |
+| failed_attempts | 1.000 | 0.875 | 0.933 |
+| safety_warnings | 0.824 | 0.875 | 0.848 |
+
+The headline is **0.833, just below the O1 target of 0.85**, on templated synthetic
+narratives. Expect lower on real recordings.
+
+### Error analysis
+
+These findings come from inspecting the eval misses. The reported numbers above were
+**not** changed after this inspection.
+
+1. **Root cause left empty (9 episodes).** The narratives state the cause plainly
+   ("turned out, clogged pump suction strainer"), but prompt v3's strict
+   "explicit causal statement" rule kept it null. This is an extractor recall gap.
+   Fixing the prompt must be done on the **dev** split, not eval.
+2. **Machine type in shift logs (7 of 10 misses).** Shift logs name the machine only by
+   asset code (`CMP-02:`, `HYD-02:`, `CNC-03:`), and v3 deliberately doesn't infer a
+   category from asset IDs. Mapping these prefixes in K5 would be a resolver change,
+   not an extraction change. The data's prefixes (`CNV`/`CMP`/`HYD`/`CNC`) also differ
+   from K5's provisional asset convention, which should be aligned with the team's data.
+3. **Parts precision is probably understated.** 15 of the 19 unmatched predicted parts
+   are words that appear in a narrated step ("replace the thermocouple"). The gold only
+   counts parts from the generator's separate "parts" line. A rule such as "parts named
+   in a narrated replace/install step also count" needs team agreement and a check on
+   the dev split before any re-scoring. Until then, v1 stands.
+
+## Limits
 - Matching on token overlap is a documented approximation of semantic equivalence. It
   can under-credit heavy paraphrase and over-credit items that share words.
 - The narratives come from seeded templates. Scores on them will likely be higher than
