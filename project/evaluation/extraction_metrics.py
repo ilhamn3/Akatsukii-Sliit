@@ -396,7 +396,8 @@ def run_extraction(episode_ids: list[str], data: dict, predictions_path: Path, c
                    "prompt_version": draft["prompt_version"] if draft else None,
                    "prediction": prediction_from_draft(draft) if draft else None,
                    "draft": draft, "error": None if draft else "; ".join(result.get("errors") or ["no draft"]),
-                   "tokens": _tokens(client)}  # For quota budgeting.
+                   # For quota budgeting; a failed call leaves the client's previous count.
+                   "tokens": _tokens(client) if draft else None}
             row["failure_kind"] = failure_kind(row["error"])
             out.write(json.dumps(row) + "\n")
             out.flush()

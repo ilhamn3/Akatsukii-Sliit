@@ -227,7 +227,7 @@ def test_rate_limit_stops_the_run_and_blocks_comparison(monkeypatch, tmp_path, d
     assert km.main(["run", "--episodes", *ids, "--output-dir", str(tmp_path)]) == 3
     assert client.generate_structured.call_count == 1 and not list(tmp_path.glob("extraction_metrics_*.json"))
     [row] = [json.loads(l) for l in (tmp_path / "predictions_custom_extraction_v3.jsonl").read_text().splitlines()]
-    assert row["failure_kind"] == "provider" and "tokens" in row
+    assert row["failure_kind"] == "provider" and row["tokens"] is None
     gold = [{"episode_id": e, "prediction": km.gold_for(e, data)} for e in ids]
     partial = [{**g, "prediction": None, "error": row["error"]} if g["episode_id"] == ids[0] else g for g in gold]
     good, _ = km.score_predictions(gold, data, system="a")
