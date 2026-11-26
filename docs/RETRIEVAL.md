@@ -1,8 +1,9 @@
 # K6: Agent 6 hybrid retrieval (vector + graph, with failed attempts)
 
-Owner: Kavibarath S. Reviewer: Ilham MM. Branch: `wp4/retrieval-agent`.
-Subtasks 4.4 and 4.5. Stacked on K5 (PR #14), then K4 (#13) and K3 (#12).
-Retarget to `main` as those merge.
+Owner: Kavibarath S. Reviewer: Ilham MM. Subtasks 4.4 and 4.5. Merged as PR #15.
+Review follow-ups (flat metadata, dev-split evaluation, latency) are on
+`wp4/review-followups`. Pipeline B calls this engine through Ilham's `RetrievalNode`
+(`project/core/stubs/retrieval_node.py`, backend `real`).
 
 ## Contract
 
@@ -25,6 +26,11 @@ symptoms, root cause, cited fix steps, failed attempts, warnings and outcome.
 
 | Key | Content |
 |---|---|
+| `verified` | Always `true`: only human-approved episodes are stored |
+| `recorded_at`, `recorded_at_source` | ISO time used for recency. It is the verification time (`"verified_at"`), because the pipeline has no capture/repair timestamp yet |
+| `root_cause`, `machine_type` | Flat copies from the record |
+| `outcome_status` | `worked` / `failed` / `unknown`, computed with A8's own `orchestration_helpers.classify_outcome` keyword rules, so A6 and A8 classify identically |
+| `kind`, `step_order` | `"episode"` and `null`: evidence is episode-level, and steps carry their own order and IDs in `steps` |
 | `steps` | Ordered steps with their step-level `evidence_id` and timestamp (cite these in `ActionStep.evidence_ids`) |
 | `failed_attempts` | `action`, `outcome`, `why_failed` for every failed attempt (4.5) |
 | `outcome` | Overall repair outcome (4.5) |
@@ -62,94 +68,101 @@ verification and recency, and deciding to abstain, belong to the Orchestrator
 
 ## Pipeline B wiring (for Ilham's Orchestrator PR)
 
-`RetrievalAgent` is a BaseAgent node. It writes `retrieved_episodes` (Evidence dicts),
-`graph_subgraph_nodes`, `failed_attempts_retrieved` (readable strings with episode and
-evidence IDs) and `retrieval_confidence` (max score). I left Ilham's `config.yaml`
-Pipeline B untouched. The proven wiring (tested with a config override in
-`tests/store/test_retrieval.py`) is:
+Ilham's `RetrievalNode` (PR #20) calls `HybridRetriever().retrieve(...)` in Pipeline B
+and writes `evidence` / `retrieved_episodes` / `retrieval_confidence`. My
+`RetrievalAgent` (same module) is an equivalent standalone node; it is not registered
+in `config.yaml`. Both need the store. If the store is unavailable the failure is
+traced and no evidence is returned, so the Orchestrator abstains.
 
-```yaml
-      - name: "RetrievalAgent"
-        module: "project.agents.a6_retrieval"
-        class: "RetrievalAgent"
-        enabled: true
-        stub: false
-    edges:
-      - from: "DiagnosticAgent"
-        condition: "check_clarification"
-        on_true: "__end__"
-        on_false: "RetrievalAgent"
-      - from: "RetrievalAgent"
-        to: "<Orchestrator>"
-```
-
-The agent needs `FACTORY_MEMORY_STORAGE` (activation script). If the store is
-unavailable, the failure is traced as AGENT_ERROR and the retrieval fields stay empty.
-The Orchestrator should then abstain. `project/core/stubs/retrieval_stub.py` can be
-retired when Ilham switches over.
-
-## Development check (synthetic; not a benchmark)
+## Dev-split evaluation (synthetic; not a benchmark)
 
 ```powershell
 . .\scripts\Activate-FactoryMemory.ps1
 python -m scripts.retrieval_dev_eval --local-files-only
 ```
 
-The script builds 40 catalogue-derived SYNTHETIC verified episodes. Each has symptoms
-and alarm codes, root cause, valid fixes as steps, wrong fixes as failed attempts and
-hazard controls as warnings. They are written through Agent 4 into
-`.local-data/retrieval-dev` (the loader is named as verifier; no human review). Each
-fault's differently worded `lay_description` is the query. Results come from code and
-are saved to `logs/retrieval_dev_eval.json`.
+The setup:
+- **Queries:** the 20 dev-split queries in `project/data/test_set/dev_queries.jsonl`,
+  5 per tier. The retriever sees **query text only**. `dev_gold.jsonl` is used only to
+  score. The script refuses to open `test_queries.jsonl` or `test_gold.jsonl`.
+- **Machine:** either not given, or detected from the query text with the K5 resolver.
+  Detection was 20/20 correct, with 0 wrong.
+- **Corpus:** an *oracle store* of the 400 synthetic episodes' ground-truth records
+  (`project/data/episodes/ground_truth.jsonl`), written through Agent 4. This isolates
+  retrieval from extraction errors. It is used for this check only and never by the
+  benchmark system, because that file is scoring-only data for agents.
+- **Scoring:** a hit is any episode listed in the query's `supporting_episode_ids`, i.e.
+  an episode of the correct fault. The weights are the config defaults and were not tuned.
 
-25 Nov 2026, real MiniLM, 40 queries:
+25 Nov 2026, real MiniLM, results computed by code (`logs/retrieval_dev_eval.json`):
 
-| Scope | Mode | hit@1 | hit@3 | MRR |
-|---|---|---:|---:|---:|
-| Within machine (8 candidates) | vector only | 0.950 | 1.000 | 0.975 |
-| | graph only | 1.000 | 1.000 | 1.000 |
-| | **hybrid** | 0.975 | 1.000 | 0.988 |
-| All machines (40 candidates) | vector only | 0.925 | 1.000 | 0.963 |
-| | graph only | 0.925 | 1.000 | 0.963 |
-| | **hybrid** | **0.975** | 1.000 | **0.988** |
+| Machine given | Mode | hit@1 | hit@3 | MRR@10 | Miss at 3 |
+|---|---|---:|---:|---:|---|
+| none | vector only | 0.95 | 0.95 | 0.958 | DQ-07 (medium) |
+| none | graph only | 0.95 | 0.95 | 0.950 | DQ-13 (hard) |
+| none | **hybrid** | **1.00** | **1.00** | **1.000** | none |
+| detected from query | vector only | 0.95 | 0.95 | 0.958 | DQ-07 |
+| detected from query | graph only | 0.95 | 0.95 | 0.950 | DQ-13 |
+| detected from query | **hybrid** | **1.00** | **1.00** | **1.000** | none |
 
 How to read this:
-- Hybrid beats either signal alone across machines, and every gold episode is in the
-  top 3 in every mode.
-- Within one machine, graph-only is slightly higher. These queries share catalogue
-  vocabulary, which favours lexical matching. I did not retune the weights to this.
-- This is a self-consistency check on synthetic data the team wrote. It is not
-  retrieval accuracy on real narratives. The frozen test set was not used.
+- Each single signal misses a different query, and the fused score recovers both.
+- n = 20, and the queries and episodes come from the same seeded templates and
+  catalogue vocabulary. Expect real narratives, and the frozen test set, to score lower.
+  These numbers say the retriever and its contract work; they are not a benchmark result.
 
-Ilham's DEV split (`tests/agents/dev_queries.json`) has no episode-level gold, so it is
-inspection only. All five display-name machine types resolved. Top-1 matched the
-plausible catalogue fault for the specific queries:
+An earlier check in this document (catalogue `lay_description` queries) has been
+**withdrawn**. The frozen test set's easy tier is built from those descriptions, so
+results on them are too close to the test set to report. No weights were tuned on it.
 
-| Query | Top-1 fault | Score |
-|---|---|---:|
-| DEV-02 ram chatter | P01 slow ram descent | 0.57 |
-| DEV-03 ALM-304 | I03 barrel temperature runaway | 0.72 |
-| DEV-04 belt slipping | C02 belt slipping at the drive | 0.63 |
-| DEV-05 oil carryover | A02 excess oil carryover | 0.62 |
-| DEV-09 turret | L06 turret fails to index | 0.59 |
+## Latency at 2,000 records
 
-The vague queries (DEV-06/07/08 "something feels strange") scored 0.28-0.42, which is
-below the 0.55 abstention threshold.
+Ilham's #12 review asked for cached projections before the 2,000-record scalability run.
+
+1. SQLite keeps a `revision` counter, bumped in the same transaction as every write.
+2. A process-wide cache keyed by store path and embedding model holds:
+   - the parsed episodes;
+   - the FAISS index and the graph, built lazily;
+   - A6's per-node term index.
+3. Any write, from any process, changes the revision, and the next read rebuilds.
+4. Writes validate only the new episode's projection, which is per-episode by design.
+5. A6 reads its retrieval settings from config only when the file changes.
+
+Measured on this laptop with the test-only hash embedder (so MiniLM time is excluded),
+using the 400 episodes replicated to 2,000. Each query used a new retriever and store
+instance, as `RetrievalNode` does:
+
+| | Before (main 93e9b20) | After |
+|---|---|---|
+| Writes | 1,016 written in 240 s, then stopped; last 100 averaged 444 ms each and rising | all 2,000 in 25-31 s, ~13 ms each, flat |
+| Query, all machines | 665 ms (at 1,016 records) | ~70 ms steady; ~2.6 s once after a write (rebuild) |
+| Query, one machine | not measured | ~40 ms steady |
+
+Every read still appends an audit event.
 
 ## Limits
 
 - Real verified team episodes don't exist yet, so real retrieval quality is unmeasured.
 - Lexical graph matching is English-only with crude stemming. Synonyms rely on the
   vector signal.
-- Every query reads one full store snapshot and rebuilds the index and graph. That is
-  fine for this project's small dataset, but it is not a high-throughput design.
+- The first query after a write rebuilds the projections (~2.6 s at 2,000 records).
+  Load data before serving queries, or warm up with one query.
+- `recorded_at` is the verification time, not the repair date. Adding a capture or
+  repair date to the pipeline would make recency ranking meaningful.
 - Symptoms are not linked to catalogue fault IDs. Retrieval returns verified episodes,
   not catalogue entries.
 
 ## Tests
 
-`tests/store/test_retrieval.py` (12 tests) uses real SQLite/FAISS/NetworkX and a
-test-only hash embedder. It covers:
+`tests/store/test_retrieval.py` (17 tests) uses real SQLite/FAISS/NetworkX and a
+test-only hash embedder. The follow-ups added tests for:
+- flat metadata, read back through A8's `normalize_evidence`;
+- the shared cache and its cross-instance invalidation;
+- reads staying independent of the cache;
+- constant work per write;
+- dev-split-only loading, with test files refused.
+
+The original tests cover:
 - contract signature and ordering;
 - failed attempts, outcome and citations;
 - machine filtering before ranking, and cross-machine search;
@@ -158,5 +171,5 @@ test-only hash embedder. It covers:
 - the asset hop;
 - empty store and invalid input;
 - agent blackboard output and traces, including the failure path;
-- Pipeline B with A6 inserted by config;
+- Pipeline B with the real retriever through `RetrievalNode`;
 - the dev-check metrics.

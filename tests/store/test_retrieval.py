@@ -165,10 +165,82 @@ def test_pipeline_b_with_retrieval_node(store, monkeypatch):
     )
 
 
-def test_dev_check_reports_code_computed_metrics(store):
-    report = evaluate(store, FAULT_DATA[:10])
-    assert report["queries"] == 10
-    for scope in ("within_machine", "all_machines"):
+def test_dev_evaluation_reports_code_computed_metrics(store):
+    # Catalogue symptoms (not lay descriptions, which seed the frozen test set's easy tier).
+    cases = [{"query_id": f["fault_id"], "tier": "unit", "query": " ".join(f["symptoms"][1:]),
+              "gold": {f"SYN-CAT-{f['fault_id']}"}, "gold_machine": f["machine_type"]} for f in FAULT_DATA[:10]]
+    report = evaluate(store, cases)
+    assert report["queries"] == report["scored"] == 10
+    for machine_mode in ("none", "detected_from_query"):
         for mode in ("vector_only", "graph_only", "hybrid"):
-            metrics = report["results"][f"{scope}/{mode}"]
-            assert 0 <= metrics["hit@1"] <= metrics["hit@3"] <= 1 and 0 <= metrics["mrr"] <= 1
+            metrics = report["results"][f"{machine_mode}/{mode}"]
+            assert 0 <= metrics["hit@1"] <= metrics["hit@3"] <= 1 and 0 <= metrics["mrr@10"] <= 1
+
+
+def test_dev_evaluation_reads_dev_split_only(tmp_path):
+    from scripts import retrieval_dev_eval as dev
+    cases = dev.dev_cases()
+    assert len(cases) == 20 and all(c["query_id"].startswith("DQ-") and c["gold"] for c in cases)
+    assert set(cases[0]) == {"query_id", "tier", "query", "gold", "gold_machine"}  # query text only to the system
+    for name in ("test_queries.jsonl", "test_gold.jsonl"):
+        with pytest.raises(ValueError, match="frozen test split"):
+            dev._jsonl(dev.TEST_SET / name)
+    rows = dev._jsonl(dev.GROUND_TRUTH)[:3]
+    episodes = dev.ground_truth_episodes(rows)
+    assert [e.episode_id for e in episodes] == [r["episode_id"] for r in rows]
+    assert "oracle store" in episodes[0].verified_by
+
+
+def test_flat_orchestrator_metadata(store):
+    from project.core.orchestration_helpers import normalize_evidence
+    [hit] = HybridRetriever(store).retrieve("spindle housing too hot to touch", "cnc_lathe", k=1)
+    meta = hit.metadata
+    assert meta["verified"] is True and meta["kind"] == "episode" and meta["step_order"] is None
+    assert meta["recorded_at"] == meta["verified_at"] and meta["recorded_at_source"] == "verified_at"
+    assert meta["root_cause"] == meta["record"]["root_cause"] == "clogged filter in the spindle chiller circuit"
+    assert "hazards" not in meta and "H06" in meta["catalogue_hazards"] and meta["machine_type"] == "cnc_lathe"
+    assert meta["outcome_status"] == "worked"  # "Fault cleared ..." under A8's keyword rules
+    normalized = normalize_evidence(hit.model_dump(mode="json"))  # Ilham's reader agrees with the flat keys.
+    assert normalized["verified"] is True and normalized["recorded_at"] == meta["recorded_at"]
+    assert normalized["outcome_class"] == meta["outcome_status"] and normalized["hazards"] == meta["catalogue_hazards"]
+
+
+def test_projection_cache_is_shared_and_invalidated_by_writes(tmp_path):
+    from project.store import knowledge_store as ks
+    episodes = catalogue_episodes(FAULT_DATA, HAZARD_DATA)
+    writer = KnowledgeStore(tmp_path / "c.sqlite3", embedder=HashEmbedder())
+    for episode in episodes[:3]:
+        writer.put_verified(episode, trace_id="T")
+    reader = KnowledgeStore(tmp_path / "c.sqlite3", embedder=HashEmbedder())  # Like a new RetrievalNode.
+    first = reader.projection(trace_id="T")
+    assert reader.projection(trace_id="T") is first and first.graph() is first.graph()
+    writer.put_verified(episodes[3], trace_id="T")  # Another instance writes.
+    second = reader.projection(trace_id="T")
+    assert second is not first and second.revision == first.revision + 1
+    assert episodes[3].episode_id in {e.episode_id for e in second.episodes}
+    # A write from outside this process's cache bookkeeping is still seen via SQLite's revision.
+    ks._CACHE.clear()
+    writer.put_verified(episodes[4], trace_id="T")
+    assert len(reader.projection(trace_id="T").episodes) == 5
+
+
+def test_public_reads_stay_independent_of_the_cache(tmp_path):
+    store = loaded(tmp_path, HashEmbedder(), catalogue_episodes(FAULT_DATA, HAZARD_DATA)[:2])
+    got = store.get("SYN-CAT-L01", trace_id="T")
+    got.record.symptoms.append("mutated by caller")
+    store.by_machine("cnc_lathe", trace_id="T")[0].record.root_cause = "mutated"
+    store.graph_snapshot(trace_id="T").clear()
+    fresh = store.get("SYN-CAT-L01", trace_id="T")
+    assert "mutated by caller" not in fresh.record.symptoms and fresh.record.root_cause != "mutated"
+    assert store.graph_snapshot(trace_id="T").number_of_nodes() > 0
+
+
+def test_writes_validate_only_the_new_episode(tmp_path, monkeypatch):
+    from project.store import knowledge_store as ks
+    store = KnowledgeStore(tmp_path / "w.sqlite3", embedder=HashEmbedder())
+    built = []
+    real = ks.KnowledgeGraph
+    monkeypatch.setattr(ks, "KnowledgeGraph", lambda eps: built.append(len(eps)) or real(eps))
+    for episode in catalogue_episodes(FAULT_DATA, HAZARD_DATA)[:5]:
+        store.put_verified(episode, trace_id="T")
+    assert built == [1, 1, 1, 1, 1]  # Constant work per write, not a full rebuild.
