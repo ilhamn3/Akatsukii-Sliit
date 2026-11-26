@@ -1,5 +1,8 @@
 # Session script (study lead's cheat sheet)
 
+> **Group session (protocol §11, 27 Nov).** If you run all 5 people together, use the
+> "Group session" section at the end instead of the one-person flow.
+
 A short version of [protocol.md](protocol.md) §5–6 to keep open during each session. If
 the two ever disagree, the protocol wins. About 60 minutes per person.
 
@@ -102,3 +105,32 @@ python project/human_study/build_grading.py
 It checks every file, then reports problems such as a missing time or a wrong packet, with
 the file and question. Fix them and run it again. Then hand `private/answer_key.csv` to the
 key holder, and only to them. See `grading/README.md`.
+
+## Group session (P01–P05 together, about 75 minutes)
+
+**Before (15 min):**
+1. Give each person their folder from `private/handouts/` (copy `P0N.zip` to a USB stick or
+   send it to them, then they unzip it). P01 gets `P01`, and so on.
+2. Seat people so no one can see another screen. Each opens `START_HERE_instructions.html`,
+   `repair_log.html` and their `P0N_packet_X.csv` in Excel.
+3. Consent forms out, pens ready. Write each person's code on their form as they sign.
+
+**Run it:**
+1. **Consent (5 min)** for everyone.
+2. **Briefing:** read the same words as in "The session" above, once, aloud to the group.
+   Then add: **"You time yourselves. Start your stopwatch when you read a question, stop at
+   done or at 3 minutes, and type the seconds in. Do the questions in order."**
+3. **Practice (5 min):** the practice question on their instruction page. Answer questions
+   about the *sheet* only, not about repairs.
+4. **12 questions (about 35 min).** You walk around but don't time anyone. If asked for help:
+   **"Use whatever you find in the log."**
+5. **Break (2 min).**
+6. **Extraction (about 15 min):** "Open your extraction file. Up to 7 minutes per note, timed
+   by you. Leave a field blank if the note doesn't say."
+7. **Save and hand back:** each person saves both files as **CSV UTF-8**, same names, and
+   gives them back. Ask each their study area and hands-on experience (none / some / a lot)
+   and write it in `results/participants.csv`.
+8. **Close:** thank them; withdrawal until 28 Nov, 11:59 PM, by code.
+
+**After:** copy the returned files into `project/human_study/results/`, replacing the blank
+ones with the same names, then run `python project/human_study/build_grading.py --check`.

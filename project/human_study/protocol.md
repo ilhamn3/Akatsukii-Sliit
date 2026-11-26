@@ -148,3 +148,22 @@ approval or a sign-off is needed before the first session**, and record the answ
 - [ ] Consent signed before every session
 - [ ] CSVs filled; no names in any committed file
 - [ ] Results handed to Kajanan by 28 Nov
+
+## 11. Amendment, 27 Nov 2026: one group session, self-timed
+
+Decided by the study lead because there was not enough time for seven one-hour sessions.
+
+- **Participants:** 5 (P01–P05, packets A–E), so each of the 60 test queries gets one human
+  answer. P06 and P07 are not run, so no query has a second human answer.
+- **Format:** one session, all participants in the same room at the same time, each on their
+  own laptop, seated so no one can see another screen. Consent, briefing (same words as
+  section 5) and practice are done once for the group.
+- **Timing:** each participant times their own questions with a phone stopwatch, using the
+  same limits (3 minutes per question, 7 minutes per extraction note), and types the seconds
+  into their sheet. The study lead does not time individuals.
+- **Materials:** each participant gets a folder with `repair_log.html`, their own packet and
+  extraction sheet, and `participant_instructions.html` (task, timing and saving rules; no
+  answers).
+- **Effect on results:** self-reported times are less precise than lead-timed ones. Report
+  "group session, self-timed, n = 5" next to every human timing figure. Answer content and
+  blind grading are unchanged.
