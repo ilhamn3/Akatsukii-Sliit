@@ -138,8 +138,12 @@ Run these from the repository root with the virtual environment active.
 **1. Offline smoke test** (no API key, canned LLM output, clearly labelled as fake):
 
 ```powershell
-python project/main.py --fake-llm
+python project/main.py --fake-llm --machine-type cnc_lathe
 ```
+
+Without `--machine-type`, the system asks which machine you mean, and the run stops there.
+That is expected. Before the store is loaded (step 2), it abstains with "Low retrieval
+similarity", which is also expected.
 
 **2. Load the synthetic knowledge store** (once; the first run downloads the MiniLM
 embedding model, about 90 MB):
@@ -192,8 +196,13 @@ The tests need no API key and no model download.
 | Check the episodes rebuild byte for byte | `python project/data/generator.py --check` |
 | Check the frozen test set is untouched | `python project/data/test_set/build_test_set.py --verify` |
 | Validate the fault catalogue | `python project/data/fault_catalogue/validate_catalogue.py` |
-| Dev-split evaluation (never touches the test set) | `python scripts/run_dev_eval.py --limit 5 --fake-llm` |
+| Dev-split evaluation, plumbing check (never touches the test set) | `python scripts/run_dev_eval.py --limit 5 --fake-llm --out logs/dev_check.json --md-out logs/dev_check.md` |
 | Safety cases | `python scripts/run_safety_cases.py` |
+
+Without `--out` and `--md-out`, `run_dev_eval.py` overwrites the committed
+`results/dev_eval_full.json` and `docs/DEV_RESULTS.md`, so only leave them out for a real
+evaluation run. It also writes a per-query cache to `results/dev_eval_cache_<model>.jsonl`;
+delete it after a fake run.
 
 **The frozen test set (`project/data/test_set/test_*.jsonl`) is never used for tuning.**
 Prompts and thresholds are tuned on the dev split only.
