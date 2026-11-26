@@ -118,6 +118,7 @@ For K3, see [Verified knowledge store and retrieval interface](docs/KNOWLEDGE_ST
 For K4, see [Agent 3 validation and review-queue backend](docs/VALIDATION_REVIEW.md).
 For K5, see [Agent 4 entity resolution and graph writes](docs/ENTITY_GRAPH.md).
 For K6, see [Agent 6 hybrid retrieval](docs/RETRIEVAL.md).
+For K7, see [Extraction precision/recall/F1 export](docs/EXTRACTION_METRICS.md).
 
 - Python 3.10, 3.11, or 3.12
 - Git
