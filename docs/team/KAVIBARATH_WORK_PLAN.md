@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 20.8 / 30 points · 69% complete**
+**Overall: 20.4 / 30 points · 68% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP3 | Ingestion agents 1-4 and review queue | 18 | 10.8 | 60% |
-| WP4 | Knowledge store and retrieval | 10 | 10 | 100% |
+| WP4 | Knowledge store and retrieval | 10 | 9.7 | 97% |
 | WP10 | Hardening and unit tests | 2 | 0 | 0% |
 <!-- PROGRESS:END -->
 
@@ -42,7 +42,7 @@
 | 4.1 | SQLite tables for verified records | 2 | 26 Nov | 100% |
 | 4.2 | Vector index (ChromaDB or FAISS) | 2 | 26 Nov | 100% |
 | 4.3 | Knowledge graph (NetworkX) of machines, faults, causes, fixes, hazards | 2 | 26 Nov | 100% |
-| 4.4 | Agent 6: hybrid vector + graph retrieval | 3 | 27 Nov | 100% |
+| 4.4 | Agent 6: hybrid vector + graph retrieval | 3 | 27 Nov | 90% |
 | 4.5 | Retrieval returns failed attempts and outcomes | 1 | 27 Nov | 100% |
 
 #### WP10 – Hardening and unit tests (2 pts)
@@ -191,6 +191,7 @@ After merging origin/main at f735884, all 80 tests and pip check passed locally.
 | [#13](https://github.com/ilhamn3/Akatsukii-Sliit/pull/13) (K4; builds on #12) | 25 Nov 2026 | [WP3] Agent 3: validation, dedup, confidence and review-queue backend | 3.4 (0->50%), 3.6 (0->75%) | Rule-based A3 (grounding, quantity/unit, consistency, exact and semantic dedup), uncalibrated transparent confidence, Pipeline A handoff, SQLite review queue with audited approve/reject and reviewer corrections, publishing to K3. Every draft needs human approval. 150 tests and pip check pass; cached-MiniLM synthetic queue -> approve -> search run passes. Evidence: docs/VALIDATION_REVIEW.md. Score calibration, representative data, UI integration and review pending | 32% -> 43% (9.5/30 -> 13/30 pts) | Ilham MM (pending) |
 | [#14](https://github.com/ilhamn3/Akatsukii-Sliit/pull/14) (K5; builds on #13) | 25 Nov 2026 | [WP3] Agent 4: entity resolution and graph writes | 3.5 (0->75%) | Deterministic machine/asset/hazard resolution from a curated vocabulary plus SafetyAgent rule keywords; unknown, ambiguous and conflicting labels stay blocked in review; approvals publish through traced GraphAgent with canonical IDs and raw text kept in provenance; shared asset and catalogue-hazard graph nodes; A3 dedup uses canonical machines. 183 tests and pip check pass; cached-MiniLM synthetic approve -> canonical store/graph run passes. Evidence: docs/ENTITY_GRAPH.md. Vocabulary check on team recordings/asset names and review pending | 43% -> 51% (13/30 -> 15.25/30 pts) | Ilham MM (pending) |
 | [#15](https://github.com/ilhamn3/Akatsukii-Sliit/pull/15) (K6) | 25 Nov 2026 | [WP4] Agent 6: hybrid retrieval including failed attempts | 4.4 (0->75%), 4.5 (0->75%) | RetrievalEngine contract: K5 machine resolution and filter-before-rank, MiniLM/FAISS symptom cosine fused (support-only) with NetworkX traversal and alarm-code/asset hops; Evidence carries failed attempts, outcome, step-level evidence IDs, verification and provenance; RetrievalAgent node and proven Pipeline B wiring. 195 tests and pip check pass. The synthetic catalogue check in this PR was later withdrawn (its queries resembled the test set's easy tier); see the follow-up row. Evidence: docs/RETRIEVAL.md | 51% -> 61% (15.25/30 -> 18.25/30 pts) | Ilham MM (approved, merged) |
-| K3-K6 review follow-ups (PR number pending) | 25 Nov 2026 | [WP4] Review follow-ups: store caching, flat evidence metadata, dev-split retrieval evaluation | 4.1-4.3 (75->100% each), 4.4 (75->100%), 4.5 (75->100%) | Addresses Ilham's #12-#15 reviews. Revision-keyed projection cache: 2,000 writes in ~31 s instead of ~444 ms per write and rising; queries ~40-70 ms steady instead of 665 ms. Flat `verified`, `recorded_at` (+source), `root_cause`, `outcome_status` (A8's own rules), `kind`/`step_order` metadata, checked against A8's normalize_evidence. Dev-split-only evaluation (test split refused) over an oracle store: hybrid hit@1 20/20, single signals 19/20 (synthetic, not a benchmark). A4 note in Workflow.md. 230 tests pass with and without FACTORY_MEMORY_STORAGE. Done-when criteria met and #12/#15 approved | 61% -> 69% (18.25/30 -> 20.75/30 pts) | Ilham MM (pending) |
+| [#21](https://github.com/ilhamn3/Akatsukii-Sliit/pull/21) (K3-K6 review follow-ups) | 25 Nov 2026 | [WP4] Review follow-ups: store caching, flat evidence metadata, dev-split retrieval evaluation | 4.1-4.3 (75->100% each), 4.4 (75->100%), 4.5 (75->100%) | Addresses Ilham's #12-#15 reviews. Revision-keyed projection cache: 2,000 writes in ~31 s instead of ~444 ms per write and rising; queries ~40-70 ms steady instead of 665 ms. Flat `verified`, `recorded_at` (+source), `root_cause`, `outcome_status` (A8's own rules), `kind`/`step_order` metadata, checked against A8's normalize_evidence. Dev-split-only evaluation (test split refused) over an oracle store: hybrid hit@1 20/20, single signals 19/20 (synthetic, not a benchmark). A4 note in Workflow.md. 230 tests pass with and without FACTORY_MEMORY_STORAGE. Done-when criteria met and #12/#15 approved | 61% -> 69% (18.25/30 -> 20.75/30 pts) | Ilham MM (approved, merged; asked 4.4 -> 90%, see next row) |
+| [#22](https://github.com/ilhamn3/Akatsukii-Sliit/pull/22) (4.4 tracker correction) | 26 Nov 2026 | [WP4] Set 4.4 to 90% per #21 review | 4.4 (100->90%) | Reviewer correction: hybrid retrieval has only been evaluated on the synthetic oracle store, not yet through the real pipeline (Pipeline A ingestion -> verified store -> Pipeline B). Remaining 10%: retrieval evaluated on episodes ingested by the real pipeline. Progress recomputed with scripts/progress.py | 69% -> 68% (20.75/30 -> 20.45/30 pts) | Ilham MM (requested) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
