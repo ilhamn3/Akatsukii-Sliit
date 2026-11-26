@@ -1,205 +1,266 @@
-# Factory Memory 🏭🧠
-**A Multi-Agent AI System for Preserving and Transferring Industrial Repair Knowledge**
+# Factory Memory
 
-[![Innodata AI Catalyst 2026](https://img.shields.io/badge/Innodata-AI%20Catalyst%20%2726%20University%20Track-blue.svg)](https://innodata.com)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://python.org)
-[![Architecture-LangGraph](https://img.shields.io/badge/Architecture-LangGraph%20MAS-orange.svg)](https://github.com/langchain-ai/langgraph)
-[![License-MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+**A multi-agent AI system that captures what senior maintenance technicians know and gives it back to junior technicians as cited, safety-checked repair guidance.**
 
----
+Innodata AI Catalyst '26, University Track · Team Akatsukii (SLIIT)
 
-## 📌 Problem Statement
-
-In modern manufacturing plants, critical maintenance and diagnostic expertise resides primarily in the tacit, unwritten memories of senior technicians. As veteran mechanics retire, decades of experiential knowledge—subtle vibration cues, machine idiosyncrasies, troubleshooting heuristics, and hazardous edge-case workarounds—are permanently lost.
-
-Simultaneously, junior technicians face steep learning curves, frequently resorting to trial-and-error repairs. This causes:
-1. **Prolonged Equipment Downtime:** Average mean time to repair (MTTR) increases by up to 40% when experienced technicians are unavailable.
-2. **Repeated Ineffective Fixes:** Without historical tracking of previous failed attempts, identical invalid replacement parts are installed repeatedly.
-3. **Severe Safety Risks:** Inadequate isolation procedures (Lockout/Tagout - LOTO, stored hydraulic pressure, arc-flash hazards) lead to preventable workplace injuries.
-
-**Factory Memory** solves this crisis by deploying an 8-agent collaborative multi-agent architecture across two specialized pipelines connected to a unified hybrid knowledge store.
+> **All repair data in this repository is synthetic.** No real plant, technician, machine,
+> incident or recording is described. See [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md).
 
 ---
 
-## 🏗️ System Architecture
+## The problem
 
-Factory Memory separates **Knowledge Capture (Pipeline A)** from **Knowledge Retrieval & Diagnostics (Pipeline B)** to guarantee schema validity, rigorous safety enforcement, and grounded citations before any repair guidance reaches junior technicians.
+Much of a plant's repair knowledge lives in the heads of experienced technicians: the
+noise that means a bearing is going, the fix that looks right but never works, the
+isolation step that must not be skipped. When they leave or are off shift, junior staff
+repeat failed fixes, machines stay down longer, and safety steps get missed.
 
+Factory Memory has two pipelines around one shared knowledge store:
+
+- **Pipeline A (capture):** a technician's spoken debrief or shift log becomes a structured
+  repair record. A person reviews every record before it is stored.
+- **Pipeline B (assist):** a junior technician describes a fault. The system finds similar
+  verified repairs, proposes steps with citations, and an independent safety agent can veto
+  unsafe steps. If the evidence is weak, it abstains instead of guessing.
+
+## Current status (26 Nov 2026)
+
+| Part | State |
+|---|---|
+| Pipeline B: diagnose, retrieve, plan, safety veto loop, finalize | Working end to end with Gemini, or offline with `--fake-llm` |
+| Pipeline A: capture, extraction, validation, review queue, store write on approval | Working; `scripts/demo_e2e.py` runs A then B |
+| Knowledge store: SQLite + FAISS + NetworkX | Working; loads the synthetic episodes |
+| Synthetic data: 40 faults, 400 episodes, frozen 60-query test set | Done |
+| Streamlit UI | Pages built on **mock data**; not yet connected to the agents |
+| 3-way benchmark (multi-agent vs single agent vs humans) | In progress |
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph A["Pipeline A: capture"]
+        A1["1 Capture<br/>local Whisper"] --> A2["2 Extraction<br/>LLM to RepairRecord"]
+        A2 --> A3["3 Validation<br/>checks, duplicates"]
+        A3 --> Q["Review queue<br/>(human approves)"]
+        Q --> A4["4 Graph agent<br/>entity resolution"]
+    end
+    A4 --> S[("Knowledge store<br/>SQLite + FAISS + NetworkX")]
+    subgraph B["Pipeline B: assist"]
+        B5["5 Diagnostic<br/>hypotheses or clarify"] --> B6["6 Retrieval<br/>vector + graph"]
+        B6 --> B8p["8 Orchestrator<br/>plan with citations"]
+        B8p --> B7{"7 Safety<br/>rules + LLM"}
+        B7 -- "veto (max 2)" --> B8r["8 Orchestrator<br/>revise"] --> B7
+        B7 -- "approve / exhausted" --> B8f["8 Orchestrator<br/>finalize"]
+    end
+    S -.-> B6
+    B8f --> OUT["Answer: cited steps, safety notes,<br/>failed attempts to avoid,<br/>or abstain / escalate"]
 ```
-====================================================================================================
-                                      FACTORY MEMORY ARCHITECTURE
-====================================================================================================
 
-      [ PIPELINE A: INGESTION & CAPTURE ]                     [ PIPELINE B: ASSISTANCE & DIAGNOSTICS ]
-  (Audio, Video Notes, Repair Logs, Sensors)                       (Junior Technician Query / Symptoms)
-                     │                                                               │
-                     ▼                                                               ▼
-        ┌─────────────────────────┐                                     ┌─────────────────────────┐
-        │ 1. Capture & Transcript │                                     │  5. Diagnostic Agent    │
-        │    (Whisper + Sampling) │                                     │  (Clarify & Hypotheses) │
-        └────────────┬────────────┘                                     └────────────┬────────────┘
-                     │ Raw Transcript & Keyframes                                    │ Fault Hypotheses
-                     ▼                                                               ▼
-        ┌─────────────────────────┐                                     ┌─────────────────────────┐
-        │ 2. Knowledge Extraction │                                     │  6. Retrieval Agent     │
-        │    (Pydantic Schema)    │                                     │  (Hybrid Vector + Graph)│
-        └────────────┬────────────┘                                     └────────────┬────────────┘
-                     │ Structured Candidate JSON                                     │ Grounded Evidence
-                     ▼                                                               ▼
-        ┌─────────────────────────┐                                     ┌─────────────────────────┐
-        │ 3. Validation & Curation│ ──[Low Conf]──> [HITL Queue]        │ 7. Safety Verification  │◄──┐
-        │    (Deduplication/Logic)│                                     │    (Rule + LLM Veto)    │   │
-        └────────────┬────────────┘                                     └────────────┬────────────┘   │
-                     │ Verified Records                                              │ Approved?      │
-                     ▼                                                [Vetoed] ──────┴─(≤ 2 loops)────┘
-        ┌─────────────────────────┐                                          │ (If > 2 loops: Escalates)
-        │ 4. Knowledge Graph Agent│                                          ▼
-        │    (Entity Resolution)  │                             ┌─────────────────────────┐
-        └────────────┬────────────┘                             │  8. Orchestrator Agent  │
-                     │                                          │  (Supervisor & Citations)
-                     │ Writes                                   └────────────┬────────────┘
-                     ▼                                                       │
-  ┌──────────────────────────────────────────────────────────────┐           │ Formatted Response
-  │                    SHARED KNOWLEDGE STORE                    │           ▼
-  │  ┌───────────────┐ ┌────────────────┐ ┌───────────────────┐  │      [ Junior Technician UI ]
-  │  │ SQLite Rel.DB │ │ ChromaDB/FAISS │ │ NetworkX Graph DB │  │   (Safety Check, Ranked Steps,
-  │  │ (Repair Episodes│ (Dense Vectors │ │ (Component Causal │  │     Citations & Disclaimers)
-  │  │  & Metadata)  │ │  & Symptoms)   │ │   Dependencies)   │  │
-  │  └───────────────┘ └────────────────┘ └───────────────────┘  │
-  │            JSONL Audit Log (Immutable Decision Trail)        │
-  └──────────────────────────────────────────────────────────────┘
-====================================================================================================
-```
-
-### The 8 Specialized Agents
-
-| # | Agent Name | Pipeline | Primary Responsibility |
+| # | Agent | File | What it does |
 |---|---|---|---|
-| 1 | **Capture & Transcription Agent** | Pipeline A (Ingestion) | Transcribes spoken audio (OpenAI Whisper) and extracts key visual frames from technician repair recordings. |
-| 2 | **Knowledge Extraction Agent** | Pipeline A (Ingestion) | Extracts machine type, symptoms, step-by-step procedures, tools, parts, root cause, failed attempts, and safety warnings into structured Pydantic schemas. |
-| 3 | **Validation & Curation Agent** | Pipeline A (Ingestion) | Performs schema validation, units check, duplicate detection, and confidence scoring; routes borderline entries to a Human-in-the-Loop (HITL) review queue. |
-| 4 | **Knowledge Graph Agent** | Pipeline A (Ingestion) | Performs entity resolution and updates the SQLite episode database, vector index, and NetworkX component/failure relationship graph. |
-| 5 | **Diagnostic Agent** | Pipeline B (Assistance) | Interprets junior worker queries, requests clarifying diagnostic readouts when ambiguous, and formulates prioritized fault hypotheses. |
-| 6 | **Retrieval Agent** | Pipeline B (Assistance) | Executes hybrid retrieval (dense vector similarity + graph traversal) to surface verified past repairs, similar symptoms, and historical failed attempts. |
-| 7 | **Safety Verification Agent** | Pipeline B (Assistance) | Operates an independent deterministic safety ruleset + LLM check with **veto power** over proposed repair steps (max 2 revision loops before human escalation). |
-| 8 | **Orchestrator Agent** | Pipeline B (Assistance) | Serves as the supervisor; coordinates agent flow, synthesizes final responses with verified citations, triggers abstention when evidence is weak, and writes JSONL traces. |
+| 1 | Capture | `project/agents/a1_capture.py` | Transcribes audio/video locally with Whisper (no audio leaves the machine), timestamps each segment, samples video frames |
+| 2 | Extraction | `project/agents/a2_extraction.py` | LLM turns the transcript into a draft `RepairRecord`, with a source quote for every field |
+| 3 | Validation | `project/agents/a3_validation.py` | Rule checks, duplicate detection, confidence score; puts every draft in the review queue |
+| 4 | Graph | `project/agents/a4_graph.py` | Runs when a reviewer approves: resolves machine, asset and hazard names, writes the store and graph |
+| 5 | Diagnostic | `project/agents/a5_diagnostic.py` | Reads the question, asks a clarifying question if needed, ranks fault hypotheses |
+| 6 | Retrieval | `project/agents/a6_retrieval.py` | MiniLM/FAISS symptom search combined with NetworkX graph links; returns evidence with IDs |
+| 7 | Safety | `project/agents/a7_safety.py` | Deterministic rules plus an LLM check; can veto a plan, up to 2 revision loops, then escalate |
+| 8 | Orchestrator | `project/agents/a8_orchestrator.py` | Plans, revises and finalizes the answer; checks every step cites evidence; abstains on weak evidence |
+
+The graph and its order are declared in `project/core/config.yaml`. Every agent step is
+written to an audit trace in `logs/audit_trace.jsonl`. Full detail: [docs/Workflow.md](docs/Workflow.md).
 
 ---
 
-## 🗂️ Repository Structure
-
-The repository is structured to adhere to the competition submission specifications:
-
-```
-factory-memory/
-├── docs/
-│   ├── .gitkeep                 # Ensures docs directory tracking
-│   ├── Workflow.md              # Detailed pipeline dataflow, protocols, HITL & state machines
-│   ├── PROJECT_DETAILS.md       # Target metrics (O1-O5), synthetic dataset, and stack rationales
-│   ├── Proposal.docx            # Competition formal project proposal (manually placed)
-│   └── project-demo.mp4         # System walkthrough video recording (manually placed)
-├── project/
-│   ├── main.py                  # Primary application entry point (Streamlit UI + CLI mode)
-│   └── requirements.txt         # Production and development dependencies
-├── .env.example                 # Environment variable template
-├── .gitignore                   # Git exclusion rules (keys, caches, virtualenvs)
-└── README.md                    # Project documentation, architecture, and getting started
-```
-
----
-
-## 🚀 Setup & Installation
+## Setup
 
 ### Prerequisites
 
-For Agent 1 development, see [Capture setup and handoff contract](docs/CAPTURE_SETUP.md).
-For Agent 2, see [Extraction setup and draft contract](docs/EXTRACTION_SETUP.md).
-For K3, see [Verified knowledge store and retrieval interface](docs/KNOWLEDGE_STORE.md).
-For K4, see [Agent 3 validation and review-queue backend](docs/VALIDATION_REVIEW.md).
-For K5, see [Agent 4 entity resolution and graph writes](docs/ENTITY_GRAPH.md).
-For K6, see [Agent 6 hybrid retrieval](docs/RETRIEVAL.md).
+- **Python 3.10 to 3.13.** Newer versions lack wheels for some dependencies (for example `faiss-cpu`).
+- **Git.**
+- **FFmpeg**, only for Agent 1 on real audio or video. Everything else runs without it.
+- A **Gemini API key** for real answers. Without one, use `--fake-llm` (offline, canned output).
 
-- Python 3.10, 3.11, or 3.12
-- Git
-- FFmpeg (required for local audio transcription via OpenAI Whisper)
+### 1. Get the code and make a virtual environment
 
-### 1. Clone & Create Virtual Environment
-```bash
-# Clone the repository
-git clone https://github.com/your-org/factory-memory.git
-cd factory-memory
-
-# Create a virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# Windows (PowerShell):
-.\venv\Scripts\Activate.ps1
-# Linux / macOS:
-source venv/bin/activate
+```powershell
+git clone https://github.com/ilhamn3/Akatsukii-Sliit.git
+cd Akatsukii-Sliit
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
-### 2. Install Dependencies
-```bash
-pip install --upgrade pip
+On Linux or macOS: `python3 -m venv .venv` then `source .venv/bin/activate`.
+
+If PowerShell says running scripts is disabled, allow it for the current window only:
+`Set-ExecutionPolicy -Scope Process Bypass`, then activate again.
+
+### 2. Install dependencies
+
+```powershell
+python -m pip install --upgrade pip
 pip install -r project/requirements.txt
 ```
 
-### 3. Environment Configuration
-Copy `.env.example` to `.env` and fill in your API credentials:
-```bash
-cp .env.example .env
+This is a large install (PyTorch, Whisper, sentence-transformers), so allow several minutes.
+
+### 3. Configure
+
+```powershell
+Copy-Item .env.example .env
 ```
-Edit `.env` with your parameters:
-```env
-OPENAI_API_KEY=your_api_key_here
-PRIMARY_LLM_MODEL=gpt-4o-mini
-REASONING_LLM_MODEL=gpt-4o
-WHISPER_MODEL=base
-WHISPER_DEVICE=cpu
-```
+
+Then edit `.env`. These are the settings the code reads:
+
+| Variable | Needed? | Meaning |
+|---|---|---|
+| `LLM_PROVIDER` | yes | `gemini` (default) or `openai` |
+| `GEMINI_API_KEY` | for Gemini | Your key. Never commit `.env`; it is git-ignored |
+| `GEMINI_MODEL` | optional | Default `gemini-3.5-flash-lite` |
+| `GEMINI_THINKING`, `GEMINI_TIMEOUT_S` | optional | Thinking level and request timeout |
+| `GEMINI_MODEL_SAFETY`, `GEMINI_THINKING_SAFETY` | optional | Separate model for the Safety agent |
+| `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `PRIMARY_LLM_MODEL` | for `openai` | OpenAI or a compatible endpoint |
+| `WHISPER_MODEL`, `WHISPER_DEVICE` | optional | Agent 1 model size (`base`) and `cpu`/`cuda` |
+| `FACTORY_MEMORY_STORAGE` | optional | Where the store lives. Default: `.factory_memory/` in the repo (git-ignored) |
+
+Thresholds (abstention, review confidence, safety loops, retrieval weights) are in
+`project/core/config.yaml`, not `.env`.
 
 ---
 
-## 💻 Execution Guide
+## Running it
 
-### Option A: Interactive Streamlit UI (Recommended)
-Run the web application containing the Technician Ingestion Queue, Worker Troubleshooting Assistant, and Live Agent Trace / Benchmark Dashboard:
-```bash
-streamlit run project/main.py
-```
-Then navigate to `http://localhost:8501` in your browser.
+Run these from the repository root with the virtual environment active.
 
-### Option B: Command Line Interface (CLI Diagnostics)
-To execute a self-test diagnostic check, inspect pipeline integrity, and verify connectivity across agents:
-```bash
-python project/main.py --mode cli
+**1. Offline smoke test** (no API key, canned LLM output, clearly labelled as fake):
+
+```powershell
+python project/main.py --fake-llm
 ```
+
+**2. Load the synthetic knowledge store** (once; the first run downloads the MiniLM
+embedding model, about 90 MB):
+
+```powershell
+python scripts/load_expanded_store.py --size n400
+```
+
+Sizes `n100` and `n2000` are for scalability tests. Loading again does not duplicate records.
+
+**3. Ask a question:**
+
+```powershell
+python project/main.py --query "Press ram creeps down while holding and the pressure drops" --machine-type hydraulic_press
+```
+
+Machine types: `cnc_lathe`, `hydraulic_press`, `injection_moulding`, `conveyor_line`,
+`air_compressor`. The output shows the diagnosis, cited steps with the evidence each one
+rests on, safety notes, failed attempts to avoid, and the trace ID.
+
+**4. Full demo, Pipeline A then B** (a narrative goes through capture, extraction,
+validation and approval, then Pipeline B retrieves and cites it):
+
+```powershell
+python scripts/demo_e2e.py
+```
+
+Add `--fake-llm` to run it offline.
+
+**5. UI** (currently mock data only):
+
+```powershell
+python project/main.py --mode ui
+```
+
+Then open http://localhost:8501.
+
+**6. Tests:**
+
+```powershell
+python -m pytest -q
+```
+
+The tests need no API key and no model download.
+
+### Data and evaluation
+
+| Task | Command |
+|---|---|
+| Check the episodes rebuild byte for byte | `python project/data/generator.py --check` |
+| Check the frozen test set is untouched | `python project/data/test_set/build_test_set.py --verify` |
+| Validate the fault catalogue | `python project/data/fault_catalogue/validate_catalogue.py` |
+| Dev-split evaluation (never touches the test set) | `python scripts/run_dev_eval.py --limit 5 --fake-llm` |
+| Safety cases | `python scripts/run_safety_cases.py` |
+
+**The frozen test set (`project/data/test_set/test_*.jsonl`) is never used for tuning.**
+Prompts and thresholds are tuned on the dev split only.
+
+### Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `GEMINI_API_KEY not set` or similar | Fill in `.env`, or add `--fake-llm` |
+| Every answer abstains | The store is empty: run step 2 |
+| `No matching distribution found for faiss-cpu` | Use Python 3.10 to 3.13 |
+| Activation blocked in PowerShell | `Set-ExecutionPolicy -Scope Process Bypass` |
+| `429` from Gemini | Rate limit. Wait, or use `--resume` with `run_dev_eval.py` |
 
 ---
 
-## 🎯 Target Objectives & Evaluation Metrics
+## Repository layout
 
-| ID | Objective | Evaluation Metric | Target Benchmark |
+```
+project/
+  main.py                 CLI entry point (and --mode ui)
+  agents/                 the 8 agents (a1_capture.py ... a8_orchestrator.py)
+  core/                   schemas, state, registry, LLM client, trace log, config.yaml,
+                          prompts/, safety_rules/, api.py (entry point for the UI)
+  store/                  SQLite, FAISS and NetworkX store, embeddings, review queue
+  ui/                     Streamlit app and pages
+  data/                   fault catalogue, generator, episodes, test set (all synthetic)
+  human_study/            consent form and protocol for the human baseline
+scripts/                  demos, store loader, evaluation runners, progress tracker
+tests/                    pytest suite
+docs/                     architecture, setup notes per agent, results, team plans
+logs/                     audit traces (generated, git-ignored)
+```
+
+## Documentation
+
+| Document | Contents |
+|---|---|
+| [docs/Workflow.md](docs/Workflow.md) | How the pipelines run, the safety veto loop, abstention, human checkpoints |
+| [docs/PROJECT_DETAILS.md](docs/PROJECT_DETAILS.md) | Objectives and metrics, dataset, stack, AI tools disclosure |
+| [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md) | What is synthetic, what is not, limitations |
+| [docs/UI_API.md](docs/UI_API.md) | `project/core/api.py`, the entry point for the UI |
+| [docs/DEV_RESULTS.md](docs/DEV_RESULTS.md) | Dev-split evaluation results |
+| [docs/CAPTURE_SETUP.md](docs/CAPTURE_SETUP.md), [EXTRACTION_SETUP.md](docs/EXTRACTION_SETUP.md), [VALIDATION_REVIEW.md](docs/VALIDATION_REVIEW.md), [ENTITY_GRAPH.md](docs/ENTITY_GRAPH.md), [KNOWLEDGE_STORE.md](docs/KNOWLEDGE_STORE.md), [RETRIEVAL.md](docs/RETRIEVAL.md) | Per-agent setup and contracts |
+| [project/human_study/protocol.md](project/human_study/protocol.md) | Human baseline study |
+| [docs/team/](docs/team/README.md) | Work plans and progress |
+
+## Objectives
+
+| ID | Objective | Metric | Target |
 |---|---|---|---|
-| **O1** | **Structured Knowledge Extraction** | Extraction F1-Score | $\ge 0.85$ on synthetic repair transcripts across 5 machine types |
-| **O2** | **Root-Cause Diagnostic Accuracy** | Top-3 Accuracy | $\ge 80\%$ on 60 held-out diagnostic test cases |
-| **O3** | **Repair Safety Enforcement** | Safety Recall & Violation Rate | $\ge 95\%$ safety hazard recall; **0** unflagged hazardous instructions |
-| **O4** | **Evidence Grounding & Citations** | Citation Precision | $\ge 90\%$ of generated guidance steps mapped to explicit Evidence IDs |
-| **O5** | **Multi-Agent Superiority** | 3-Way Comparative Study | Statistically significant improvement ($p < 0.05$) vs Single-Agent and Human Baselines |
+| O1 | Structured extraction | Field F1 | ≥ 0.85 |
+| O2 | Root-cause diagnosis | Top-3 accuracy on the 60 test queries | ≥ 80% |
+| O3 | Safety | Hazard recall; unflagged hazardous instructions | ≥ 95%; 0 |
+| O4 | Grounding | Steps with valid evidence IDs | ≥ 90% |
+| O5 | Multi-agent benefit | 3-way comparison | Significant (p < 0.05) vs single agent and humans |
 
----
+## Team
 
-## 📅 Project Milestones (Nov 20 – Dec 07, 2026)
+| Member | Role |
+|---|---|
+| Ilham MM | Tech lead; foundation, Pipeline B agents 5, 7, 8 |
+| Kavibarath S | Pipeline A agents 1 to 4, review queue, knowledge store and retrieval |
+| Tharshanth A | Synthetic data, fault and hazard catalogue, test set, human baseline study |
+| Kajanan K | Streamlit UI, benchmark harness and statistics |
 
-- [x] **Milestone 1 (20 Nov 2026):** Project Inception, Repository Skeleton, Initial Architecture Specifications.
-- [ ] **Milestone 2 (24 Nov 2026):** Synthetic Dataset Generation (5 machine classes, 400 repair episodes) & Hybrid Store initialization.
-- [ ] **Milestone 3 (28 Nov 2026):** Pipeline A (Ingestion, Whisper, Schema Extraction, HITL Queue) integration.
-- [ ] **Milestone 4 (02 Dec 2026):** Pipeline B (Diagnostic, Hybrid Retrieval, Safety Veto loop, Supervisor) implementation in LangGraph.
-- [ ] **Milestone 5 (05 Dec 2026):** 3-Way Comparative Benchmark Execution (MAS vs. Single-Agent vs. Human Baseline).
-- [ ] **Milestone 6 (07 Dec 2026):** Final submission freeze: Streamlit demonstration, video demo recording, and proposal documentation.
+Every AI model, service and AI coding assistant used is declared in
+[docs/PROJECT_DETAILS.md](docs/PROJECT_DETAILS.md#4-third-party-components-models--ai-tools-disclosure).
 
----
-
-## 📄 License & Attribution
-Developed for the **Innodata AI Catalyst '26 University Track Competition**. All open-source tools and foundation models are credited in [docs/PROJECT_DETAILS.md](file:///d:/Desktop/factory%20memory/docs/PROJECT_DETAILS.md).
+Developed for the Innodata AI Catalyst '26 University Track.

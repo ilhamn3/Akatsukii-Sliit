@@ -1,225 +1,199 @@
-# Factory Memory — Operational Workflow & System Protocols
+# Factory Memory: Workflow
 
-This document specifies the technical operational workflows, inter-agent communication protocols, safety veto state machines, Human-in-the-Loop (HITL) checkpoints, and execution phases of **Factory Memory**.
+How the two pipelines run, how agents hand off to each other, and where people stay in
+control. This describes the code on `main` as of 26 Nov 2026. The graph itself is declared
+in `project/core/config.yaml` and built by `project/core/registry.py`.
+
+All repair data used here is synthetic ([SYNTHETIC_DATA.md](SYNTHETIC_DATA.md)).
 
 ---
 
-## 1. End-to-End System Architecture
-
-Factory Memory coordinates eight specialized agents grouped into two sequential/concurrent pipelines interacting through a shared hybrid knowledge store and an immutable blackboard state.
+## 1. Overview
 
 ```mermaid
 flowchart TD
-    subgraph Pipeline_A["Pipeline A: Ingestion & Knowledge Capture"]
-        A1["Senior Tech Audio / Video Notes"] --> AG1["1. Capture & Transcription Agent\n(OpenAI Whisper + Frame Sampler)"]
-        AG1 -->|"Raw Transcript + Metadata"| AG2["2. Knowledge Extraction Agent\n(Pydantic Schema Parser)"]
-        AG2 -->|"Candidate Episode JSON"| AG3{"3. Validation & Curation Agent\n(Schema/Units/Deduplication)"}
-        AG3 -- "Confidence < 0.75 or Conflict" --> HITL1["HITL Checkpoint 1:\nIngestion Review Queue"]
-        HITL1 -->|"Approved / Corrected"| AG4["4. Knowledge Graph Agent\n(Entity Resolution)"]
-        AG3 -- "Confidence >= 0.75" --> AG4
-        AG4 -->|"Relational Record"| DB_SQL[("SQLite DB:\nEpisodes & Steps")]
-        AG4 -->|"Symptom & Fix Embeddings"| DB_VEC[("ChromaDB/FAISS:\nVector Index")]
-        AG4 -->|"Components & Causes"| DB_KG[("NetworkX:\nKnowledge Graph")]
+    subgraph A["Pipeline A: capture (agents 1-4)"]
+        IN["Technician debrief<br/>audio, video or text"] --> A1["1 CaptureAgent<br/>local Whisper, timestamps, frames"]
+        A1 -->|CaptureResult| A2["2 ExtractionAgent<br/>LLM draft RepairRecord + source quotes"]
+        A2 -->|draft_record| A3["3 ValidationAgent<br/>rules, duplicates, confidence"]
+        A3 -->|every draft| RQ["Review queue<br/>HITL checkpoint 1"]
+        RQ -- approve --> A4["4 GraphAgent<br/>entity resolution"]
+        RQ -- reject --> X["Not stored"]
     end
+    A4 --> DB[("Knowledge store<br/>SQLite records · FAISS vectors · NetworkX graph")]
 
-    subgraph Pipeline_B["Pipeline B: Assistance & Troubleshooting"]
-        B1["Junior Tech Query & Symptoms"] --> BG5["5. Diagnostic Agent\n(Clarification & Fault Hypotheses)"]
-        BG5 -->|"Ranked Hypotheses"| BG6["6. Retrieval Agent\n(Hybrid Vector + Graph Traversal)"]
-        DB_SQL -.-> BG6
-        DB_VEC -.-> BG6
-        DB_KG -.-> BG6
-        BG6 -->|"Retrieved Evidence & Failures"| BG7{"7. Safety Verification Agent\n(Deterministic Rules + LLM Veto)"}
-        BG7 -- "Unsafe / Missing LOTO\n(Loop <= 2)" --> BG5
-        BG7 -- "Repeated Failure\n(Loop > 2)" --> HITL2["HITL Checkpoint 2:\nSupervisor Escalation"]
-        BG7 -- "Safety Verified" --> BG8["8. Orchestrator Agent\n(Supervisor & Citation Assembly)"]
-        BG8 -->|"Abstention Check"| EVAL_ABSTAIN{"Sufficient Evidence?\n(Sim >= 0.55)"}
-        EVAL_ABSTAIN -- "No" --> ABSTAIN_OUT["Abstention Response:\nSafe Deferral & Escalation"]
-        EVAL_ABSTAIN -- "Yes" --> OUT["Synthesized Actionable Guidance\n+ Evidence IDs + Safety Warnings"]
-        OUT --> HITL3["HITL Checkpoint 3:\nWorker Repair Feedback Loop"]
-        HITL3 -->|"Outcome & Failed Attempts"| AG2
+    subgraph B["Pipeline B: assist (agents 5-8)"]
+        Q["Junior technician question"] --> B5["5 DiagnosticAgent<br/>hypotheses"]
+        B5 -- "needs info" --> CQ["Clarifying question<br/>(end of run)"]
+        B5 --> B6["6 RetrievalNode<br/>HybridRetriever"]
+        B6 --> P["8 Orchestrator: plan"]
+        P -- "weak evidence" --> F
+        P --> S{"7 SafetyAgent"}
+        S -- "veto / amend<br/>(loop ≤ 2)" --> R["8 Orchestrator: revise"] --> S
+        S -- "approve, or loops used up" --> F["8 Orchestrator: finalize"]
     end
+    DB -.-> B6
+    F --> OUT["FinalAnswer<br/>cited steps · safety notes · failed attempts to avoid<br/>or abstain / refuse / escalate"]
+    F -. "escalation" .-> ESC["HITL checkpoint 2<br/>logs/escalations.jsonl"]
 ```
 
----
-
-## 2. Pipeline A — Ingestion & Knowledge Capture
-
-### Step-by-Step Data & Control Flow
-1. **Audio/Video Input**: Veteran technician uploads recorded post-repair debriefs, voice memos, or phone video clips from the shop floor.
-2. **Audio Transcription & Sampling (Agent 1)**:
-   - Whisper transcribes spoken audio into text with timestamp segments.
-   - For video inputs, keyframes are sampled at notable repair transitions (e.g., component disassembly).
-3. **Structured Extraction (Agent 2)**:
-   - LLM extracts structured fields strictly adhering to the `RepairEpisodeSchema` (Pydantic).
-   - Mandatory fields: `machine_type`, `machine_id`, `subsystem`, `symptom_observed`, `root_cause`, `tools_required`, `parts_replaced`, `action_steps`, `failed_attempts`, `safety_warnings`.
-4. **Validation, Curation & Deduplication (Agent 3)**:
-   - Schema conformance check (e.g., valid pressure/torque units: PSI, bar, Nm).
-   - Semantic duplicate check: Computes cosine similarity of `(machine_type + symptom_observed)` against existing database episodes.
-   - Computes an overall Extraction Confidence Score $C \in [0.0, 1.0]$.
-   - If $C < 0.75$ or conflicting repairs are detected, the episode is diverted to **HITL Checkpoint 1 (Ingestion Review Queue)**.
-5. **Knowledge Graph Ingestion & Indexing (Agent 4)**:
-   - Resolves entity aliases (e.g., "spindle encoder" vs "rotary position sensor").
-   - Generates unique `episode_id` (e.g., `EP-CNC-0042`) and granular `evidence_id` tags (e.g., `EV-CNC-0042-S3`).
-   - Inserts relational records into **SQLite**, generates dense embeddings for symptoms and fixes into **ChromaDB/FAISS**, and updates causal edges in **NetworkX** (`Component` $\xrightarrow{\text{has\_fault}}$ `Symptom` $\xrightarrow{\text{caused\_by}}$ `RootCause` $\xrightarrow{\text{resolved\_by}}$ `FixAction`).
-
-> **Implementation note: where Agents 3 and 4 run.** Pipeline A in `project/core/config.yaml`
-> registers only `CaptureAgent -> ExtractionAgent -> ValidationAgent`. Agent 4
-> (`GraphAgent`, `project/agents/a4_graph.py`) is deliberately **not** a node in that
-> graph. Nothing may reach the knowledge store before a human approves it, so A4 runs
-> when a reviewer approves an item in the review queue (`ReviewQueue.approve()`, HITL
-> Checkpoint 1), traced under that approval's trace ID. The "C >= 0.75 -> Agent 4"
-> shortcut in the diagram is not enabled: every draft is queued for a named human
-> reviewer, because the confidence score is uncalibrated (see `docs/VALIDATION_REVIEW.md`).
-> Counting registry nodes therefore understates the agents: all eight exist.
-> Pipeline A has 3 registered nodes plus A4 at approval time. Pipeline B registers
-> A5, A6 (`RetrievalNode` wrapping `HybridRetriever`), A7 and the A8 phases.
+| Agent | Class and file | Pipeline |
+|---|---|---|
+| 1 | `CaptureAgent`, `project/agents/a1_capture.py` | A |
+| 2 | `ExtractionAgent`, `project/agents/a2_extraction.py` | A |
+| 3 | `ValidationAgent`, `project/agents/a3_validation.py` | A |
+| 4 | `GraphAgent`, `project/agents/a4_graph.py` | A, at approval time |
+| 5 | `DiagnosticAgent`, `project/agents/a5_diagnostic.py` | B |
+| 6 | `RetrievalNode` wrapping `HybridRetriever`, `project/core/stubs/retrieval_node.py` and `project/agents/a6_retrieval.py` | B |
+| 7 | `SafetyAgent`, `project/agents/a7_safety.py` | B |
+| 8 | `OrchestratorAgent` in three phases (plan, revise, finalize), `project/agents/a8_orchestrator.py` | B |
 
 ---
 
-## 3. Pipeline B — Assistance & Knowledge Retrieval
+## 2. Pipeline A: capture
 
-### Step-by-Step Data & Control Flow
-1. **Worker Query Intake**: Junior technician inputs observed symptoms, machine type, and optional error code via Streamlit UI.
-2. **Diagnostic Hypotheses Generation (Agent 5)**:
-   - Parses the query. If essential information is missing (e.g., hydraulic oil level or line pressure), generates a targeted clarifying question before proceeding.
-   - Proposes 1 to 3 ranked fault hypotheses based on symptom topology.
-3. **Hybrid Knowledge Retrieval (Agent 6)**:
-   - **Vector Search**: Queries ChromaDB/FAISS for top-$k$ nearest historical repair episodes using semantic embeddings of current symptoms.
-   - **Graph Traversal**: Traverses NetworkX graph starting from `MachineType` and `Subsystem` nodes to locate co-occurring failure modes, prerequisite component checks, and historically documented `failed_attempts`.
-   - Extracts relevant evidence chunks with their unique `evidence_id` values.
-4. **Safety Verification & Veto Loop (Agent 7)**:
-   - Passes candidate instructions through a deterministic rule check for mandatory safety protocols:
-     - **LOTO (Lockout / Tagout)** verification for electrical/mechanical isolation.
-     - **Residual pressure bleeding** for hydraulic and pneumatic circuits.
-     - **Thermal / chemical personal protective equipment (PPE)** requirements.
-   - Performs LLM-based safety verification checking whether any step violates standard OSHA / ISO 13849 machinery safety standards.
-   - **Veto Execution**: If a hazard is detected or LOTO is omitted, the agent vetoes the plan, appends an explicit revision notice, and routes back to Agent 5.
-   - **Loop Limit**: Maximum **2 revision loops** permitted. If the plan remains unsafe after 2 iterations, the system terminates automatic generation and escalates to **HITL Checkpoint 2 (Supervisor Escalation)**.
-5. **Orchestration, Grounding & Response Generation (Agent 8)**:
-   - **Abstention Policy**: If maximum retrieval similarity score is $< 0.55$, the Orchestrator refuses to hallucinate, explicitly declaring: *"Insufficient historical evidence to safely guide this repair. Please escalate to a senior technician."*
-   - Otherwise, assembles the step-by-step guidance, prepends mandatory PPE/LOTO safety alerts, annotates every step with `[Evidence: EV-XXXX]`, highlights common *failed attempts* to avoid, and logs full trace to JSONL.
+Registered graph: `CaptureAgent -> ExtractionAgent -> ValidationAgent -> end`.
+
+1. **Capture (agent 1).** Whisper runs locally (model from `WHISPER_MODEL`, default `base`);
+   no audio is sent to an API. FFmpeg reads the media. The output is a `CaptureResult`:
+   the full text, timestamped segments each with an evidence ID, the source file's SHA-256,
+   and sampled frames for video. Poor audio is flagged for review. Setup:
+   [CAPTURE_SETUP.md](CAPTURE_SETUP.md).
+2. **Extraction (agent 2).** An LLM fills a draft `RepairRecord` (machine, symptoms, steps,
+   tools, parts, root cause, failed attempts, safety warnings). Each field must carry a
+   quote from the transcript, and quotes are checked against the source. Unknown fields stay
+   empty instead of being guessed. Setup: [EXTRACTION_SETUP.md](EXTRACTION_SETUP.md).
+3. **Validation (agent 3).** Rule-based checks, no LLM: required fields, failed attempts
+   that contradict a step, the same recording submitted twice (blocks approval), near
+   duplicates (symptom cosine ≥ `duplicate_similarity_threshold`, 0.90, on the same
+   machine; a warning), and a confidence score. **Every draft goes to the review queue**, whatever its
+   score, because the score is not calibrated. See [VALIDATION_REVIEW.md](VALIDATION_REVIEW.md).
+4. **Review and store (agent 4).** A named reviewer approves (optionally with corrections)
+   or rejects each item. Only `ReviewQueue.approve()` publishes a record: it calls
+   `GraphAgent`, which resolves machine, asset and hazard names using
+   `project/data/entities/aliases.yaml` and writes the verified episode to the store. That is
+   why agent 4 is not a node in the Pipeline A graph. Nothing reaches the store without a
+   human decision. See [ENTITY_GRAPH.md](ENTITY_GRAPH.md).
+
+The store keeps each verified episode in SQLite, its symptom embedding (MiniLM, 384
+dimensions) in FAISS, and machine, asset, hazard and episode links in a NetworkX graph.
+See [KNOWLEDGE_STORE.md](KNOWLEDGE_STORE.md). The synthetic episodes are loaded directly
+with `scripts/load_expanded_store.py`, marked as verified by the generator.
+
+`scripts/demo_e2e.py` runs the whole of Pipeline A on one synthetic narrative, approves it,
+then asks Pipeline B a question that should retrieve it.
 
 ---
 
-## 4. Inter-Agent Communication Protocol & State Machine
+## 3. Pipeline B: assist
 
-Agents communicate through a typed, shared blackboard state implemented via **LangGraph**. Every transition mutates or appends to a structured state dictionary.
+Entry points: `python project/main.py --query "..."`, or `project.core.api.run_query(...)`
+for the UI ([UI_API.md](UI_API.md)).
 
-### Blackboard State Schema (`FactoryBlackboardState`)
-```python
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
+1. **Diagnose (agent 5).** Reads the question and machine type and ranks fault hypotheses.
+   If key information is missing, it returns a clarifying question and the run ends there
+   (`check_clarification`).
+2. **Retrieve (agent 6).** `HybridRetriever` scores each verified episode as
+   `1 - (1 - cosine)(1 - 0.5·graph)(1 - 0.1·asset)`. Graph and asset links can only add
+   support, so the abstention threshold stays on the cosine scale. It returns the top
+   `k = 3` as evidence items with evidence IDs, outcomes and failed attempts. Weights were
+   fixed before any evaluation. See [RETRIEVAL.md](RETRIEVAL.md).
+3. **Plan (agent 8, plan phase).** In order:
+   - **Abstain** if there is no evidence or retrieval confidence is below
+     `abstention_similarity_threshold` (0.55).
+   - **Abstain** if the context involves high energy (over 50 V or 10 bar) and no evidence
+     shows an isolation or bleed-down step.
+   - **Rank conflicting episodes** with `conflict_ranking_weights` (worked +0.40, failed
+     −0.50, verified by senior +0.25, recency 0.15, similarity 0.20). Fixes that failed
+     elsewhere become "failed attempts to avoid". If the evidence disagrees with the
+     diagnostic hypothesis, the evidence's root cause wins.
+   - **Draft steps** with the LLM, then drop any step whose citations are not real evidence
+     IDs from this retrieval. Required catalogue safety controls go first. If no cited step
+     survives, abstain.
+4. **Safety check (agent 7).** Deterministic rules run first, then an LLM review. The
+   rules' verdict cannot be weakened by the LLM. A request to skip a safety control is
+   refused. The verdict is `approve`, `amend` or `veto`.
+5. **Revise (agent 8, revise phase).** On amend or veto, the orchestrator rewrites the plan
+   with the safety feedback and sends it back to agent 7. At most
+   `safety_max_revision_loops` (2) revisions are allowed.
+6. **Finalize (agent 8, finalize phase).** Produces the `FinalAnswer`. If safety still
+   has not approved, safety wins: no steps are returned, the answer is marked abstained and
+   escalated, and a ticket is written to `logs/escalations.jsonl`.
 
-class BlackboardState(BaseModel):
-    # Session & Query Context
-    session_id: str
-    worker_id: str
-    machine_type: str
-    machine_id: Optional[str] = None
-    raw_query: str
-    clarification_turns: int = 0
-    clarification_needed: bool = False
-    clarification_question: Optional[str] = None
+### What the answer contains (`FinalAnswer`, `project/core/schemas.py`)
 
-    # Diagnostic Phase
-    ranked_hypotheses: List[Dict[str, Any]] = Field(default_factory=list)
-    selected_hypothesis: Optional[Dict[str, Any]] = None
+`machine_type`, `symptoms`, `diagnosed_cause`, `steps` (each with `instruction` and
+`evidence_ids`), `safety_warnings`, `failed_attempts_to_avoid`, `abstained` and
+`abstention_reason`, `refusal`, `escalated` and `escalation_ticket_id`, and `trace_id`.
 
-    # Retrieval Phase
-    retrieved_episodes: List[Dict[str, Any]] = Field(default_factory=list)
-    graph_subgraph_nodes: List[str] = Field(default_factory=list)
-    failed_attempts_retrieved: List[str] = Field(default_factory=list)
-    retrieval_confidence: float = 0.0
+---
 
-    # Safety Veto Loop State
-    candidate_steps: List[Dict[str, Any]] = Field(default_factory=list)
-    safety_violations: List[str] = Field(default_factory=list)
-    safety_loop_count: int = 0
-    safety_approved: bool = False
-    escalated_to_supervisor: bool = False
+## 4. Shared state and the audit trace
 
-    # Final Output & Audit
-    synthesized_guidance: Optional[str] = None
-    citations: List[str] = Field(default_factory=list)
-    abstention_triggered: bool = False
-    audit_trace: List[Dict[str, Any]] = Field(default_factory=list)
-```
+Agents share one `BlackboardState` (`project/core/state.py`), a typed dictionary passed
+through the LangGraph graph. Each agent returns only the fields it changes. Main groups:
 
-### JSONL Audit Log Specification
-Every agent interaction appends an immutable record to `logs/audit_trace.jsonl`:
+| Group | Fields |
+|---|---|
+| Request | `session_id`, `trace_id`, `worker_id`, `machine_type`, `machine_id`, `raw_query` |
+| Pipeline A | `capture_result`, `draft_record`, `validation_report`, `review_item_id`, `verified_episode`, `entity_links` |
+| Diagnosis | `clarification_needed`, `clarification_question`, `ranked_hypotheses`, `selected_hypothesis` |
+| Retrieval | `evidence`, `retrieved_episodes`, `retrieval_confidence`, `failed_attempts_to_avoid` |
+| Safety loop | `candidate_steps`, `safety_violations`, `safety_loop_count`, `safety_approved`, `escalated_to_supervisor` |
+| Result | `conflicts`, `final_answer`, `abstained`, `escalated`, `abstention_reason` |
+| Bookkeeping | `messages`, `errors`, `audit_trace`, `metadata` |
+
+Every agent step appends one JSON line to `logs/audit_trace.jsonl` (`project/core/trace.py`):
+
 ```json
-{
-  "timestamp": "2026-11-20T23:00:00Z",
-  "session_id": "SES-20261120-001",
-  "agent_name": "SafetyVerificationAgent",
-  "action": "VETO",
-  "loop_iteration": 1,
-  "violations": ["Missing hydraulic pressure discharge step before manifold disassembly"],
-  "evidence_ids_evaluated": ["EV-HYD-0012-S2"],
-  "blackboard_delta": {"safety_approved": false, "safety_loop_count": 1}
-}
+{"ts": "2026-11-26T09:14:02.511+00:00", "trace_id": "TR-1A2B3C4D", "session_id": "SES-9F8E7D6C",
+ "agent": "OrchestratorPlan", "stub": false, "event": "ORCHESTRATOR_ABSTAIN",
+ "input_digest": {"retrieval_confidence": 0.41, "threshold": 0.55},
+ "output_digest": {"reason": "Low retrieval similarity (0.41 < 0.55); ..."},
+ "decision": "ABSTAIN", "latency_ms": 3.2, "error": null}
 ```
+
+The `trace_id` printed with each answer finds every line for that run. The UI's trace
+viewer page currently shows mock data in a simpler format; it is not yet reading this file.
 
 ---
 
-## 5. Conflict Resolution, Safety Veto & Abstention Rules
+## 5. Human checkpoints
 
-### 1. Conflict Resolution Matrix
-When multiple historical episodes recommend differing repair procedures for similar symptoms:
-- **Rule 1 (Success Recency & Count):** Procedures verified by $\ge 2$ senior technicians override single-instance repairs.
-- **Rule 2 (Failed Attempt Veto):** If Procedure A was subsequently logged as a `failed_attempt` in a later episode of the same machine variant, Procedure A is disqualified.
-- **Rule 3 (Specific Over General):** Exact `machine_id` records take precedence over general `machine_type` matches.
-
-### 2. Safety Veto Loop Policy
-```
-If safety_violations exist:
-    Increment safety_loop_count
-    If safety_loop_count <= 2:
-        Return to Diagnostic/Retrieval Agent with feedback: "Hazard detected: {violations}. Modify procedure."
-    Else:
-        Set escalated_to_supervisor = True
-        Trigger HITL Checkpoint 2
-        Halt automated assistance
-```
-
-### 3. Abstention Policy
-To prevent hazardous hallucinations in an industrial plant:
-- **Condition 1:** Semantic similarity of top retrieved repair episode $< 0.55$.
-- **Condition 2:** Missing Lockout/Tagout specifications for electrical inputs $> 50\text{V}$ or hydraulic pressures $> 10\text{ bar}$.
-- **Action:** Output standard safe shutdown procedure + issue supervisor dispatch notification.
+| Checkpoint | When | Who | Status |
+|---|---|---|---|
+| 1. Review queue | Every extracted draft, before it can be stored | A named reviewer (maintenance lead) approves, corrects or rejects | Working (`project/store/review_queue.py`; UI page on mock data) |
+| 2. Safety escalation | Safety still objects after 2 revisions | Safety officer or senior technician, from the ticket in `logs/escalations.jsonl` | Ticket written; no UI yet |
+| 3. Repair feedback | After a junior technician tries the guidance | The technician reports worked, partly worked or failed | Planned, not built. Failed fixes would go back through Pipeline A |
 
 ---
 
-## 6. The Three Human-in-the-Loop (HITL) Checkpoints
+## 6. Settings that change behaviour
 
-1. **HITL Checkpoint 1 (Ingestion Review Queue)**:
-   - **Trigger:** Validation Agent flags low confidence ($C < 0.75$), contradictory tool/part specs, or duplicate ambiguities.
-   - **User:** Maintenance Engineering Lead.
-   - **Action:** Accept, modify fields via Streamlit Review Tab, or reject raw entry.
-2. **HITL Checkpoint 2 (Safety Supervisor Escalation)**:
-   - **Trigger:** Safety Agent veto loop exceeds 2 iterations or an unresolvable hazardous sequence is detected.
-   - **User:** Certified Plant Safety Officer / Master Technician.
-   - **Action:** Reviews system trace, specifies mandatory safety steps, or dispatches senior support.
-3. **HITL Checkpoint 3 (Worker Repair Feedback Loop)**:
-   - **Trigger:** Junior technician finishes executing the recommended guidance.
-   - **User:** Junior Technician.
-   - **Action:** Submits simple structured outcome feedback: *Successful*, *Partially Successful*, or *Failed Attempt (with notes)*. Failed attempts are fed directly into Pipeline A to prevent future identical failures.
+All in `project/core/config.yaml`:
+
+| Setting | Value | Effect |
+|---|---|---|
+| `abstention_similarity_threshold` | 0.55 | Below this retrieval confidence, the system abstains |
+| `safety_max_revision_loops` | 2 | Revisions allowed before escalation |
+| `confidence_threshold_review` | 0.75 | Shown to reviewers; does not skip review |
+| `duplicate_similarity_threshold` | 0.90 | Near-duplicate warning in validation |
+| `retrieval.k`, `graph_weight`, `asset_weight` | 3, 0.5, 0.1 | Hybrid retrieval |
+| `conflict_ranking_weights` | see section 3 | Ranking of conflicting episodes |
+| `retrieval_backend` | `real` | `stub` (or `FACTORY_STUB_RETRIEVAL=1`) uses placeholder evidence for testing |
+
+These were set on the dev split or before any evaluation. The frozen test set is not used
+for tuning.
 
 ---
 
-## 7. Implementation & Evaluation Phases
+## 7. Evaluation
 
-- **Phase 1: Knowledge Store & Synthetic Data Foundry (Milestones 1–2)**
-  - Schema definition, SQLite schema setup, ChromaDB indexing, NetworkX ontology graph.
-  - Generation of ~400 synthetic repair episodes across 5 machine categories.
-- **Phase 2: Pipeline A Ingestion & Validation (Milestone 3)**
-  - Local Whisper integration for audio transcription.
-  - Pydantic structured output validation, similarity-based deduplication, HITL Review Queue UI.
-- **Phase 3: Pipeline B Assistance & Safety Veto Loop (Milestone 4)**
-  - LangGraph stateful multi-agent execution with dynamic routing.
-  - Hybrid retrieval engine combining vector similarity and NetworkX graph hops.
-  - Deterministic safety rule engine + LLM veto guardrail with max 2 retries.
-- **Phase 4: 3-Way Benchmark & Evaluation (Milestones 5–6)**
-  - Rigorous evaluation across 60 held-out test queries (Easy, Medium, Hard, Adversarial).
-  - Comparing **Multi-Agent System (MAS)** vs. **Single-Agent Baseline** vs. **Human Baseline**.
-  - Finalization of project video demonstration and formal proposal submission.
+- **Dev split:** `scripts/run_dev_eval.py` runs Pipeline B on the 20 dev queries and writes
+  `docs/DEV_RESULTS.md`. It never reads the test set.
+- **Test set:** 60 frozen queries (20 easy, 20 medium, 10 hard, 10 adversarial) with gold
+  answers, in `project/data/test_set/`, checked with `build_test_set.py --verify`.
+- **Three-way comparison:** the multi-agent system against a single-agent baseline and
+  human volunteers working from the same repair notes. Answers from all three are graded
+  blind against the gold answers. See [project/human_study/protocol.md](../project/human_study/protocol.md).
+- **Scalability:** stores of 100, 400 and 2,000 episodes (`scripts/load_expanded_store.py --size ...`).
