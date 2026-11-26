@@ -698,9 +698,7 @@ def test_diagnosis_taken_from_top_episode_and_disagreement_traced(tmp_path):
 
 
 def test_knowledge_store_snapshot_cache_invalidation_on_put_verified(tmp_path):
-    """Verify KnowledgeStore caches snapshots and invalidates cache on put_verified."""
-    from project.store.knowledge_store import _CACHE
-
+    """Verify KnowledgeStore reads reflect new put_verified writes and repeat reads stay consistent."""
     faults = json.loads(FAULTS.read_text(encoding="utf-8"))
     hazards = json.loads(HAZARDS.read_text(encoding="utf-8"))
     eps = catalogue_episodes(faults[:2], hazards)
@@ -710,17 +708,16 @@ def test_knowledge_store_snapshot_cache_invalidation_on_put_verified(tmp_path):
     writer.put_verified(eps[0], trace_id="TR-CACHE-1")
 
     snap1, _ = store.snapshot(trace_id="TR-CACHE-2")
-    assert len(snap1) == 1
-    assert store._cache_key in _CACHE
-    rev1 = _CACHE[store._cache_key].revision
+    ids1 = [e.episode_id for e in snap1]
+    assert ids1 == [eps[0].episode_id]
 
-    # Second read hits cache (same revision)
+    # Second read without any write returns the same episode IDs
     snap2, _ = store.snapshot(trace_id="TR-CACHE-3")
-    assert len(snap2) == 1
-    assert _CACHE[store._cache_key].revision == rev1
+    assert [e.episode_id for e in snap2] == ids1
 
-    # Write second episode -> must invalidate cache and bump revision
+    # Write a new episode -> next read must include the new episode ID
     writer.put_verified(eps[1], trace_id="TR-CACHE-4")
     snap3, _ = store.snapshot(trace_id="TR-CACHE-5")
-    assert len(snap3) == 2
-    assert _CACHE[store._cache_key].revision > rev1
+    ids3 = [e.episode_id for e in snap3]
+    assert eps[0].episode_id in ids3 and eps[1].episode_id in ids3
+    assert len(ids3) == 2

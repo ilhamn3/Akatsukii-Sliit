@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 30 / 30 points · 100% complete**
+**Overall: 28 / 30 points · 93% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP1 | Foundation and architecture | 12 | 12 | 100% |
-| WP5 | Assistance agents 5, 7 and 8 | 18 | 18 | 100% |
+| WP5 | Assistance agents 5, 7 and 8 | 18 | 16 | 89% |
 <!-- PROGRESS:END -->
 
 **How to update:** edit only the **Done %** column below (0-100). Points earned = Pts x Done %. A subtask is 100% only when it meets its "done when" in section 3 and has been reviewed. Partial progress is fine (25 / 50 / 75%).
@@ -40,9 +40,9 @@
 | 5.2 | Diagnostic agent: clarifying-question flow | 2 | 24 Nov | 100% |
 | 5.3 | Safety rule base (from Tharshanth's hazard list) | 3 | 24 Nov | 100% |
 | 5.4 | Safety Verification agent: approve / amend / veto with reason | 3 | 26 Nov | 100% |
-| 5.5 | Orchestrator: task delegation and adaptive routing | 3 | 26 Nov | 100% |
-| 5.6 | Orchestrator: conflict ranking, veto loop (max 2), abstention, human escalation | 3 | 26 Nov | 100% |
-| 5.7 | End-to-end integration run and adversarial safety tests | 1 | 28 Nov | 100% |
+| 5.5 | Orchestrator: task delegation and adaptive routing | 3 | 26 Nov | 90% |
+| 5.6 | Orchestrator: conflict ranking, veto loop (max 2), abstention, human escalation | 3 | 26 Nov | 65% |
+| 5.7 | End-to-end integration run and adversarial safety tests | 1 | 28 Nov | 40% |
 
 ## 2. Files and folders you own
 
@@ -166,7 +166,7 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | I3b-fix | 24 Nov | [WP5] Fix Gemini latency via minimal thinking and add fallback diagnostics | 5.1 (100%), 5.2 (100%) | GEMINI_THINKING (minimal/off/low), GEMINI_TIMEOUT_S, token & latency logging in trace, dev query evaluation with fallback honesty (0 fallbacks on gemini-3.5-flash-lite, 2.93s median latency), PR 7 compatibility check | 57% -> 57% | Kavibarath S |
 | I4 | 24 Nov | [WP5] Safety rule base and Safety Verification agent | 5.3 (0->100%), 5.4 (0->100%) | Deterministic safety rules (SR-H01..SR-H16 + SR-X01..SR-X04), rule_engine.py with runtime hazards.json sync, a7_safety.py with immutable rule veto priority, adversarial safety benchmark (100% hazard recall across 24 cases), 27 safety tests (105 total in repo) | 57% -> 77% | Kavibarath S |
 | I5a | 25 Nov | [WP5] Orchestrator: real retrieval wiring, routing, conflict ranking and safety-wins finalize | 5.5 (0->70%) | Real: HybridRetriever wiring in RetrievalNode (no silent stub fallback), normalize_evidence for K6 metadata, step-level citations, FAST/FULL routing, conflict ranking, safety-wins finalize/revise, n400 store loader, 222 pytest tests; Pending (5.6 / I5b): full LLM-guided revision loop, escalation UX, and adversarial end-to-end suite | 77% -> 84% | Kavibarath S |
-| I5b | 25 Nov | [WP5] Safety-aware revise loop, unsafe-request rule, escalation tickets, dev eval | 5.5 (70->100%), 5.6 (0->85%) | Safety-control-aware planning, LLM-guided revise loop, diagnosis from top episode root_cause + disagreement trace, SR-X05 unsafe-request refusal (5/5 dev adversarial caught, 0/15 FP), LLM-unavailable disclosure, escalation tickets (logs/escalations.jsonl), embedder/snapshot caching (cold 17.4s -> warm 95ms), dev eval on n=10 (flash-lite: 0.80 behaviour, 0.60 root cause, 0 must-not violations; flash hit 429 quota), 228 pytest tests | 84% -> 95% | Kavibarath S |
-| I6 | 26 Nov | [WP5] Dev diagnosis, unseen adversarial check, UI API, e2e demo | 5.6 (85->100%), 5.7 (0->100%) | Deterministic catalogue control insertion in plan/revise, 20/20 non-degraded dev eval on flash-lite minimal (0.55 behaviour, 0.40 root cause, 0.60 safety cov, 0 must-not violations, 1.00 citations, 33.0s avg latency), unseen adversarial generalisation check (1/12 recall, 0/6 FP, gaps documented in docs/DEV_RESULTS.md), project/core/api.py + docs/UI_API.md, scripts/demo_e2e.py real A1-A4->B run, full pytest suite | 95% -> 100% | Kavibarath S |
+| I5b | 25 Nov | [WP5] Safety-aware revise loop, unsafe-request rule, escalation tickets, dev eval | 5.5 (70->90%), 5.6 (0->60%) | Safety-control-aware planning, LLM-guided revise loop, diagnosis from top episode root_cause + disagreement trace, SR-X05 unsafe-request refusal (5/5 dev adversarial caught, 0/15 FP), LLM-unavailable disclosure, escalation tickets (logs/escalations.jsonl), embedder caching + main revision-keyed store cache; Dev eval n=10 of 20, unbalanced; flash hit 20 requests/day free-tier cap so models are not comparable; SR-X05 patterns tuned on dev | 84% -> 91.7% | Kavibarath S |
+| I6 | 26 Nov | [WP5] Dev diagnosis, unseen adversarial check, UI API, e2e demo | 5.6 (60->65%), 5.7 (0->40%) | Deterministic catalogue control insertion in plan/revise; 20 dev queries run, 0 degraded: behaviour match 55%, root-cause match 40%, safety coverage 60%, unseen adversarial recall 1/12 (0/6 false positives), avg latency 33 s; gaps documented in docs/DEV_RESULTS.md; project/core/api.py + docs/UI_API.md, scripts/demo_e2e.py real A1-A4->B run, full pytest suite | 91.7% -> 93.5% | Kavibarath S |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
