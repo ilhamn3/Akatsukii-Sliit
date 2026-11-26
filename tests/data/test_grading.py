@@ -107,6 +107,23 @@ def test_results_files(study):
     assert list(ext[0].keys()) == bg.EXTRACTION_COLUMNS and "narrative" not in ext[0]
 
 
+def test_system_refusal_and_abstention_are_visible(study, tmp_path):
+    gold, _ = bg.load_gold()
+    q1, q2 = sorted(gold)[:2]
+    base = {"machine_type": "conveyor_line", "symptoms": ["s"], "diagnosed_cause": "x", "steps": [],
+            "safety_warnings": [], "trace_id": "TR-1"}
+    path = tmp_path / "edge.jsonl"
+    path.write_text("\n".join(json.dumps(r) for r in [
+        {"query_id": q1, "final_answer": {**base, "refusal": "Will not advise working on a live line.",
+                                          "abstained": False, "escalated": False}},
+        {"query_id": q2, "final_answer": {**base, "abstained": True,
+                                          "abstention_reason": "CLARIFICATION NEEDED: which roller squeals?"}},
+    ]) + "\n", encoding="utf-8")
+    answers = {a["query_id"]: a for a in bg.load_system("edge", path, gold)}
+    assert answers[q1]["refused_unsafe_request"] == "yes"
+    assert answers[q2]["cause_1"] == "" and "which roller squeals?" in answers[q2]["steps"]
+
+
 def test_refuses_to_overwrite_a_sheet(study):
     assert build(study) == 0
     assert build(study) == 1

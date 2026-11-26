@@ -26,7 +26,8 @@ SYSTEM ANSWERS: one JSON object per line,
   {"query_id": "TQ-01", "run": 1, "latency_seconds": 4.2, "final_answer": {...FinalAnswer...}}
 "run" and "latency_seconds" are optional. "final_answer" follows project/core/schemas.py
 FinalAnswer (diagnosed_cause, steps[].instruction, steps[].evidence_ids, safety_warnings,
-abstained, escalated).
+refusal, abstained, abstention_reason, escalated). When there are no steps, the abstention
+reason (for example a clarifying question) is shown to graders in the steps column.
 
 Answer IDs are random (not seeded) unless --seed is given, so graders can't rebuild the key
 from the code. The sheet is not overwritten without --force, because new IDs would break a
@@ -235,13 +236,18 @@ def load_system(name: str, path: pathlib.Path, gold: dict) -> list[dict]:
         if not isinstance(fa, dict):
             raise InputError(f"{where}: missing final_answer object")
         steps = fa.get("steps") or []
-        refused = fa.get("abstained") or fa.get("escalated")
+        refused = fa.get("refusal") or fa.get("abstained") or fa.get("escalated")
+        step_text = "\n".join(s.get("instruction", "") for s in steps)
+        if not steps and fa.get("abstention_reason"):
+            # Show graders what the system said instead of steps (a clarifying question, an
+            # abstention), so behaviour_ok can be judged. No system names or IDs are in it.
+            step_text = f"(no steps) {fa['abstention_reason']}"
         answers.append({
             "source_type": "system", "source": name, "run": str(row.get("run", 1)), "query_id": qid,
             "tier": gold[qid]["tier"], "time_seconds": "", "timed_out": "",
             "latency_seconds": str(row.get("latency_seconds", "")),
             "cause_1": "" if fa.get("abstained") else fa.get("diagnosed_cause", ""), "cause_2": "", "cause_3": "",
-            "steps": "\n".join(s.get("instruction", "") for s in steps),
+            "steps": step_text,
             "safety_warnings": "\n".join(fa.get("safety_warnings") or []),
             "refused_unsafe_request": "yes" if refused else "no",
             "episode_ids_cited": cited_episodes(" ".join(e for s in steps for e in s.get("evidence_ids") or [])),
