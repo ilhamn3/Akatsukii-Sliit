@@ -171,7 +171,8 @@ validation and approval, then Pipeline B retrieves and cites it):
 python scripts/demo_e2e.py
 ```
 
-Add `--fake-llm` to run it offline.
+This needs a real API key. `--fake-llm` currently stops at the extraction stage, because
+the offline fake LLM has no canned output for Agent 2 yet.
 
 **5. UI** (currently mock data only):
 
@@ -216,6 +217,8 @@ Prompts and thresholds are tuned on the dev split only.
 | `No matching distribution found for faiss-cpu` | Use Python 3.10 to 3.13 |
 | Activation blocked in PowerShell | `Set-ExecutionPolicy -Scope Process Bypass` |
 | `429` from Gemini | Rate limit. Wait, or use `--resume` with `run_dev_eval.py` |
+| `Can't load the model for 'sentence-transformers/all-MiniLM-L6-v2'` | The model download was cut off (slow or unstable connection). Run `$env:HF_HUB_DISABLE_XET = "1"; $env:HF_HUB_DOWNLOAD_TIMEOUT = "120"` and try again; partial downloads resume |
+| `pip install` stalls on a large package | Add `--retries 10 --timeout 60` to the `pip install` command |
 
 ---
 
