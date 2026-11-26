@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Protocol
+from typing import Dict, Protocol, Tuple
 import numpy as np
 
 
@@ -41,3 +41,16 @@ class MiniLMEmbedder:
                 local_files_only=self.local_files_only,
             )
         return self._model.encode(texts, convert_to_numpy=True, normalize_embeddings=True)
+
+
+_EMBEDDER_CACHE: Dict[Tuple[str, bool], MiniLMEmbedder] = {}
+
+
+def get_cached_embedder(*, local_files_only: bool = False) -> MiniLMEmbedder:
+    """Return a process-cached MiniLMEmbedder instance to avoid repeated model loads."""
+    key = (MiniLMEmbedder.model_id, bool(local_files_only))
+    embedder = _EMBEDDER_CACHE.get(key)
+    if embedder is None:
+        embedder = MiniLMEmbedder(local_files_only=local_files_only)
+        _EMBEDDER_CACHE[key] = embedder
+    return embedder
