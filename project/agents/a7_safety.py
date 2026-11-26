@@ -200,8 +200,15 @@ class SafetyAgent(BaseAgent):
         # ======================================================================
         rule_hits = self.rule_engine.evaluate(steps=candidate_steps, context=context)
 
-        det_has_veto = any(h.action == "veto" for h in rule_hits)
-        det_has_amend = any(h.action == "amend" for h in rule_hits)
+        # Separate SR-X05 (unsafe shortcut request in query) from step-level rule hits
+        unsafe_req_hits = [h for h in rule_hits if h.rule_id == "SR-X05"]
+        step_rule_hits = [h for h in rule_hits if h.rule_id != "SR-X05"]
+        refusal_msg: Optional[str] = (
+            "; ".join(h.reason for h in unsafe_req_hits) if unsafe_req_hits else None
+        )
+
+        det_has_veto = any(h.action == "veto" for h in step_rule_hits)
+        det_has_amend = any(h.action == "amend" for h in step_rule_hits)
 
         if det_has_veto:
             det_verdict = "veto"
@@ -252,7 +259,13 @@ class SafetyAgent(BaseAgent):
                 llm_check_status = "performed"
             except Exception as e:
                 logger.warning("LLM safety review check failed or skipped: %s", e)
-                llm_check_status = "skipped"
+                err_str = str(e).lower()
+                if "429" in err_str or "resource_exhausted" in err_str:
+                    llm_check_status = "skipped_429"
+                elif "timeout" in err_str or "timed out" in err_str:
+                    llm_check_status = "skipped_timeout"
+                else:
+                    llm_check_status = "skipped_error"
 
         # ======================================================================
         # Combine Verdicts: Invariant - Deterministic Veto is IMMUTABLE
@@ -337,6 +350,12 @@ class SafetyAgent(BaseAgent):
             else ([f"SAFETY AMENDMENT: {combined_reason}"] + all_amendments if final_verdict == "amend"
                   else ["Safety Verified: Deterministic safety invariants and procedural controls verified."])
         )
+        if refusal_msg and refusal_msg not in safety_warnings:
+            safety_warnings.insert(0, refusal_msg)
+        if llm_check_status.startswith("skipped"):
+            llm_unavail_msg = "LLM safety oversight unavailable: deterministic rules only"
+            if llm_unavail_msg not in safety_warnings:
+                safety_warnings.append(llm_unavail_msg)
 
         final_answer_obj = FinalAnswer(
             machine_type=machine_type,
@@ -346,6 +365,7 @@ class SafetyAgent(BaseAgent):
             safety_warnings=safety_warnings,
             abstained=(final_verdict == "veto"),
             abstention_reason=f"Plan Vetoed for Safety: {combined_reason}" if final_verdict == "veto" else None,
+            refusal=refusal_msg,
             escalated=escalate,
             trace_id=state.get("trace_id", "TR-UNKNOWN"),
         )
@@ -377,11 +397,16 @@ class SafetyAgent(BaseAgent):
 
         return {
             "safety_approved": is_approved,
-            "safety_violations": det_reasons + llm_concerns,
+            "safety_violations": safety_warnings if (det_reasons or llm_concerns or refusal_msg or llm_check_status.startswith("skipped")) else [],
             "safety_loop_count": current_loop,
             "escalated_to_supervisor": escalate,
             "safety_verdict": verdict_obj.model_dump(),
             "final_answer": final_answer_obj.model_dump(),
             "decision": f"SAFETY_{final_verdict.upper()}",
             "llm_check": llm_check_status,
+            "metadata": {
+                **dict(state.get("metadata") or {}),
+                "refusal": refusal_msg,
+                "llm_check": llm_check_status,
+            },
         }

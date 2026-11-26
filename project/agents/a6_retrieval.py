@@ -34,10 +34,10 @@ import networkx as nx
 from project.agents.a4_graph import default_resolver
 from project.agents.base import BaseAgent
 from project.core.registry import load_config
+from project.core.orchestration_helpers import classify_outcome
 from project.core.schemas import Evidence
-from project.store.graph import KnowledgeGraph
 from project.store.models import VerifiedEpisode, label_key
-from project.store.vector_index import VectorIndex, normalized
+from project.store.vector_index import normalized
 
 # Weight of a matched query term by the graph node kind it was found on.
 NODE_WEIGHTS = {"fault": 1.0, "cause": 0.75, "failed_attempt": 0.5, "fix": 0.5}
@@ -48,6 +48,20 @@ STOPWORDS = {
     "noticeably", "excessive", "high", "low", "some", "any", "what", "why", "how", "does", "did",
 }
 _CODE = re.compile(r"\b([a-z]{1,5})-?(\d{2,4})\b", re.IGNORECASE)
+_SETTINGS: dict = {}
+
+
+def retrieval_settings() -> dict:
+    """config.yaml `retrieval:` section, re-read only when the file changes.
+
+    Pipeline B constructs a retriever per query; parsing YAML each time was about
+    half of the steady-state query latency at 2,000 episodes.
+    """
+    from project.core.registry import DEFAULT_CONFIG_PATH
+    stamp = DEFAULT_CONFIG_PATH.stat().st_mtime_ns
+    if _SETTINGS.get("stamp") != stamp:
+        _SETTINGS.update(stamp=stamp, values=dict(load_config().get("retrieval", {})))
+    return dict(_SETTINGS["values"])
 
 
 def _stem(token: str) -> str:
@@ -91,7 +105,7 @@ class HybridRetriever:
     """RetrievalEngine implementation backed by the K3 KnowledgeStore."""
 
     def __init__(self, store=None, *, resolver=None, graph_weight=None, asset_weight=None, use_vector=True):
-        cfg = load_config().get("retrieval", {})
+        cfg = retrieval_settings()
         self._store = store
         self.use_vector = use_vector  # False only for graph-only ablation in dev checks.
         self.resolver = resolver or default_resolver()
@@ -107,29 +121,36 @@ class HybridRetriever:
             self._store = KnowledgeStore()
         return self._store
 
-    def _graph_features(self, graph, episodes, query_terms, query_codes, machine):
-        """Per-episode graph score and matched nodes, by traversal from machine nodes."""
+    @staticmethod
+    def _reach(graph, machine):
+        """episode_id -> [(node, kind, terms, codes)] reached by traversal from the
+        machine node(s). Tokenized once per store revision via Projection.memo."""
         starts = ([("machine", label_key(machine))] if machine else
                   [n for n, d in graph.nodes(data=True) if d["kind"] == "machine"])
         reached = defaultdict(list)
         for start in starts:
             if start in graph:
                 for node in nx.descendants(graph, start):
-                    kind = graph.nodes[node]["kind"]
-                    if kind in NODE_WEIGHTS and node[1] in episodes:
-                        reached[node[1]].append(node)
+                    data = graph.nodes[node]
+                    if data["kind"] in NODE_WEIGHTS:
+                        reached[node[1]].append((node, data["kind"], terms(data["label"]), codes(data["label"])))
+        return dict(reached)
+
+    def _graph_features(self, reached, episodes, query_terms, query_codes):
+        """Per-episode graph score and matched nodes from the cached traversal."""
         features = {}
         for episode_id, nodes in reached.items():
-            best, matched, text = {}, [], []
-            for node in nodes:
-                label = graph.nodes[node]["label"]
-                text.append(label)
-                hit = terms(label) & query_terms
+            if episode_id not in episodes:
+                continue
+            best, matched, node_codes = {}, [], set()
+            for node, kind, node_terms, found_codes in nodes:
+                node_codes |= found_codes
+                hit = node_terms & query_terms
                 if hit:
                     matched.append(node)
                     for term in hit:
-                        best[term] = max(best.get(term, 0.0), NODE_WEIGHTS[graph.nodes[node]["kind"]])
-            code_hits = sorted(query_codes & codes(" ".join(text)))
+                        best[term] = max(best.get(term, 0.0), NODE_WEIGHTS[kind])
+            code_hits = sorted(query_codes & node_codes)
             coverage = sum(best.values()) / len(query_terms) if query_terms else 0.0
             features[episode_id] = {"score": 1.0 if code_hits else min(1.0, coverage),
                                     "matched_terms": sorted(best), "matched_codes": code_hits,
@@ -146,26 +167,29 @@ class HybridRetriever:
         trace_id = trace_id or f"TR-RETRIEVE-{uuid.uuid4().hex[:8].upper()}"
         resolution = self.resolver.resolve_machine(machine_type) if machine_type and machine_type.strip() else None
         machine = resolution.entity_id if resolution is not None else None
-        episodes, vectors = self.store.snapshot(trace_id=trace_id, operation="RETRIEVAL_QUERY")
-        selected = {e.episode_id: e for e in episodes
+        # One revision-cached projection: vectors and graph describe the same data.
+        projection = self.store.projection(trace_id=trace_id, operation="RETRIEVAL_QUERY")
+        selected = {e.episode_id: e for e in projection.episodes
                     if machine is None or label_key(e.record.machine_type) == label_key(machine)}
         if not selected:
             return []
         cosine = {}
         if self.use_vector:
             embedder = self.store.embedder
-            index = VectorIndex({key: vectors[key] for key in selected}, embedder.dimension)
             query_vector = normalized(embedder.encode([query]), embedder.dimension)
-            cosine = {key: max(0.0, score) for key, score in index.search(query_vector[0], k=len(selected))}
-        graph = KnowledgeGraph(list(selected.values())).graph
+            cosine = {key: max(0.0, score) for key, score in projection.index().search(
+                query_vector[0], k=len(projection.episodes)) if key in selected}
+        graph = projection.graph().graph  # Shared read-only; traversal is filtered to `selected`.
         query_terms, query_codes = terms(query), codes(query)
-        features = self._graph_features(graph, selected, query_terms, query_codes, machine)
+        reached = projection.memo(("a6_reach", machine), lambda: self._reach(graph, machine))
+        features = self._graph_features(reached, selected, query_terms, query_codes)
         asset_hits = set()
         if machine and machine_id:
             asset = self.resolver.resolve_asset(machine_id, machine)
             asset_key = ("asset", label_key(asset.entity_id or machine_id))
             if asset_key in graph:
-                asset_hits = {edge["episode_id"] for _, _, edge in graph.out_edges(asset_key, data=True)}
+                asset_hits = {edge["episode_id"] for _, _, edge in graph.out_edges(asset_key, data=True)
+                              if edge["episode_id"] in selected}
         ranked = []
         for episode_id, episode in selected.items():
             cos = cosine.get(episode_id, 0.0)
@@ -191,6 +215,21 @@ class HybridRetriever:
             source_type="vector" if cos >= graph_part else "graph",
             content=summarize(episode), similarity_score=fused,
             metadata={
+                # Flat keys for the Orchestrator's conflict ranking (review of #12/#15).
+                "kind": "episode",            # Episode-level evidence; steps carry their own IDs.
+                "step_order": None,           # Use steps[].step_number / steps[].evidence_id.
+                "machine_type": r.machine_type,
+                "verified": episode.status == "verified",  # Always True: only verified episodes are stored.
+                "recorded_at": episode.verified_at.isoformat(),
+                # No capture/repair timestamp exists in the pipeline yet, so recency
+                # uses the human verification time; this names the source honestly.
+                "recorded_at_source": "verified_at",
+                "root_cause": r.root_cause,
+                # Hazard IDs stay in the single flat key `catalogue_hazards` (below), which
+                # A8's normalize_evidence reads first; a duplicate `hazards` list would
+                # disagree with it whenever one is edited.
+                "outcome_status": classify_outcome(episode.outcome),  # Same rules as A8.
+                "outcome_status_method": "orchestration_helpers.classify_outcome keyword rules",
                 "record": r.model_dump(mode="json"),
                 "outcome": episode.outcome,
                 "failed_attempts": [a.model_dump(mode="json") for a in r.failed_attempts],
@@ -218,7 +257,7 @@ class RetrievalAgent(BaseAgent):
     def __init__(self, engine=None, trace_logger=None, k=None):
         super().__init__("RetrievalAgent", "Hybrid vector + graph retrieval of verified repairs", "B", trace_logger)
         self.engine = engine
-        self.k = int(k if k is not None else load_config().get("retrieval", {}).get("k", 3))
+        self.k = int(k if k is not None else retrieval_settings().get("k", 3))
 
     def run(self, state):
         state.update(retrieved_episodes=[], graph_subgraph_nodes=[], failed_attempts_retrieved=[],

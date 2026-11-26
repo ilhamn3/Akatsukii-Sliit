@@ -115,7 +115,11 @@ class GeminiLLMClient(LLMClient):
 
         if response_model is not None:
             config_kwargs["response_mime_type"] = "application/json"
-            config_kwargs["response_schema"] = response_model
+            schema_dict = response_model.model_json_schema()
+            if "additionalProperties" in json.dumps(schema_dict):
+                config_kwargs["response_json_schema"] = schema_dict
+            else:
+                config_kwargs["response_schema"] = response_model
 
         thinking_cfg = self._get_thinking_config()
         if thinking_cfg is not None:
@@ -467,16 +471,29 @@ class FakeLLM(LLMClient):
 
         if response_model.__name__ in ("OrchestrationPlanOutput", "OrchestratorPlanOutput"):
             import re
-            eids = list(dict.fromkeys(re.findall(r"EV-[A-Za-z0-9-]+", prompt)))
+            eids = list(dict.fromkeys(re.findall(r"(?:EV|SYN)-[A-Za-z0-9-]+", prompt)))
             steps = []
+            # If this is a revise prompt with Suggested Amendments, emit [SAFETY CONTROL] steps first
+            if "suggested amendments:" in p_lower:
+                am_block = prompt.split("Suggested Amendments:", 1)[1].split("Valid Grounded Evidence IDs:", 1)[0]
+                for line in am_block.splitlines():
+                    line = line.strip()
+                    if line.startswith("- "):
+                        am_text = line[2:].strip()
+                        if am_text:
+                            steps.append({
+                                "step_number": len(steps) + 1,
+                                "instruction": f"[SAFETY CONTROL SAFETY] {am_text}",
+                                "evidence_ids": [],
+                            })
             if eids:
-                for idx, eid in enumerate(eids[:4], 1):
+                for eid in eids[:4]:
                     steps.append({
-                        "step_number": idx,
+                        "step_number": len(steps) + 1,
                         "instruction": f"Simulated repair instruction grounded in retrieved evidence {eid}.",
                         "evidence_ids": [eid],
                     })
-            else:
+            elif not steps:
                 steps.append({
                     "step_number": 1,
                     "instruction": "Inspect machine assembly according to standard operating procedure.",
@@ -558,9 +575,6 @@ def get_llm(
                 if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
                     return FakeLLM()
                 raise
-        if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
-            return FakeLLM()
-        raise ValueError("OPENAI_API_KEY not set; set it in .env, or pass --fake-llm for offline demo")
         if "PYTEST_CURRENT_TEST" in os.environ or os.getenv("FACTORY_FAKE_LLM") == "1":
             return FakeLLM()
         raise ValueError("OPENAI_API_KEY not set; set it in .env, or pass --fake-llm for offline demo")

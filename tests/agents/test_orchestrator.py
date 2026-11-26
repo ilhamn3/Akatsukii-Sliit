@@ -283,9 +283,12 @@ def test_pipeline_b_graph_execution_with_stub_retrieval(monkeypatch):
     assert len(final_ans["steps"]) >= 1
     assert len(final_state["evidence"]) >= 1
 
-    # Verify all steps cite real retrieved evidence IDs
+    # Verify all non-control steps cite real retrieved evidence IDs
     valid_eids = {e["evidence_id"] for e in final_state["evidence"]}
     for step in final_ans["steps"]:
+        if step["instruction"].startswith(("[SAFETY CONTROL", "[SAFETY AMENDMENT")):
+            assert step["evidence_ids"] == []
+            continue
         assert len(step["evidence_ids"]) >= 1
         for eid in step["evidence_ids"]:
             assert eid in valid_eids
@@ -406,10 +409,14 @@ def test_revise_amendments_carry_no_borrowed_evidence_ids_and_veto_escalates():
         machine_type="Hydraulic Press",
         trace_id="TR-REVISE-01",
     )
+    state["evidence"] = [
+        {"evidence_id": "EV-HYD-01", "episode_id": "EP-HYD-01", "content": "Disconnect hose fitting.", "similarity_score": 0.9, "metadata": {}}
+    ]
     state["candidate_steps"] = [
         {"step_number": 1, "instruction": "Disconnect hose fitting.", "evidence_ids": ["EV-HYD-01"]}
     ]
     state["safety_loop_count"] = 1
+    state["safety_violations"] = ["Missing depressurisation step."]
     state["safety_verdict"] = {
         "verdict": "amend",
         "reason": "Missing depressurisation step.",
@@ -420,11 +427,12 @@ def test_revise_amendments_carry_no_borrowed_evidence_ids_and_veto_escalates():
     rev_updates = orch_rev.process(state)
     amended = rev_updates["candidate_steps"]
 
-    assert amended[0]["instruction"].startswith("[SAFETY AMENDMENT]")
+    assert amended[0]["instruction"].startswith("[SAFETY CONTROL")
     assert amended[0]["evidence_ids"] == []
     assert amended[1]["evidence_ids"] == ["EV-HYD-01"]
 
-    # Now test hard veto with NO suggested_amendments -> immediate escalation
+    # Now test hard veto with NO suggested_amendments and NO violations -> immediate escalation
+    state["safety_violations"] = []
     state["safety_verdict"] = {
         "verdict": "veto",
         "reason": "Unknown hazard class.",
@@ -510,3 +518,206 @@ def test_step_level_evidence_ids_accepted_unknown_dropped():
     assert filtered[0]["evidence_ids"] == ["SYN-L01-S1"]
     assert filtered[1]["evidence_ids"] == ["SYN-L01-S2"]
     assert coverage == pytest.approx(2 / 3, abs=1e-3)
+
+
+def test_revise_uses_all_amendments_and_keeps_citation_integrity():
+    """Revise phase incorporates all amendments with [SAFETY CONTROL] and drops uncited non-control steps."""
+    state = create_initial_state(
+        query="Hydraulic pressure unstable",
+        machine_type="Hydraulic Press",
+        trace_id="TR-REV-ALL-01",
+    )
+    state["evidence"] = [
+        {
+            "evidence_id": "EV-HYD-01",
+            "episode_id": "EP-HYD-01",
+            "content": "Summary",
+            "similarity_score": 0.9,
+            "metadata": {
+                "steps": [
+                    {"step_number": 1, "description": "Inspect valve", "evidence_id": "SYN-HYD-S1"}
+                ]
+            },
+        }
+    ]
+    state["candidate_steps"] = [
+        {"step_number": 1, "instruction": "Inspect valve", "evidence_ids": ["SYN-HYD-S1"]}
+    ]
+    state["safety_loop_count"] = 1
+    state["safety_violations"] = ["Missing LOTO", "Missing zero-pressure verification"]
+    state["safety_verdict"] = {
+        "verdict": "amend",
+        "rule_ids": ["SR-H01", "SR-H02"],
+        "suggested_amendments": [
+            "Apply electrical LOTO at main breaker.",
+            "Bleed hydraulic line to 0 bar and verify gauge.",
+        ],
+    }
+
+    orch_rev = OrchestratorAgent(phase="revise", llm_client=FakeLLM())
+    updates = orch_rev.process(state)
+    steps = updates["candidate_steps"]
+
+    control_steps = [s for s in steps if s["instruction"].startswith("[SAFETY CONTROL")]
+    assert len(control_steps) >= 2
+    assert all(s["evidence_ids"] == [] for s in control_steps)
+    non_control = [s for s in steps if not s["instruction"].startswith("[SAFETY CONTROL")]
+    assert len(non_control) >= 1
+    assert all(eid in {"EV-HYD-01", "SYN-HYD-S1"} for s in non_control for eid in s["evidence_ids"])
+
+
+def test_sr_x05_triggers_on_adversarial_and_not_benign():
+    """SR-X05 catches all 5 dev adversarial queries and triggers 0 false positives on benign dev queries."""
+    from project.core.safety_rules.rule_engine import RuleEngine
+
+    eng = RuleEngine()
+    with open("project/data/test_set/dev_queries.jsonl", "r", encoding="utf-8") as f:
+        queries = [json.loads(line) for line in f if line.strip()]
+
+    adv = [q for q in queries if q["tier"] == "adversarial"]
+    benign = [q for q in queries if q["tier"] != "adversarial"]
+
+    assert len(adv) == 5
+    for q in adv:
+        hits = eng.evaluate_unsafe_request(q["query"])
+        assert len(hits) >= 1, f"Expected SR-X05 hit on {q['query_id']}"
+        assert hits[0].rule_id == "SR-X05"
+        assert "refused" in hits[0].reason.lower()
+
+    for q in benign:
+        hits = eng.evaluate_unsafe_request(q["query"])
+        assert hits == [], f"Unexpected SR-X05 false positive on {q['query_id']}: {q['query']}"
+
+
+def test_llm_unavailable_disclosure_in_safety_and_finalize(tmp_path):
+    """When SafetyAgent LLM fails with 429, FinalAnswer discloses deterministic-only check and trace records skipped_429."""
+    from project.agents.a7_safety import SafetyAgent
+
+    log_file = tmp_path / "llm_unavail_trace.jsonl"
+    logger = TraceLogger.get_instance(str(log_file))
+
+    failing_llm = Mock()
+    failing_llm.model_name = "gemini:gemini-3.5-flash"
+    failing_llm.generate_structured.side_effect = RuntimeError("429 RESOURCE_EXHAUSTED")
+
+    safety = SafetyAgent(trace_logger=logger, llm_client=failing_llm)
+    state = create_initial_state("Belt slipping", machine_type="Conveyor Line", trace_id="TR-429-01")
+    state["candidate_steps"] = [
+        {"step_number": 1, "instruction": "Stop and lock out the conveyor drive.", "evidence_ids": ["EV-C01"]}
+    ]
+
+    s_out = safety.run(state)
+    assert s_out["llm_check"] == "skipped_429"
+
+    trace_events = read_trace(str(log_file))
+    assert any(
+        e.get("agent") == "SafetyAgent"
+        and isinstance(e.get("output_digest"), dict)
+        and e["output_digest"].get("llm_check") == "skipped_429"
+        for e in trace_events
+    )
+
+    orch_fin = OrchestratorAgent(phase="finalize", trace_logger=logger)
+    fin_out = orch_fin.run(s_out)
+    warnings = fin_out["final_answer"]["safety_warnings"]
+    assert "LLM safety oversight unavailable: deterministic rules only" in warnings
+
+
+def test_escalation_ticket_written(tmp_path, monkeypatch):
+    """When escalated=True, OrchestratorFinalize appends a ticket line to logs/escalations.jsonl."""
+    from project.agents import a8_orchestrator
+
+    esc_file = tmp_path / "escalations.jsonl"
+    monkeypatch.setattr(a8_orchestrator, "ESCALATIONS_LOG_PATH", esc_file)
+
+    state = create_initial_state(
+        query="Press ram drifting down",
+        machine_type="Hydraulic Press",
+        trace_id="TR-ESC-TICKET-01",
+    )
+    state["safety_approved"] = False
+    state["safety_violations"] = ["Missing safety blocks (SR-H03)"]
+    state["safety_verdict"] = {"verdict": "veto", "rule_ids": ["SR-H03"], "reason": "Critical crush hazard"}
+
+    orch_fin = OrchestratorAgent(phase="finalize")
+    out = orch_fin.process(state)
+    final_ans = out["final_answer"]
+
+    assert final_ans["escalated"] is True
+    assert final_ans["escalation_ticket_id"] is not None
+    assert esc_file.exists()
+    lines = [json.loads(l) for l in esc_file.read_text(encoding="utf-8").splitlines() if l.strip()]
+    assert len(lines) == 1
+    assert lines[0]["ticket_id"] == final_ans["escalation_ticket_id"]
+    assert lines[0]["trace_id"] == "TR-ESC-TICKET-01"
+    assert "SR-H03" in lines[0]["rule_ids"]
+
+
+def test_diagnosis_taken_from_top_episode_and_disagreement_traced(tmp_path):
+    """Final diagnosed_cause uses top retrieved episode's root_cause and logs DIAGNOSIS_DISAGREEMENT when different."""
+    log_file = tmp_path / "diag_disagree.jsonl"
+    logger = TraceLogger.get_instance(str(log_file))
+
+    state = create_initial_state("Spindle hot ALM-410", machine_type="CNC Lathe", trace_id="TR-DISAGREE-01")
+    state["selected_hypothesis"] = {
+        "rank": 1,
+        "fault": "Spindle ceramic bearing spalling",
+        "subsystem": "Spindle",
+        "confidence": 0.85,
+    }
+    state["ranked_hypotheses"] = [state["selected_hypothesis"]]
+    state["evidence"] = [
+        {
+            "evidence_id": "EV-L01",
+            "episode_id": "EP-0027",
+            "content": "Clean chiller filter.",
+            "similarity_score": 0.92,
+            "metadata": {
+                "outcome": "Fault cleared",
+                "verified_by": "loader",
+                "catalogue_hazards": [],
+                "record": {"root_cause": "clogged filter in the spindle chiller circuit"},
+                "steps": [{"step_number": 1, "description": "Clean chiller filter", "evidence_id": "EV-L01-S1"}],
+            },
+        }
+    ]
+    state["retrieval_confidence"] = 0.92
+
+    orch_plan = OrchestratorAgent(phase="plan", llm_client=FakeLLM(), trace_logger=logger)
+    state.update(orch_plan.process(state))
+    state["safety_approved"] = True
+
+    orch_fin = OrchestratorAgent(phase="finalize", trace_logger=logger)
+    fin_out = orch_fin.process(state)
+    final_ans = fin_out["final_answer"]
+
+    assert final_ans["diagnosed_cause"] == "clogged filter in the spindle chiller circuit"
+    assert len(final_ans["alternative_hypotheses"]) == 1
+    trace_events = read_trace(str(log_file))
+    assert any(e.get("event") == "DIAGNOSIS_DISAGREEMENT" for e in trace_events)
+
+
+def test_knowledge_store_snapshot_cache_invalidation_on_put_verified(tmp_path):
+    """Verify KnowledgeStore reads reflect new put_verified writes and repeat reads stay consistent."""
+    faults = json.loads(FAULTS.read_text(encoding="utf-8"))
+    hazards = json.loads(HAZARDS.read_text(encoding="utf-8"))
+    eps = catalogue_episodes(faults[:2], hazards)
+
+    store = KnowledgeStore(tmp_path / "cache_test.sqlite3", embedder=HashEmbedder())
+    writer = GraphAgent(store)
+    writer.put_verified(eps[0], trace_id="TR-CACHE-1")
+
+    snap1, _ = store.snapshot(trace_id="TR-CACHE-2")
+    ids1 = [e.episode_id for e in snap1]
+    assert ids1 == [eps[0].episode_id]
+
+    # Second read without any write returns the same episode IDs
+    snap2, _ = store.snapshot(trace_id="TR-CACHE-3")
+    assert [e.episode_id for e in snap2] == ids1
+
+    # Write a new episode -> next read must include the new episode ID
+    writer.put_verified(eps[1], trace_id="TR-CACHE-4")
+    snap3, _ = store.snapshot(trace_id="TR-CACHE-5")
+    ids3 = [e.episode_id for e in snap3]
+    assert eps[0].episode_id in ids3 and eps[1].episode_id in ids3
+    assert len(ids3) == 2
