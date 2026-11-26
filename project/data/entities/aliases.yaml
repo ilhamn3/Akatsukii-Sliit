@@ -1,0 +1,95 @@
+# ==============================================================================
+# Factory Memory - Agent 4 entity vocabulary (K5). Curated by the team; edit here,
+# not in code. All phrases are normalized with the same function as input text
+# (casefold, punctuation -> space, token replacements below), so write them naturally.
+#
+# Machine IDs must match project/data/fault_catalogue (validate_catalogue.MACHINES).
+# Hazard IDs come from hazards.json; specific hazard phrases are taken from the
+# SafetyAgent rules (core/safety_rules/rules.yaml trigger_keywords) plus `hazard_phrases`.
+# ==============================================================================
+
+version: "entities_v1"
+
+# Token-level replacements applied after punctuation removal.
+replacements:
+  hyd: hydraulic
+  hydr: hydraulic
+  comp: compressor
+  compr: compressor
+  conv: conveyor
+  inj: injection
+  molding: moulding
+  molder: moulder
+  molders: moulders
+  mold: mould
+  center: centre
+  depressurize: depressurise
+
+# Words ignored when matching machine labels ("the conveyor" = "conveyor").
+ignore_words: [the, a, an, our, this, that]
+
+# Tokens ignored when reading an asset number ("Press no. 3", "unit 3", "asset #3").
+# Quote words YAML would read as booleans (no/yes/on/off).
+asset_filler: ["no", number, unit, asset, id, tag]
+
+machines:
+  cnc_lathe:
+    asset_prefix: LATHE
+    aliases: [cnc lathe, lathe, cnc turning centre, turning centre, cnc turning machine, cnc lathe machine]
+    head_terms: [lathe, turning centre]
+    exclude: [wood lathe, wood turning lathe, pottery lathe]
+  hydraulic_press:
+    asset_prefix: PRESS
+    aliases: [hydraulic press, press, hydraulic press machine, hydraulic forming press]
+    head_terms: [press]
+    # Presses that are not the catalogue's hydraulic press.
+    exclude: [mechanical press, punch press, drill press, printing press, press brake,
+              pneumatic press, heat press, arbor press, servo press, press fit, pressfit]
+  injection_moulding:
+    asset_prefix: IMM
+    aliases: [injection moulding, injection moulding machine, injection moulder, imm,
+              moulding machine, plastic injection machine, injection press]
+    head_terms: [injection moulding, injection moulder, moulding machine, imm, injection press]
+    exclude: [blow moulding, compression moulding, rotational moulding, extrusion]
+  conveyor_line:
+    asset_prefix: CONV
+    aliases: [conveyor, conveyor line, belt conveyor, conveyor belt, roller conveyor, conveyor system]
+    head_terms: [conveyor]
+    exclude: [chip conveyor, swarf conveyor, screw conveyor]
+  air_compressor:
+    asset_prefix: COMP
+    aliases: [air compressor, compressor, screw compressor, rotary screw compressor,
+              piston compressor, reciprocating compressor, air compressor unit]
+    head_terms: [compressor]
+    exclude: [refrigeration compressor, a c compressor, ac compressor, fridge compressor,
+              gas compressor, chiller compressor]
+
+# Extra specific phrases (beyond the SafetyAgent trigger keywords) per catalogue hazard.
+hazard_phrases:
+  H01: [hydraulic pressure, stored hydraulic pressure, bleed the pressure, depressurise the circuit]
+  H02: [electric shock, isolate power, isolate the power, isolate electrical power, live panel, prove dead, mains power]
+  H03: [pinch point, crush point, trapped hand]
+  H04: [too hot to touch, burn risk, hot housing]
+  H05: [air pressure, stored air, vent the receiver, vent to zero]
+  H06: [rotating parts, coasting, full stop]
+  H07: [hot barrel]
+  H08: [moving belt, belt guard, guards in place]
+  H09: [slippery floor, slip hazard]
+  H10: [injection injury, cardboard test]
+  H11: [sharp swarf, hot chips]
+  H12: [falling ram, ram could drop, block the ram, safety blocks, gravity load]
+  H13: [residual voltage, discharge time, wait for discharge]
+  H14: [pressure vessel, rated pressure]
+  H15: [bypass the interlock, defeat the interlock, override the guard]
+  H16: [water near electrics, wet electrics]
+
+# Generic phrases that name hazardous energy without saying which kind. Never
+# resolved automatically: kept as an ambiguous link listing the candidates that
+# also occur in the catalogue faults for the record's machine.
+generic_hazards:
+  stored_energy:
+    phrases: [stored energy, residual energy, zero energy]
+    candidates: [H01, H05, H12, H13]
+  hazardous_energy_isolation:
+    phrases: [lockout, lock out, lockout tagout, loto, tag out, isolate the machine, isolation]
+    candidates: [H01, H02, H03, H05, H06, H08, H12]

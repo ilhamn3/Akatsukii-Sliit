@@ -235,7 +235,7 @@ def main():
         if is_fake_llm:
             print("\n*** FAKE LLM - CANNED OUTPUT - NOT REAL DIAGNOSIS ***")
         if is_stub:
-            print("*** STUB / DUMMY AGENTS - NOT REAL RESULTS - NO REAL SAFETY CHECK PERFORMED ***")
+            print("*** UPSTREAM STUB: evidence comes from the placeholder retrieval stub; steps are grounded in that stub data only ***")
             print("--- [DUMMY WORKFLOW RESULT] ---")
         else:
             print("\n--- [WORKFLOW EXECUTION RESULT] ---")
@@ -244,20 +244,39 @@ def main():
         print(f"  • Abstained:       {final_answer.abstained}")
         if final_answer.abstained:
             print(f"  • Reason:          {final_answer.abstention_reason}")
-        print(f"  • Safety Warnings: {len(final_answer.safety_warnings)} verified")
+        if final_answer.refusal:
+            print(f"  • Refusal:         {final_answer.refusal}")
+        if final_answer.escalated:
+            ticket = final_answer.escalation_ticket_id or "UNASSIGNED"
+            print(f"  • Escalated:       supervisor review required, ticket {ticket}")
+        print(f"  • Safety notes:    {len(final_answer.safety_warnings)} (rule/advisory)")
         for w in final_answer.safety_warnings:
             print(f"    - {w}")
+
+        if final_answer.failed_attempts_to_avoid:
+            print(f"  • Failed Attempts to Avoid: {len(final_answer.failed_attempts_to_avoid)}")
+            for fa in final_answer.failed_attempts_to_avoid:
+                print(f"    - DO NOT REPEAT: {fa}")
+
+        evidence_map = {
+            e.get("evidence_id"): e.get("content", "")
+            for e in final_state.get("evidence", [])
+            if e.get("evidence_id")
+        }
 
         print(f"  • Action Steps:    {len(final_answer.steps)} cited steps")
         for step in final_answer.steps:
             cits = ", ".join(step.evidence_ids) if step.evidence_ids else "None"
             print(f"    {step.step_number}. {step.instruction} [Citations: {cits}]")
+            for eid in step.evidence_ids:
+                if eid in evidence_map:
+                    print(f"       ↳ [Grounded in {eid}]: \"{evidence_map[eid]}\"")
 
         print(f"\n[*] Trace ID:       {final_answer.trace_id}")
         print(f"[*] Audit Log:      {DEFAULT_LOG_PATH.resolve()}")
 
         if is_stub:
-            print("*** STUB / DUMMY AGENTS - NOT REAL RESULTS - NO REAL SAFETY CHECK PERFORMED ***")
+            print("*** UPSTREAM STUB: evidence comes from the placeholder retrieval stub; steps are grounded in that stub data only ***")
         if is_fake_llm:
             print("*** FAKE LLM - CANNED OUTPUT - NOT REAL DIAGNOSIS ***")
 

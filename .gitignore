@@ -49,6 +49,7 @@ venv.bak/
 *.db-wal
 
 # Vector databases & local model caches
+.factory_memory/
 chroma_data/
 faiss_index/
 .chroma/

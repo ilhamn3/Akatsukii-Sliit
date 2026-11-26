@@ -3,10 +3,21 @@
 # ==============================================================================
 
 system:
+  retrieval_backend: "real"
   safety_max_revision_loops: 2
   confidence_threshold_review: 0.75
+  # A3 semantic near-duplicate warning (symptom cosine, same machine label). Uncalibrated.
+  duplicate_similarity_threshold: 0.90
   abstention_similarity_threshold: 0.55
   log_path: "logs/audit_trace.jsonl"
+
+# Agent 6 hybrid retrieval (K6). score = 1 - (1-cosine)(1-graph_weight*graph)(1-asset_weight*asset):
+# graph/asset evidence only adds support, so the abstention threshold stays on the cosine scale.
+# Development defaults chosen before evaluation; not tuned on any test data.
+retrieval:
+  k: 3
+  graph_weight: 0.5
+  asset_weight: 0.1
 
 conflict_ranking_weights:
   outcome_worked: 0.40
@@ -31,14 +42,56 @@ pipelines:
         stub: false
         order: 1
 
-      - name: "DummySafetyAgent"
-        role: "Safety verification and veto loop"
+      - name: "RetrievalNode"
+        role: "Historical repair evidence retrieval"
         pipeline: "B"
-        module: "project.core.stubs.dummy_agents"
-        class: "DummySafetyAgent"
+        module: "project.core.stubs.retrieval_node"
+        class: "RetrievalNode"
         enabled: true
-        stub: true
+        stub: false
         order: 2
+
+      - name: "OrchestratorPlan"
+        role: "Orchestration and repair step synthesis (plan phase)"
+        pipeline: "B"
+        module: "project.agents.a8_orchestrator"
+        class: "OrchestratorAgent"
+        params:
+          phase: "plan"
+        enabled: true
+        stub: false
+        order: 3
+
+      - name: "SafetyAgent"
+        role: "Deterministic safety rule verification and LLM oversight"
+        pipeline: "B"
+        module: "project.agents.a7_safety"
+        class: "SafetyAgent"
+        enabled: true
+        stub: false
+        order: 4
+
+      - name: "OrchestratorRevise"
+        role: "Orchestration and repair step revision (revise phase)"
+        pipeline: "B"
+        module: "project.agents.a8_orchestrator"
+        class: "OrchestratorAgent"
+        params:
+          phase: "revise"
+        enabled: true
+        stub: false
+        order: 5
+
+      - name: "OrchestratorFinalize"
+        role: "Orchestration and final answer delivery (finalize phase)"
+        pipeline: "B"
+        module: "project.agents.a8_orchestrator"
+        class: "OrchestratorAgent"
+        params:
+          phase: "finalize"
+        enabled: true
+        stub: false
+        order: 6
 
     # Graph edge definitions (src -> dst). Use '__end__' to terminate.
     # Conditional routing: specify condition: "check_clarification", on_true, on_false
@@ -46,11 +99,32 @@ pipelines:
       - from: "DiagnosticAgent"
         condition: "check_clarification"
         on_true: "__end__"
-        on_false: "DummySafetyAgent"
-      - from: "DummySafetyAgent"
+        on_false: "RetrievalNode"
+
+      - from: "RetrievalNode"
+        to: "OrchestratorPlan"
+
+      - from: "OrchestratorPlan"
+        condition: "check_abstention"
+        on_true: "OrchestratorFinalize"
+        on_false: "SafetyAgent"
+
+      - from: "SafetyAgent"
+        condition: "check_safety_verdict"
+        on_approve: "OrchestratorFinalize"
+        on_revise: "OrchestratorRevise"
+        on_exhausted: "OrchestratorFinalize"
+
+      - from: "OrchestratorRevise"
+        to: "SafetyAgent"
+
+      - from: "OrchestratorFinalize"
         to: "__end__"
 
-  # Pipeline A currently ends after capture; extraction/validation follow in K2/K4.
+  # Pipeline A: capture -> unverified draft -> A3 validation into the human review queue.
+  # Only ReviewQueue.approve() publishes verified episodes, through A4 GraphAgent
+  # (project.agents.a4_graph), which runs at approval time rather than as a node here.
+  # So this pipeline lists 3 nodes, but A4 is still a real, traced agent (docs/Workflow.md).
   A:
     name: "Ingestion Pipeline"
     entrypoint: "CaptureAgent"
@@ -60,6 +134,20 @@ pipelines:
         class: "CaptureAgent"
         enabled: true
         stub: false
+      - name: "ExtractionAgent"
+        module: "project.agents.a2_extraction"
+        class: "ExtractionAgent"
+        enabled: true
+        stub: false
+      - name: "ValidationAgent"
+        module: "project.agents.a3_validation"
+        class: "ValidationAgent"
+        enabled: true
+        stub: false
     edges:
       - from: "CaptureAgent"
+        to: "ExtractionAgent"
+      - from: "ExtractionAgent"
+        to: "ValidationAgent"
+      - from: "ValidationAgent"
         to: "__end__"

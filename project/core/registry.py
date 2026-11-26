@@ -6,6 +6,7 @@ class and edge definitions in YAML—no graph code edits required.
 """
 
 import importlib
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import yaml
@@ -29,12 +30,20 @@ def instantiate_agent(agent_cfg: Dict[str, Any]) -> BaseAgent:
     """Dynamically load and instantiate an agent class defined in config.yaml."""
     module_name = agent_cfg["module"]
     class_name = agent_cfg["class"]
+    params = agent_cfg.get("params", {})
+    name = agent_cfg.get("name")
 
     try:
         mod = importlib.import_module(module_name)
         cls = getattr(mod, class_name)
-        agent = cls()
-        if agent_cfg.get("stub", False) or "stubs" in module_name:
+        init_params = dict(params)
+        if name and "name" not in init_params:
+            import inspect
+            sig = inspect.signature(cls.__init__)
+            if "name" in sig.parameters:
+                init_params["name"] = name
+        agent = cls(**init_params)
+        if agent_cfg.get("stub", False) or ("stubs" in module_name and class_name != "RetrievalNode"):
             agent.is_stub = True
         return agent
     except (ImportError, AttributeError) as e:
@@ -51,9 +60,17 @@ def is_pipeline_stub(
     """Check if the specified pipeline contains any stub / mock agents."""
     cfg = config_override if config_override is not None else load_config(config_path)
     pipe_cfg = cfg.get("pipelines", {}).get(pipeline, {})
+    retrieval_backend = (
+        "stub"
+        if os.getenv("FACTORY_STUB_RETRIEVAL") == "1"
+        else cfg.get("system", {}).get("retrieval_backend", "real")
+    )
     for a in pipe_cfg.get("agents", []):
         if a.get("enabled", True):
-            if a.get("stub", False) or "stubs" in a.get("module", ""):
+            if a.get("class") == "RetrievalNode":
+                if a.get("stub", False) or retrieval_backend == "stub":
+                    return True
+            elif a.get("stub", False) or "stubs" in a.get("module", ""):
                 return True
     return False
 
@@ -127,6 +144,50 @@ def build_graph(
                     {
                         "clarify": true_target,
                         "continue": false_target,
+                    },
+                )
+            elif cond_type == "check_abstention":
+                raw_true = edge.get("on_true", "__end__")
+                raw_false = edge.get("on_false", "__end__")
+                true_target = END if raw_true in ("__end__", "END") else raw_true
+                false_target = END if raw_false in ("__end__", "END") else raw_false
+
+                def route_abstention(state: BlackboardState) -> str:
+                    return "abstain" if state.get("abstained") else "proceed"
+
+                builder.add_conditional_edges(
+                    src,
+                    route_abstention,
+                    {
+                        "abstain": true_target,
+                        "proceed": false_target,
+                    },
+                )
+            elif cond_type == "check_safety_verdict":
+                raw_approve = edge.get("on_approve", "__end__")
+                raw_revise = edge.get("on_revise", "__end__")
+                raw_exhausted = edge.get("on_exhausted", "__end__")
+                max_loops = int(cfg.get("system", {}).get("safety_max_revision_loops", 2))
+
+                approve_target = END if raw_approve in ("__end__", "END") else raw_approve
+                revise_target = END if raw_revise in ("__end__", "END") else raw_revise
+                exhausted_target = END if raw_exhausted in ("__end__", "END") else raw_exhausted
+
+                def route_safety(state: BlackboardState) -> str:
+                    if state.get("safety_approved"):
+                        return "approve"
+                    loop_count = int(state.get("safety_loop_count", 0))
+                    if loop_count < max_loops and not state.get("escalated_to_supervisor"):
+                        return "revise"
+                    return "exhausted"
+
+                builder.add_conditional_edges(
+                    src,
+                    route_safety,
+                    {
+                        "approve": approve_target,
+                        "revise": revise_target,
+                        "exhausted": exhausted_target,
                     },
                 )
         else:
