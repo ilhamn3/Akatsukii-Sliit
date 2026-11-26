@@ -237,6 +237,30 @@ def test_rate_limit_stops_the_run_and_blocks_comparison(monkeypatch, tmp_path, d
         km.compare_reports(good, hit)
 
 
+def test_wait_on_rate_limit_waits_as_suggested_then_continues(tmp_path, data):
+    assert km.retry_after_seconds("Please try again in 20m0.96s.") == pytest.approx(1205.96)
+    assert km.retry_after_seconds("try again in 2m56.688s") == pytest.approx(181.688)
+    assert km.retry_after_seconds("no hint here") == 300.0
+    limited = RuntimeError("Error code: 429 - Rate limit reached ... Please try again in 1m0s.")
+    good = scripted_client(data).generate_structured.return_value
+    client = Mock()
+    client.model_name = "test-quota"
+    client.last_token_count = 1234
+    client.generate_structured.side_effect = [limited, good]
+    sleeps = []
+    rows = km.run_extraction(["EP-0002"], data, tmp_path / "p.jsonl", client=client,
+                             max_wait_seconds=600, sleep=sleeps.append, log=lambda m: None)
+    assert sleeps == [pytest.approx(65.0)] and rows[0]["error"] is None and rows[0]["tokens"] == 1234
+    # Budget exhausted: stop with a rate-limit error after recording the failure.
+    stuck = Mock()
+    stuck.model_name = "test-quota"
+    stuck.generate_structured.side_effect = limited
+    with pytest.raises(km.ProviderRateLimitError):
+        km.run_extraction(["EP-0002"], data, tmp_path / "q.jsonl", client=stuck,
+                          max_wait_seconds=100, sleep=sleeps.append, log=lambda m: None)
+    assert len(sleeps) == 2  # One 65 s wait fit the 100 s budget, the next did not.
+
+
 def test_v5_separates_clean_values_from_exact_quotes():
     text = (km.ROOT / "project/core/prompts/extraction_v5.md").read_text(encoding="utf-8")
     assert "A value is clean" in text and "A quote is exact" in text

@@ -371,37 +371,56 @@ def failure_kind(error: str | None) -> str | None:
     return "provider" if (_PROVIDER_FAILURE.search(error) or _AUTH_ERROR.search(error)) else "output"
 
 
+_RETRY_AFTER = re.compile(r"try again in\s+(?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)?", re.IGNORECASE)
+
+
+def retry_after_seconds(error: str, default: float = 300.0) -> float:
+    """Wait suggested by the provider ("Please try again in 20m0.96s"), plus a margin."""
+    match = _RETRY_AFTER.search(error or "")
+    if not match or not any(match.groups()):
+        return default
+    hours, minutes, seconds = (float(g) if g else 0.0 for g in match.groups())
+    return hours * 3600 + minutes * 60 + seconds + 5.0
+
+
 def run_extraction(episode_ids: list[str], data: dict, predictions_path: Path, client=None,
-                   *, retry_errors: bool = False) -> list[dict]:
+                   *, retry_errors: bool = False, max_wait_seconds: float = 0.0,
+                   sleep=None, log=None) -> list[dict]:
     """Run Agent 2 on each narrative; append results so an interrupted run resumes.
 
     The last row per episode wins. With retry_errors, episodes whose last attempt
     failed (e.g. a provider timeout) are attempted again; otherwise a failure is
-    kept and scored as a miss.
+    kept and scored as a miss. With max_wait_seconds > 0, a rate-limited episode
+    is retried after the wait the provider suggests, until the total waiting
+    budget is spent; then the run stops as without waiting.
     """
+    import time
     from project.agents.a2_extraction import ExtractionAgent
     from project.core.state import create_initial_state
+    sleep = sleep or time.sleep
+    log = log or (lambda message: print(message, file=sys.stderr, flush=True))
     done = {r["episode_id"]: r for r in _jsonl(predictions_path)} if predictions_path.exists() else {}
     predictions_path.parent.mkdir(parents=True, exist_ok=True)
     agent = ExtractionAgent(llm_client=client)
+    waited = 0.0
     with predictions_path.open("a", encoding="utf-8") as out:
         for eid in episode_ids:
             if eid in done and not (retry_errors and done[eid].get("error")):
                 continue
-            state = create_initial_state("", trace_id=f"TR-K7-{eid}")
-            state["capture_result"] = narrative_capture(data["narratives"][eid])
-            result = agent.run(state)
-            draft = result.get("draft_record")
-            row = {"episode_id": eid, "model": draft["model"] if draft else agent.llm_name,
-                   "prompt_version": draft["prompt_version"] if draft else None,
-                   "prediction": prediction_from_draft(draft) if draft else None,
-                   "draft": draft, "error": None if draft else "; ".join(result.get("errors") or ["no draft"]),
-                   # For quota budgeting; a failed call leaves the client's previous count.
-                   "tokens": _tokens(client) if draft else None}
-            row["failure_kind"] = failure_kind(row["error"])
-            out.write(json.dumps(row) + "\n")
-            out.flush()
-            done[eid] = row
+            while True:
+                row = _extract_one(agent, eid, data, client, create_initial_state)
+                out.write(json.dumps(row) + "\n")
+                out.flush()
+                done[eid] = row
+                if not (row["error"] and _RATE_LIMIT.search(row["error"])) or _AUTH_ERROR.search(row["error"]):
+                    break
+                wait = retry_after_seconds(row["error"])
+                if waited + wait > max_wait_seconds:
+                    break
+                log(f"Rate limited on {eid}; waiting {wait / 60:.1f} min as the provider suggests "
+                    f"({(max_wait_seconds - waited - wait) / 60:.0f} min of waiting budget left)...")
+                sleep(wait)
+                waited += wait
             # Stop instead of burning retries on every episode; rows are kept and
             # re-run later with --retry-errors once the key/quota is fixed.
             if row["error"] and _AUTH_ERROR.search(row["error"]):
@@ -409,6 +428,21 @@ def run_extraction(episode_ids: list[str], data: dict, predictions_path: Path, c
             if row["error"] and _RATE_LIMIT.search(row["error"]):
                 raise ProviderRateLimitError(f"Provider rate limit/quota reached on {eid}: {row['error'][-160:]}")
     return [done[eid] for eid in episode_ids]
+
+
+def _extract_one(agent, eid, data, client, create_initial_state):
+    state = create_initial_state("", trace_id=f"TR-K7-{eid}")
+    state["capture_result"] = narrative_capture(data["narratives"][eid])
+    result = agent.run(state)
+    draft = result.get("draft_record")
+    row = {"episode_id": eid, "model": draft["model"] if draft else agent.llm_name,
+           "prompt_version": draft["prompt_version"] if draft else None,
+           "prediction": prediction_from_draft(draft) if draft else None,
+           "draft": draft, "error": None if draft else "; ".join(result.get("errors") or ["no draft"]),
+           # For quota budgeting; a failed call leaves the client's previous count.
+           "tokens": _tokens(client) if draft else None}
+    row["failure_kind"] = failure_kind(row["error"])
+    return row
 
 
 def main(argv=None):
@@ -420,6 +454,9 @@ def main(argv=None):
     run.add_argument("--episodes", nargs="*", help="Explicit episode IDs instead of a split")
     run.add_argument("--output-dir", default=str(ROOT / "logs" / "extraction_eval"))
     run.add_argument("--retry-errors", action="store_true", help="Re-run episodes whose last attempt failed")
+    run.add_argument("--wait-on-rate-limit", type=float, default=0, metavar="MINUTES",
+                     help="On a rate limit, wait as the provider suggests and continue, up to this many "
+                          "minutes of waiting in total (0 = stop immediately)")
     score = sub.add_parser("score", help="Score an existing predictions JSONL")
     score.add_argument("--predictions", required=True)
     score.add_argument("--output")
@@ -453,8 +490,11 @@ def main(argv=None):
             prompt = prompt_path().stem  # EXTRACTION_PROMPT; part of every file name so
             out_dir = Path(args.output_dir)  # resuming never mixes prompt versions.
             label = f"{'custom' if args.episodes else args.split}_{prompt}"
+            if not 0 <= args.wait_on_rate_limit <= 24 * 60:
+                raise ValueError("--wait-on-rate-limit must be between 0 and 1440 minutes")
             preds = run_extraction(ids, data, out_dir / f"predictions_{label}.jsonl", client=client,
-                                   retry_errors=args.retry_errors)
+                                   retry_errors=args.retry_errors,
+                                   max_wait_seconds=args.wait_on_rate_limit * 60)
             if preds and all(p.get("error") for p in preds):
                 raise ValueError("Every episode failed; no metrics written. Fix the provider and re-run "
                                  "with --retry-errors (see the error column in the predictions file)")
