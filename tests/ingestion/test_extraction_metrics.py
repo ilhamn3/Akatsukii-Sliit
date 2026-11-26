@@ -149,7 +149,7 @@ def test_rejected_key_stops_the_run_without_metrics(monkeypatch, tmp_path, data)
     assert km.main(["run", "--episodes", *ids, "--output-dir", str(tmp_path)]) == 2
     assert client.generate_structured.call_count == 1  # Stopped after the first rejection.
     assert not list(tmp_path.glob("extraction_metrics_*.json"))
-    rows = [json.loads(l) for l in (tmp_path / "predictions_custom_extraction_v3.jsonl").read_text().splitlines()]
+    rows = [json.loads(l) for l in (tmp_path / "predictions_custom_extraction_v5.jsonl").read_text().splitlines()]
     assert len(rows) == 1 and "401" in rows[0]["error"]
 
 
@@ -164,7 +164,7 @@ def test_run_with_every_episode_failing_writes_no_metrics(monkeypatch, tmp_path,
 
 def test_prompt_version_is_selectable_recorded_and_kept_apart(monkeypatch, tmp_path, data):
     from project.agents import a2_extraction as a2
-    assert a2.prompt_path().stem == "extraction_v3"  # Default unchanged until dev results justify v4.
+    assert a2.prompt_path().stem == "extraction_v5"  # Default chosen from the dev-split comparison.
     monkeypatch.setenv("EXTRACTION_PROMPT", "extraction_v4")
     client = scripted_client(data)
     [row] = km.run_extraction(["EP-0002"], data, tmp_path / "p.jsonl", client=client)
@@ -226,7 +226,7 @@ def test_rate_limit_stops_the_run_and_blocks_comparison(monkeypatch, tmp_path, d
     ids = km.select_episodes(data, "dev")[:3]
     assert km.main(["run", "--episodes", *ids, "--output-dir", str(tmp_path)]) == 3
     assert client.generate_structured.call_count == 1 and not list(tmp_path.glob("extraction_metrics_*.json"))
-    [row] = [json.loads(l) for l in (tmp_path / "predictions_custom_extraction_v3.jsonl").read_text().splitlines()]
+    [row] = [json.loads(l) for l in (tmp_path / "predictions_custom_extraction_v5.jsonl").read_text().splitlines()]
     assert row["failure_kind"] == "provider" and row["tokens"] is None
     gold = [{"episode_id": e, "prediction": km.gold_for(e, data)} for e in ids]
     partial = [{**g, "prediction": None, "error": row["error"]} if g["episode_id"] == ids[0] else g for g in gold]

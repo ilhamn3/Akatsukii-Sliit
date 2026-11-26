@@ -207,17 +207,45 @@ These findings come from inspecting the eval misses. The reported numbers above 
 
 Goal: fix the root causes v3 left empty, using **only** the 12 dev episodes. The eval
 split stays untouched until a prompt is final. The prompt is selected with
-`EXTRACTION_PROMPT`; the default is still `extraction_v3`. Every prompt version stays
-fixed once it has been run, so recorded results always name an exact prompt.
+`EXTRACTION_PROMPT`; the default is now `extraction_v5` (set `extraction_v3` to
+reproduce the earlier results). Every prompt version stays fixed once it has been run,
+so recorded results always name an exact prompt.
 
 | Prompt | Change | Dev result |
 |---|---|---|
 | v3 (baseline, with the K8 retry) | none | micro F1 **0.887** (P 0.870, R 0.905), root cause F1 0.957, 0 failures |
 | v4 | Any wording presenting a cause as the finding counts ("problem was", "turned out", "Cause:"); use the corrected statement after self-corrections; quotes must be exact. Unstated or hedged causes stay null | **Invalid run.** 8 of 12 calls hit Groq's free-tier daily token limit (429, 200k tokens/day). On the 4 episodes both prompts completed, root cause improved (EP-0003: null -> "worn check ring") but steps fell (0.92 -> 0.74) |
-| v5 | v4, plus: values are cleaned of fillers while quotes stay exact (v4 had leaked "you know", "uh" into values); an action that didn't help goes only in failed_attempts, never also in steps | not run yet |
+| v5 | v4, plus: values are cleaned of fillers while quotes stay exact (v4 had leaked "you know", "uh" into values); an action that didn't help goes only in failed_attempts, never also in steps | micro F1 **0.874**, root cause F1 **1.000**, 0 failures, all 12 episodes (27 Nov 2026) |
 
 The v4 step losses came from two general issues, not episode-specific wording: fillers
 copied into values, and a failed attempt repeated as a step. v5 addresses both.
+
+**v5 vs v3 on dev** (`compare`, same 12 episodes, same model, no failures in either run):
+
+| Field | v3 | v5 | Delta |
+|---|---|---|---|
+| root_cause | 0.957 | 1.000 | +0.043 |
+| steps | 0.943 | 0.935 | -0.009 |
+| symptoms | 0.745 | 0.720 | -0.025 |
+| tools | 0.966 | 0.933 | -0.032 |
+| parts | 0.800 | 0.750 | -0.050 |
+| machine_type, failed_attempts, safety_warnings | unchanged | unchanged | 0 |
+| micro F1 | 0.887 | 0.874 | -0.014 |
+
+- **Root cause (the goal):** EP-0003 was null under v3 and is now "worn check ring";
+  EP-0004, EP-0005 and EP-0025 match the stated diagnosis more closely.
+- **Failed attempts stay out of steps:** EP-0025's "raised the setpoint" appears only in
+  failed_attempts, and v4's filler leaks are gone.
+- **The losses are single items spread over episodes, not a repeated pattern:** two
+  logistics actions listed as steps ("grab drive chain from stores", "grab thermocouple
+  from stores"), one extra tool (EP-0006 "feeler gauge"), one extra part (EP-0009 "purge
+  compound"), one shortened part name ("check ring" vs "check ring set"), and symptoms
+  split or merged differently in EP-0001 and EP-0012. With one run of 12 episodes, part of
+  this is likely run-to-run variation; it was not tuned away, to avoid fitting the dev set.
+
+**Decision:** v5 is the default, because it fixes the targeted root-cause misses and
+the remaining differences are small and unpatterned. This is a dev-split result only.
+It is not the reported benchmark number.
 
 The example causes in v4/v5 were chosen so they don't resemble any catalogue root
 cause (token Dice < 0.5, enforced by a test). My first draft's examples were too close
@@ -230,11 +258,12 @@ to real causes and were replaced before any run.
 - A rate limit now stops the run, like a rejected key (exit code 3). Finished episodes
   are kept for `--retry-errors`.
 - Each prediction row records the call's `tokens`, for budgeting the provider quota.
+- `run --wait-on-rate-limit MINUTES` waits as long as the provider suggests, retries the
+  same episode and continues, up to that total waiting budget (default 0: stop at once).
 
-**Next:**
-1. Run v5 on dev and `compare` it with v3's dev run.
-2. Only if v5 improves root cause without losing more elsewhere, make it the default
-   and run the eval split **once** for the reported number.
+**Next:** run the eval split **once** with v5 for the reported number, ideally on a
+fresh quota day (50 episodes, about 200k tokens), and report it beside the v3 eval run.
+No further prompt changes are made from eval results.
 
 Each episode costs roughly 3k tokens. Groq's free tier allows 200k tokens per day, so
 dev (12) and eval (50) runs may need separate days, or the team's agreed provider

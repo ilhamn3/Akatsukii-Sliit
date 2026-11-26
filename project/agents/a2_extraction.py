@@ -16,12 +16,13 @@ from project.core.llm import FakeLLM, get_llm_client
 from project.core.state import create_initial_state
 
 PROMPTS = Path(__file__).resolve().parents[1] / "core" / "prompts"
-DEFAULT_PROMPT = "extraction_v3"
+# v5 became the default after the dev-split comparison with v3 (docs/EXTRACTION_METRICS.md).
+DEFAULT_PROMPT = "extraction_v5"
 PROMPT = PROMPTS / f"{DEFAULT_PROMPT}.md"  # Kept for callers that read the default prompt.
 
 
 def prompt_path() -> Path:
-    """Prompt selected with EXTRACTION_PROMPT (e.g. extraction_v4); default v3.
+    """Prompt selected with EXTRACTION_PROMPT (e.g. extraction_v3); default v5.
 
     The version is recorded in every draft, so results always name their prompt.
     """
