@@ -14,6 +14,8 @@ from project.core.registry import load_config
 from project.core.state import BlackboardState
 from project.core.trace import TraceLogger
 
+_RETRIEVER_CACHE: Dict[Any, Any] = {}
+
 
 class RetrievalNode(BaseAgent):
     """Retrieval Agent node for Pipeline B."""
@@ -80,7 +82,10 @@ class RetrievalNode(BaseAgent):
                     retriever = self._retriever
                 else:
                     from project.agents.a6_retrieval import HybridRetriever
-                    retriever = HybridRetriever()
+                    retriever = _RETRIEVER_CACHE.get(HybridRetriever)
+                    if retriever is None:
+                        retriever = HybridRetriever()
+                        _RETRIEVER_CACHE[HybridRetriever] = retriever
                 evidence_items = retriever.retrieve(
                     query,
                     machine_arg,

@@ -53,9 +53,18 @@ read. Changing an episode's primary evidence ID is rejected, as is reusing it fo
 different episode. A different embedding identity/dimension requires an explicit
 migration/reindex; there is no silent mixing of vector spaces.
 
-This deliberately favors correctness for the project's small dataset: each read
-loads a snapshot, each write rebuilds projections, and embedding happens under the
-write lock. This is not a high-throughput multi-writer service. SQLite lock timeouts
+Since the #12 review follow-up, SQLite also keeps a `revision` counter that is bumped
+in the same transaction as every write. Parsed episodes and the FAISS and graph
+projections are cached per process, keyed by store path and embedding model. Each
+read checks the revision in the same read transaction as the data, and rebuilds only
+when it changed, so a write from any process invalidates every cache. Writes validate
+only the new episode's projection, because projections are built per episode. Public
+reads still return independent copies. At 2,000 records:
+- writes take ~13 ms each (they were ~444 ms and rising);
+- queries take ~40-70 ms steady, plus a one-time rebuild of about 2.6 s after a write.
+
+See docs/RETRIEVAL.md for the details. Embedding still happens under the write lock;
+this is not a high-throughput multi-writer service. SQLite lock timeouts
 surface as errors; K8 owns broader operational retry policy. Audit events for writes
 commit with the record. Failed writes record an error type after rollback when the
 database is available. Read events record snapshot access, not downstream completion.
@@ -79,7 +88,11 @@ events = store.audit_events()
 
 `get` returns a VerifiedEpisode or None; `by_machine` returns VerifiedEpisodes.
 `snapshot(trace_id=...)` (added for K6) returns one consistent `(episodes, vectors)`
-read; the K6 `HybridRetriever` in docs/RETRIEVAL.md implements the shared contract.
+read. `projection(trace_id=...)` returns the shared read-only cached projection
+(episodes, `index()`, `graph()`, `memo()`) that the K6 `HybridRetriever` uses; see
+docs/RETRIEVAL.md for the shared contract.
+`storage_root()` falls back to a git-ignored repo-local `.factory_memory/` when
+`FACTORY_MEMORY_STORAGE` is unset (added by Ilham in #20); the E: script still overrides it.
 Vector/graph queries return the shared Evidence schema with source type, episode ID,
 primary evidence ID, full repair record, failed attempts, outcome and provenance.
 Machine filtering precedes top-k selection. Graph labels match exactly after

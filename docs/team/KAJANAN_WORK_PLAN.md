@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 0 / 20 points · 0% complete**
+**Overall: 3 / 20 points · 15% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP6 | User interface | 8 | 0 | 0% |
+| WP6 | User interface | 8 | 3 | 38% |
 | WP7 | Single-agent baseline and benchmark | 9 | 0 | 0% |
 | WP9 | Demo and slides (Kajanan's part) | 3 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -27,10 +27,10 @@
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 6.1 | Streamlit skeleton and chat page | 3 | 22 Nov | 0% |
-| 6.2 | Cited answers display (evidence links to source repairs) | 1 | 24 Nov | 0% |
-| 6.3 | Technician review-queue page | 2 | 24 Nov | 0% |
-| 6.4 | Trace viewer showing every agent handoff | 2 | 26 Nov | 0% |
+| 6.1 | Streamlit skeleton and chat page | 3 | 22 Nov | 60% |
+| 6.2 | Cited answers display (evidence links to source repairs) | 1 | 24 Nov | 25% |
+| 6.3 | Technician review-queue page | 2 | 24 Nov | 25% |
+| 6.4 | Trace viewer showing every agent handoff | 2 | 26 Nov | 25% |
 
 #### WP7 – Single-agent baseline and benchmark (9 pts)
 
@@ -166,6 +166,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
-|   |   |   |   |   |   |   |
+| #10 | 25 Nov | [WP6] Streamlit UI skeleton and pages on mock data | 6.1 (0->60%), 6.2-6.4 (0->25%) | Chat, mock citations, review queue, and trace viewer | 0% -> 15% | Tharshanth A |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
