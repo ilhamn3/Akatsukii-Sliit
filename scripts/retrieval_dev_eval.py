@@ -1,16 +1,18 @@
-"""K6 development retrieval check on catalogue-derived SYNTHETIC verified episodes.
+"""K6 retrieval evaluation on the DEV split only (never the frozen test split).
 
-Builds one synthetic verified episode per fault in the team fault catalogue
-(symptoms + alarm codes, root cause, valid fixes, wrong fixes as failed attempts,
-hazard controls) and writes them through Agent 4 into a dedicated store. It then
-queries each fault's differently worded `lay_description` and reports hit@1,
-hit@3 and MRR for vector-only, graph-only and hybrid scoring, within the machine
-and across all machines.
+Corpus: an "oracle store" of the 400 synthetic episodes' ground-truth RepairRecords
+(project/data/episodes/ground_truth.jsonl), written through Agent 4 into a
+dedicated store. This measures retrieval in isolation from extraction errors.
+It is for this component check only and is never used by the benchmark system,
+because that file is scoring-only data for agents.
 
-The retrieval weights are the config defaults, fixed before this check, and
-nothing is tuned against it. This is a self-consistency smoke check on synthetic
-data, NOT a benchmark: the frozen test set is never used. The synthetic episodes
-name a loader, not a human reviewer.
+Queries: project/data/test_set/dev_queries.jsonl, query text only; that is all a
+system under test may see. dev_gold.jsonl is read only to score results: a hit
+is any episode in `supporting_episode_ids` (episodes with the gold fault). The
+machine is either not given, or detected from the query text with the K5 resolver.
+
+Weights are the config defaults and are not tuned here; test_queries.jsonl and
+test_gold.jsonl are refused.
 
     python -m scripts.retrieval_dev_eval --local-files-only
 """
@@ -21,15 +23,25 @@ import json
 from pathlib import Path
 import sys
 
-from project.agents.a4_graph import FAULTS, HAZARDS, GraphAgent
+from project.agents.a4_graph import GraphAgent, default_resolver
 from project.agents.a6_retrieval import HybridRetriever
 from project.store.models import VerifiedEpisode
 
 ROOT = Path(__file__).resolve().parents[1]
-DEV_QUERIES = ROOT / "tests" / "agents" / "dev_queries.json"
+TEST_SET = ROOT / "project" / "data" / "test_set"
+GROUND_TRUTH = ROOT / "project" / "data" / "episodes" / "ground_truth.jsonl"
+MODES = ("vector_only", "graph_only", "hybrid")
+MACHINE_MODES = ("none", "detected_from_query")
+
+
+def _jsonl(path: Path) -> list[dict]:
+    if path.name.startswith("test_"):
+        raise ValueError(f"Refusing to read the frozen test split: {path.name}")
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
 def catalogue_episodes(faults: list[dict], hazards: list[dict]) -> list[VerifiedEpisode]:
+    """One synthetic verified episode per catalogue fault (unit-test fixture)."""
     controls = {h["hazard_id"]: h["required_control"] for h in hazards}
     episodes = []
     for fault in faults:
@@ -61,28 +73,66 @@ def catalogue_episodes(faults: list[dict], hazards: list[dict]) -> list[Verified
     return episodes
 
 
-def evaluate(store, faults: list[dict], *, trace_id="TR-RETRIEVAL-DEV") -> dict:
-    modes = {"vector_only": HybridRetriever(store, graph_weight=0.0, asset_weight=0.0),
-             "graph_only": HybridRetriever(store, use_vector=False),
-             "hybrid": HybridRetriever(store)}
-    report = {"queries": len(faults), "weights": {"graph": modes["hybrid"].graph_weight,
-                                                 "asset": modes["hybrid"].asset_weight}, "results": {}}
-    for scope in ("within_machine", "all_machines"):
-        for name, retriever in modes.items():
-            ranks = []
-            for fault in faults:
-                hits = retriever.retrieve(fault["lay_description"],
-                                          fault["machine_type"] if scope == "within_machine" else None,
-                                          k=len(faults), trace_id=trace_id)
-                ids = [h.episode_id for h in hits]
-                gold = f"SYN-CAT-{fault['fault_id']}"
-                ranks.append(ids.index(gold) + 1 if gold in ids else None)
+def ground_truth_episodes(rows: list[dict]) -> list[VerifiedEpisode]:
+    """Oracle store: ground-truth records of the synthetic episodes (eval only)."""
+    episodes = []
+    for row in rows:
+        record = row["record"]
+        episodes.append(VerifiedEpisode.model_validate({
+            "episode_id": row["episode_id"], "status": "verified", "record": record,
+            "verified_by": "synthetic-ground-truth-loader (oracle store for retrieval evaluation; not a human review)",
+            "verified_at": "2026-11-25T00:00:00+00:00", "outcome": None,
+            "provenance": {
+                "capture_id": f"CAP-{row['episode_id']}", "source_type": record["source"],
+                "source_path": "project/data/episodes/ground_truth.jsonl",
+                "source_sha256": hashlib.sha256(json.dumps(record, sort_keys=True).encode()).hexdigest(),
+                "evidence_spans": [{"field_path": "symptoms.0", "evidence_id": record["evidence_id"],
+                                    "quote": record["symptoms"][0], "start_seconds": 0, "end_seconds": 0}],
+            },
+        }))
+    return episodes
+
+
+def dev_cases() -> list[dict]:
+    gold = {g["query_id"]: g for g in _jsonl(TEST_SET / "dev_gold.jsonl")}
+    return [{"query_id": q["query_id"], "tier": q["tier"], "query": q["query"],
+             "gold": set(gold[q["query_id"]]["supporting_episode_ids"]),
+             "gold_machine": gold[q["query_id"]]["machine_type"]}
+            for q in _jsonl(TEST_SET / "dev_queries.jsonl")]
+
+
+def evaluate(store, cases: list[dict], *, depth: int = 10) -> dict:
+    """hit@1, hit@3, MRR@depth per retrieval mode and machine mode (computed by code)."""
+    resolver = default_resolver()
+    retrievers = {"vector_only": HybridRetriever(store, graph_weight=0.0, asset_weight=0.0),
+                  "graph_only": HybridRetriever(store, use_vector=False),
+                  "hybrid": HybridRetriever(store)}
+    scored = [c for c in cases if c["gold"]]
+    detected = {c["query_id"]: resolver.resolve_machine(c["query"]).entity_id for c in scored}
+    report = {"queries": len(cases), "scored": len(scored),
+              "weights": {"graph": retrievers["hybrid"].graph_weight, "asset": retrievers["hybrid"].asset_weight},
+              "machine_detection": {
+                  "detected": sum(v is not None for v in detected.values()),
+                  "correct": sum(detected[c["query_id"]] == c["gold_machine"] for c in scored),
+                  "wrong": sum(detected[c["query_id"]] not in (None, c["gold_machine"]) for c in scored)},
+              "results": {}}
+    for machine_mode in MACHINE_MODES:
+        for name in MODES:
+            ranks, by_tier = [], {}
+            for case in scored:
+                machine = detected[case["query_id"]] if machine_mode == "detected_from_query" else None
+                hits = retrievers[name].retrieve(case["query"], machine, k=depth, trace_id="TR-RETRIEVAL-DEV")
+                rank = next((i + 1 for i, h in enumerate(hits) if h.episode_id in case["gold"]), None)
+                ranks.append(rank)
+                by_tier.setdefault(case["tier"], []).append(rank)
             n = len(ranks)
-            report["results"][f"{scope}/{name}"] = {
-                "hit@1": round(sum(r == 1 for r in ranks) / n, 4),
-                "hit@3": round(sum(r is not None and r <= 3 for r in ranks) / n, 4),
-                "mrr": round(sum(1 / r for r in ranks if r) / n, 4),
-                "misses_at_3": [f["fault_id"] for f, r in zip(faults, ranks) if r is None or r > 3],
+            report["results"][f"{machine_mode}/{name}"] = {
+                "hit@1": round(sum(r == 1 for r in ranks) / n, 4) if n else None,
+                "hit@3": round(sum(r is not None and r <= 3 for r in ranks) / n, 4) if n else None,
+                f"mrr@{depth}": round(sum(1 / r for r in ranks if r) / n, 4) if n else None,
+                "hit@3_by_tier": {t: round(sum(r is not None and r <= 3 for r in rs) / len(rs), 4)
+                                  for t, rs in sorted(by_tier.items())},
+                "misses_at_3": [c["query_id"] for c, r in zip(scored, ranks) if r is None or r > 3],
             }
     return report
 
@@ -95,27 +145,17 @@ def main(argv=None):
     try:
         from project.store.embeddings import MiniLMEmbedder, storage_root
         from project.store.knowledge_store import KnowledgeStore
-        db = storage_root() / "retrieval-dev" / "repairs.sqlite3"
-        db.unlink(missing_ok=True)  # Dedicated synthetic store, rebuilt each run.
+        db = storage_root() / "retrieval-dev" / "oracle-dev.sqlite3"
+        db.unlink(missing_ok=True)  # Dedicated synthetic oracle store, rebuilt each run.
         store = KnowledgeStore(db, embedder=MiniLMEmbedder(local_files_only=args.local_files_only))
-        faults = json.loads(FAULTS.read_text(encoding="utf-8"))
         writer = GraphAgent(store)
-        for episode in catalogue_episodes(faults, json.loads(HAZARDS.read_text(encoding="utf-8"))):
+        for episode in ground_truth_episodes(_jsonl(GROUND_TRUTH)):
             writer.put_verified(episode, trace_id="TR-RETRIEVAL-DEV-LOAD")
-        report = {"synthetic_data_only": True, "database": str(db),
-                  "embedding_model": store.embedder.model_id, **evaluate(store, faults)}
-        hybrid = HybridRetriever(store)
-        report["dev_queries_top1"] = []  # Ilham's DEV split has no episode gold; inspection only.
-        for query in json.loads(DEV_QUERIES.read_text(encoding="utf-8"))["dev_queries"]:
-            hits = hybrid.retrieve(query["query"], query["machine_type"], k=1, trace_id="TR-RETRIEVAL-DEV-Q")
-            report["dev_queries_top1"].append({
-                "id": query["id"], "machine_type": query["machine_type"],
-                "top": hits[0].episode_id if hits else None,
-                "score": hits[0].similarity_score if hits else None,
-                "cross_machine": hits[0].metadata["retrieval"]["cross_machine"] if hits else None})
+        report = {"split": "dev", "synthetic_data_only": True, "oracle_store": True, "database": str(db),
+                  "embedding_model": store.embedder.model_id, **evaluate(store, dev_cases())}
         Path(args.output).parent.mkdir(parents=True, exist_ok=True)
         Path(args.output).write_text(json.dumps(report, indent=2), encoding="utf-8")
-        print(json.dumps({k: v for k, v in report.items() if k != "dev_queries_top1"}, indent=2))
+        print(json.dumps(report, indent=2))
         return 0
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"{type(exc).__name__}: {exc}", file=sys.stderr)

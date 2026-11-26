@@ -62,6 +62,18 @@ flowchart TD
    - Generates unique `episode_id` (e.g., `EP-CNC-0042`) and granular `evidence_id` tags (e.g., `EV-CNC-0042-S3`).
    - Inserts relational records into **SQLite**, generates dense embeddings for symptoms and fixes into **ChromaDB/FAISS**, and updates causal edges in **NetworkX** (`Component` $\xrightarrow{\text{has\_fault}}$ `Symptom` $\xrightarrow{\text{caused\_by}}$ `RootCause` $\xrightarrow{\text{resolved\_by}}$ `FixAction`).
 
+> **Implementation note: where Agents 3 and 4 run.** Pipeline A in `project/core/config.yaml`
+> registers only `CaptureAgent -> ExtractionAgent -> ValidationAgent`. Agent 4
+> (`GraphAgent`, `project/agents/a4_graph.py`) is deliberately **not** a node in that
+> graph. Nothing may reach the knowledge store before a human approves it, so A4 runs
+> when a reviewer approves an item in the review queue (`ReviewQueue.approve()`, HITL
+> Checkpoint 1), traced under that approval's trace ID. The "C >= 0.75 -> Agent 4"
+> shortcut in the diagram is not enabled: every draft is queued for a named human
+> reviewer, because the confidence score is uncalibrated (see `docs/VALIDATION_REVIEW.md`).
+> Counting registry nodes therefore understates the agents: all eight exist.
+> Pipeline A has 3 registered nodes plus A4 at approval time. Pipeline B registers
+> A5, A6 (`RetrievalNode` wrapping `HybridRetriever`), A7 and the A8 phases.
+
 ---
 
 ## 3. Pipeline B — Assistance & Knowledge Retrieval
