@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 8.2 / 20 points · 41% complete**
+**Overall: 9.8 / 20 points · 49% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP2 | Synthetic data and test set | 12 | 7.5 | 62% |
+| WP2 | Synthetic data and test set | 12 | 9 | 75% |
 | WP8 | Human baseline study | 5 | 0.8 | 15% |
 | WP9 | Documentation (Tharshanth's part) | 3 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -30,9 +30,9 @@
 | 2.1 | Fault catalogue (~40 failure modes) with hazards across 5 machine types | 3 | 23 Nov | 100% |
 | 2.2 | Seeded generator script (reproducible) | 2 | 23 Nov | 75% |
 | 2.3 | ~400 repair episodes, 12 technicians, spoken-style narratives, ground-truth labels | 2 | 24 Nov | 75% |
-| 2.4 | Audio subset for the speech-to-text path | 1 | 26 Nov | 0% |
+| 2.4 | Audio subset for the speech-to-text path | 1 | 26 Nov | 50% |
 | 2.5 | 60 held-out queries in 4 tiers, gold answers, dev split, frozen with hash | 2 | 24 Nov | 75% |
-| 2.6 | Expanded stores for scalability tests (100 / 400 / 2,000 records) | 1 | 26 Nov | 0% |
+| 2.6 | Expanded stores for scalability tests (100 / 400 / 2,000 records) | 1 | 26 Nov | 100% |
 | 2.7 | Synthetic-data disclosure text | 1 | 29 Nov | 0% |
 
 #### WP8 – Human baseline study (5 pts)
@@ -178,6 +178,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | #16 | 25 Nov | [WP2] Seeded generator, 400 episodes and narratives | 2.2 (0->75%), 2.3 (0->75%) | Seeded stdlib generator, 400 episodes from 12 simulated technicians (audio debriefs and shift logs), separate ground truth validated against RepairRecord, samples.json for hand-off, 8 tests | 11% -> 26% | Ilham MM |
 | #17 | 25 Nov | [WP2] Frozen 60-query test set and dev split | 2.5 (0->75%) | 60 test queries (20 easy / 20 medium / 10 hard / 10 adversarial) with gold answers, separate 20-query dev split, FROZEN.sha256 with --verify and an overwrite guard, no-tuning rule in README, 9 tests | 26% -> 34% | Ilham MM |
 | #18 | 25 Nov | [WP8] Consent form and human-study protocol | 8.1 (0->75%), 2.1 (75->100%) | Consent form template, full protocol (packets, session script, timing, CSV formats, anonymisation and blind-grading steps), private/ folder git-ignored. 2.1 to 100%: #6 merged and the Safety agent loads hazards.json | 34% -> 41% | Ilham MM |
-
+| #19 | 26 Nov | [WP2] Audio subset and expanded stores | 2.4 (0->50%), 2.6 (0->100%) | 12 synthetic audio clips (7.3 min, 5 machines, 6 clean / 6 with plant noise, reference transcripts); nested stores n100 / n400 / n2000 as VerifiedEpisode envelopes, all 2,500 validated against the store model; 7 tests. All three stores load through scripts/load_expanded_store.py into KnowledgeStore (100 / 400 / 2,000 rows, reload is idempotent). Pending: Agent 1 transcription check (Kavibarath) | 41% -> 49% | Ilham MM |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
