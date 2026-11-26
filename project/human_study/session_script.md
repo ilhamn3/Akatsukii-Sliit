@@ -84,6 +84,15 @@ code, packet and today's date. **No name.**
 | 6 | | | | 12 | | |
 | Note 1 | | | | Note 2 | | |
 
+## At the end of each day
+
+```powershell
+python project/human_study/build_grading.py --check
+```
+
+This only checks the files saved so far. It writes nothing, so it is safe to run between
+sessions. Fix anything it reports while the participant's session is still fresh.
+
 ## When all sessions are done
 
 ```powershell

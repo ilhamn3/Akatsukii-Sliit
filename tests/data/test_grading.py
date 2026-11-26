@@ -124,6 +124,18 @@ def test_system_refusal_and_abstention_are_visible(study, tmp_path):
     assert answers[q2]["cause_1"] == "" and "which roller squeals?" in answers[q2]["steps"]
 
 
+def test_check_only_writes_nothing(study, capsys):
+    assert bg.main(study["args"] + ["--check"]) == 0
+    assert "OK: 2 participants (P01, P02), 24 answers" in capsys.readouterr().out
+    assert not study["sheet"].exists() and not study["key"].exists()
+    assert not (study["res"] / "diagnosis_results.csv").exists()
+    path = study["res"] / "P02_packet_B.csv"
+    rows = read(path)
+    rows[0]["time_seconds"] = "two minutes"
+    write_csv(path, list(rows[0].keys()), rows)
+    assert bg.main(study["args"] + ["--check"]) == 1
+
+
 def test_refuses_to_overwrite_a_sheet(study):
     assert build(study) == 0
     assert build(study) == 1

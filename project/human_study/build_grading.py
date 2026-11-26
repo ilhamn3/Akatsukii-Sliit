@@ -16,6 +16,8 @@ Step 1, after the sessions (and once system answers exist):
           private/answer_key.csv            answer ID -> source. Git-ignored. Give it only to
                                             someone who does not grade.
 
+Between sessions, `--check` validates the sheets saved so far and writes nothing.
+
 Step 2, after grading (scores typed into the sheet; see grading/README.md for the rubric):
 
   python project/human_study/build_grading.py --unblind grading/grading_sheet.csv
@@ -375,6 +377,8 @@ def main(argv=None) -> int:
     p.add_argument("--grading", type=pathlib.Path, default=GRADING)
     p.add_argument("--seed", type=int, help="fixed shuffle (tests only; a fixed seed makes the key guessable)")
     p.add_argument("--force", action="store_true", help="overwrite an existing grading sheet and key")
+    p.add_argument("--check", action="store_true",
+                   help="only validate the filled sheets (and --system files); write nothing. Safe between sessions")
     a = p.parse_args(argv)
     try:
         if a.unblind:
@@ -392,6 +396,14 @@ def main(argv=None) -> int:
             if not name or not path or not re.fullmatch(r"[a-z0-9_]+", name):
                 raise InputError(f"--system {spec!r}: use NAME=FILE with a lowercase name like multi_agent")
             answers += load_system(name, pathlib.Path(path), gold)
+
+        if a.check:
+            codes = sorted({d["participant_code"] for d in diagnosis})
+            print(f"OK: {len(codes)} participants ({', '.join(codes)}), {len(diagnosis)} answers, "
+                  f"{len(extraction)} extraction rows, {len(answers) - len(diagnosis)} system answers. Nothing written.")
+            for w in warnings:
+                print("warning:", w)
+            return 0
 
         sheet_path, key_path = a.grading / "grading_sheet.csv", a.key
         if (sheet_path.exists() or key_path.exists()) and not a.force:
