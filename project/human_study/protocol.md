@@ -167,3 +167,19 @@ Decided by the study lead because there was not enough time for seven one-hour s
 - **Effect on results:** self-reported times are less precise than lead-timed ones. Report
   "group session, self-timed, n = 5" next to every human timing figure. Answer content and
   blind grading are unchanged.
+
+### 11a. Remote sessions (same day)
+
+No group room could be arranged, so the sessions run **remotely and individually**:
+
+- Each participant receives their folder (zip) by message, works alone at home **in one
+  sitting**, times themselves as in section 11, and sends back both CSV files unrenamed.
+- **Consent** is given by replying "I agree" to a message containing the consent form's
+  content (study, data recorded, use, rights, withdrawal deadline, the four statements). The
+  study lead keeps a screenshot of each reply in `private/` only, never in the repository or
+  team chats.
+- Codes are given in the order consent arrives (P01 first). The code list stays in `private/`.
+- Rules are stated in writing: work alone, use only the repair log, no internet search or AI
+  tools. The study lead answers questions about the instructions only.
+- **Effect on results:** in addition to self-timing, the study lead cannot see that rules were
+  followed. Report "remote, self-timed, n = X" next to every human figure. Grading is unchanged.
