@@ -49,7 +49,9 @@ class CaptureResult(CaptureModel):
     capture_id: str
     source_path: str
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    media_type: Literal["audio", "video"]
+    # "text": written/transcribed narratives (e.g. shift logs) adapted for Agent 2;
+    # they carry no timing, so their segments use 0.0 offsets (K7).
+    media_type: Literal["audio", "video", "text"]
     language: str
     text: str
     segments: List[TranscriptSegment]
