@@ -93,8 +93,11 @@ flowchart TD
      - **Residual pressure bleeding** for hydraulic and pneumatic circuits.
      - **Thermal / chemical personal protective equipment (PPE)** requirements.
    - Performs LLM-based safety verification checking whether any step violates standard OSHA / ISO 13849 machinery safety standards.
-   - **Veto Execution**: If a hazard is detected or LOTO is omitted, the agent vetoes the plan, appends an explicit revision notice, and routes back to Agent 5.
-   - **Loop Limit**: Maximum **2 revision loops** permitted. If the plan remains unsafe after 2 iterations, the system terminates automatic generation and escalates to **HITL Checkpoint 2 (Supervisor Escalation)**.
+   - **Veto Execution**: If a hazard is detected or LOTO is omitted, the agent vetoes the plan, appends an explicit revision notice, and routes back to Agent 8 (`OrchestratorRevise`).
+   - **Loop Limit & Escalation Policy (`system.llm_only_concerns_block: false`)**: Maximum **2 revision loops** permitted. After max loops:
+     - **Deterministic rule violations remaining** → `abstained=True`, `escalated=True`, `steps=[]` (supervisor ticket written to `logs/escalations.jsonl`).
+     - **LLM-only advisory safety concerns remaining** (and `llm_only_concerns_block` is `false`) → grounded steps are delivered (`abstained=False`) with all unresolved advisory concerns shown as visible warnings and `escalated=True` with a supervisor review ticket.
+     - **Determinism**: Plan, Revise, and Safety LLM calls run at `temperature=0.0` where supported by the provider.
 5. **Orchestration, Grounding & Response Generation (Agent 8)**:
    - **Abstention Policy**: If maximum retrieval similarity score is $< 0.55$, the Orchestrator refuses to hallucinate, explicitly declaring: *"Insufficient historical evidence to safely guide this repair. Please escalate to a senior technician."*
    - Otherwise, assembles the step-by-step guidance, prepends mandatory PPE/LOTO safety alerts, annotates every step with `[Evidence: EV-XXXX]`, highlights common *failed attempts* to avoid, and logs full trace to JSONL.

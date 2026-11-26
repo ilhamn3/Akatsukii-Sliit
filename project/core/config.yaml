@@ -5,6 +5,7 @@
 system:
   retrieval_backend: "real"
   safety_max_revision_loops: 2
+  llm_only_concerns_block: false
   confidence_threshold_review: 0.75
   # A3 semantic near-duplicate warning (symptom cosine, same machine label). Uncalibrated.
   duplicate_similarity_threshold: 0.90

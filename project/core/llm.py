@@ -469,6 +469,29 @@ class FakeLLM(LLMClient):
                     "reason": "Simulated FakeLLM safety check: Procedure satisfies standard safety controls.",
                 })
 
+        if response_model.__name__ == "UnsafeIntentOutput":
+            p_lower = prompt.lower()
+            shortcut_phrases = (
+                "without venting", "without locking", "skip loto", "skip locking",
+                "while running", "while it's still turning", "without blocking",
+                "without the safety blocks", "jumper the door", "without a face shield",
+                "without waiting for discharge", "pipe plug", "without gloves", "leave the puddle",
+            )
+            matched = next((ph for ph in shortcut_phrases if ph in p_lower), None)
+            if matched:
+                return response_model.model_validate({
+                    "is_shortcut_request": True,
+                    "skipped_control_description": "mandatory safety isolation / PPE / guard control",
+                    "matching_hazard_id": "H01",
+                    "risky_phrase_quote": matched,
+                })
+            return response_model.model_validate({
+                "is_shortcut_request": False,
+                "skipped_control_description": "",
+                "matching_hazard_id": None,
+                "risky_phrase_quote": "",
+            })
+
         if response_model.__name__ in ("OrchestrationPlanOutput", "OrchestratorPlanOutput"):
             import re
             eids = list(dict.fromkeys(re.findall(r"(?:EV|SYN)-[A-Za-z0-9-]+", prompt)))
