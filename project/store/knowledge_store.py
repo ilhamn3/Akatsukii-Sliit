@@ -6,7 +6,7 @@ from pathlib import Path
 import threading
 
 from project.core.schemas import Evidence
-from project.store.embeddings import MiniLMEmbedder, storage_root
+from project.store.embeddings import MiniLMEmbedder, get_cached_embedder, storage_root
 from project.store.graph import KnowledgeGraph
 from project.store.models import VerifiedEpisode, label_key, symptom_text
 from project.store.sqlite_db import SQLiteStore
@@ -67,7 +67,7 @@ class KnowledgeStore:
     """
 
     def __init__(self, db_path: Path | None = None, *, embedder=None):
-        self.embedder = embedder if embedder is not None else MiniLMEmbedder()
+        self.embedder = embedder if embedder is not None else get_cached_embedder()
         self.db = SQLiteStore(db_path or storage_root() / "store" / "repairs.sqlite3",
                               model_id=self.embedder.model_id, dimension=self.embedder.dimension)
         self._cache_key = (str(self.db.path.resolve()), self.embedder.model_id)

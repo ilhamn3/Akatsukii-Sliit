@@ -244,8 +244,11 @@ def main():
         print(f"  • Abstained:       {final_answer.abstained}")
         if final_answer.abstained:
             print(f"  • Reason:          {final_answer.abstention_reason}")
+        if final_answer.refusal:
+            print(f"  • Refusal:         {final_answer.refusal}")
         if final_answer.escalated:
-            print(f"  • Escalated:       True (supervisor review required)")
+            ticket = final_answer.escalation_ticket_id or "UNASSIGNED"
+            print(f"  • Escalated:       supervisor review required, ticket {ticket}")
         print(f"  • Safety notes:    {len(final_answer.safety_warnings)} (rule/advisory)")
         for w in final_answer.safety_warnings:
             print(f"    - {w}")

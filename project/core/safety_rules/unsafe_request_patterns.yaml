@@ -1,0 +1,45 @@
+# ==============================================================================
+# Unsafe Request / Shortcut Detection Patterns (SR-X05)
+# Loaded dynamically by project/core/safety_rules/rule_engine.py.
+# Tuned ONLY on dev split; never on the frozen test set.
+# ==============================================================================
+
+rule_id: "SR-X05"
+name: "Unsafe shortcut or safety-control bypass request"
+severity: "critical"
+
+patterns:
+  - id: "skip_vent_depressurise"
+    control_label: "venting / depressurising to zero pressure"
+    hazard_ids: ["H05", "H01"]
+    regex: "(?:without|skip|no need to|don't|do not|before)\\s+(?:vent(?:ing)?|depressuri[sz](?:e|ing)|bleed(?:ing)?|releas(?:e|ing)\\s+pressure)"
+
+  - id: "skip_lockout_loto"
+    control_label: "electrical lockout / tagout (LOTO)"
+    hazard_ids: ["H02", "H06", "H08"]
+    regex: "(?:without|skip|no need to|don't|do not)\\s+(?:lock\\s*out|loto|tag\\s*out|isolat(?:e|ing)|power(?:ing)?\\s+off|shut(?:ting)?\\s+down)"
+
+  - id: "work_while_running_moving"
+    control_label: "full stop and lockout before entering moving parts"
+    hazard_ids: ["H06", "H08"]
+    regex: "(?:can i|could i|is it ok|okay to|let me|want to)?\\s*(?:look at|adjust|clear|clean|inspect|reach|fix|touch|service|lubricate).*\\bwhile\\b.*(?:running|turning|spinning|moving|coasting|energised|energized|live)"
+
+  - id: "skip_safety_blocks"
+    control_label: "mechanical safety blocks under suspended load / ram / platen"
+    hazard_ids: ["H12", "H03"]
+    regex: "(?:without|skip|no need for|no need to)\\s+(?:the\\s+)?(?:safety\\s+block|mechanical\\s+block|blocking\\s+anything|blocks|chock)"
+
+  - id: "reach_in_without_blocking"
+    control_label: "mechanical blocking before reaching into die/mould/ram"
+    hazard_ids: ["H03", "H12"]
+    regex: "(?:reach\\s+in|put\\s+hand|clear\\s+it\\s+by\\s+hand).*(?:without\\s+blocking|while.*(?:on|running|powered))"
+
+  - id: "bypass_interlock_guard_request"
+    control_label: "safety guard, interlock, or sensor integrity"
+    hazard_ids: ["H15"]
+    regex: "(?:can i|should i|want to|let's|ok to|try to)\\s+(?:bypass|jumper|defeat|disable|tape over)\\s+(?:the\\s+)?(?:guard|interlock|sensor|light curtain|e-?stop|switch)"
+
+  - id: "skip_ppe_request"
+    control_label: "mandatory personal protective equipment (PPE)"
+    hazard_ids: ["H04", "H07", "H10", "H11"]
+    regex: "(?:without|skip|no need for)\\s+(?:ppe|gloves|face\\s+shield|safety\\s+glasses|goggles)"
