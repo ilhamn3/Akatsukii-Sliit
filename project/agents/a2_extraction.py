@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import sys
 
 from project.agents.base import BaseAgent
@@ -14,7 +15,21 @@ from project.core.extraction_schemas import (
 from project.core.llm import FakeLLM, get_llm_client
 from project.core.state import create_initial_state
 
-PROMPT = Path(__file__).resolve().parents[1] / "core" / "prompts" / "extraction_v3.md"
+PROMPTS = Path(__file__).resolve().parents[1] / "core" / "prompts"
+DEFAULT_PROMPT = "extraction_v3"
+PROMPT = PROMPTS / f"{DEFAULT_PROMPT}.md"  # Kept for callers that read the default prompt.
+
+
+def prompt_path() -> Path:
+    """Prompt selected with EXTRACTION_PROMPT (e.g. extraction_v4); default v3.
+
+    The version is recorded in every draft, so results always name their prompt.
+    """
+    name = os.getenv("EXTRACTION_PROMPT", DEFAULT_PROMPT).strip()
+    path = PROMPTS / f"{name}.md"
+    if not re.fullmatch(r"extraction_v\d+", name) or not path.is_file():
+        raise ValueError(f"Unknown extraction prompt {name!r}; expected extraction_vN in core/prompts")
+    return path
 # Total model calls per capture when the OUTPUT is invalid (bad JSON/schema or a
 # quote/segment that does not match). Transport errors and timeouts are retried by
 # the shared LLM client itself and are not multiplied here (K8).
@@ -94,7 +109,8 @@ class ExtractionAgent(BaseAgent):
             {"segment_id": s.evidence_id, "text": s.text, "quality_flags": s.quality_flags}
             for s in capture.segments
         ]}, ensure_ascii=False)
-        system_prompt = PROMPT.read_text(encoding="utf-8")
+        selected_prompt = prompt_path()
+        system_prompt = selected_prompt.read_text(encoding="utf-8")
         attempts, feedback = max_attempts(), None
         for call in range(1, attempts + 1):
             request = prompt if feedback is None else json.dumps({
@@ -131,7 +147,7 @@ class ExtractionAgent(BaseAgent):
             capture_id=capture.capture_id, source_sha256=capture.source_sha256,
             source_path=capture.source_path, source_type=capture.media_type,
             extraction=record, evidence=evidence, missing_fields=missing,
-            review_reasons=reasons, model=self.llm_name, prompt_version=PROMPT.stem,
+            review_reasons=reasons, model=self.llm_name, prompt_version=selected_prompt.stem,
         )
         decision = "EXTRACTION_DRAFT_CREATED" if call == 1 else f"EXTRACTION_DRAFT_CREATED_AFTER_{call}_ATTEMPTS"
         return {"draft_record": draft.model_dump(mode="json"), "decision": decision}

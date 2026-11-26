@@ -149,7 +149,7 @@ def test_rejected_key_stops_the_run_without_metrics(monkeypatch, tmp_path, data)
     assert km.main(["run", "--episodes", *ids, "--output-dir", str(tmp_path)]) == 2
     assert client.generate_structured.call_count == 1  # Stopped after the first rejection.
     assert not list(tmp_path.glob("extraction_metrics_*.json"))
-    rows = [json.loads(l) for l in (tmp_path / "predictions_custom.jsonl").read_text().splitlines()]
+    rows = [json.loads(l) for l in (tmp_path / "predictions_custom_extraction_v3.jsonl").read_text().splitlines()]
     assert len(rows) == 1 and "401" in rows[0]["error"]
 
 
@@ -160,6 +160,45 @@ def test_run_with_every_episode_failing_writes_no_metrics(monkeypatch, tmp_path,
     monkeypatch.setattr("project.core.llm.get_llm_client", lambda: client)
     assert km.main(["run", "--episodes", "EP-0002", "--output-dir", str(tmp_path)]) == 1
     assert not list(tmp_path.glob("extraction_metrics_*.json"))
+
+
+def test_prompt_version_is_selectable_recorded_and_kept_apart(monkeypatch, tmp_path, data):
+    from project.agents import a2_extraction as a2
+    assert a2.prompt_path().stem == "extraction_v3"  # Default unchanged until dev results justify v4.
+    monkeypatch.setenv("EXTRACTION_PROMPT", "extraction_v4")
+    client = scripted_client(data)
+    [row] = km.run_extraction(["EP-0002"], data, tmp_path / "p.jsonl", client=client)
+    assert row["draft"]["prompt_version"] == "extraction_v4"
+    assert "stated diagnosis" in client.generate_structured.call_args.kwargs["system_prompt"]
+    for bad in ("extraction_v99", "../secrets", "diagnostic_v1"):
+        monkeypatch.setenv("EXTRACTION_PROMPT", bad)
+        with pytest.raises(ValueError):
+            a2.prompt_path()
+
+
+def test_v4_keeps_the_unstated_cause_safeguard_and_leaks_no_catalogue_causes(data):
+    import re
+    text = (km.ROOT / "project/core/prompts/extraction_v4.md").read_text(encoding="utf-8")
+    assert "requires root_cause=null" in text and "The connector was loose" in text
+    assert "suspected, hedged" in text
+    examples = re.findall(r'"([^"]{6,80})"', text.split("root_cause is the fault")[1].split("parts means")[0])
+    causes = [f["root_cause"] for f in data["faults"].values()]
+    for example in examples:  # Wording examples must not hint at real catalogue answers.
+        assert max(km.dice(km.tokens(example), km.tokens(c)) for c in causes) < 0.5, example
+
+
+def test_compare_reports_field_deltas_on_the_same_split_only(data):
+    ids = km.select_episodes(data, "dev")
+    gold = [{"episode_id": e, "prediction": km.gold_for(e, data)} for e in ids]
+    worse = [{"episode_id": e, "prediction": {**km.gold_for(e, data), "root_cause": None}} for e in ids]
+    a, _ = km.score_predictions(worse, data, system="v3", meta={"prompt_versions": ["extraction_v3"]})
+    b, _ = km.score_predictions(gold, data, system="v4", meta={"prompt_versions": ["extraction_v4"]})
+    diff = km.compare_reports(a, b)
+    assert diff["f1"]["root_cause"]["baseline"] is not None and diff["f1"]["root_cause"]["delta"] > 0
+    assert diff["f1"]["steps"]["delta"] == 0
+    other, _ = km.score_predictions(gold[:3], data, system="v4")
+    with pytest.raises(ValueError, match="different episodes"):
+        km.compare_reports(a, other)
 
 
 def test_live_run_refuses_the_offline_fake_llm(monkeypatch, tmp_path):

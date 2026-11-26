@@ -296,6 +296,30 @@ def score_predictions(predictions: list[dict], data: dict, *, threshold=DEFAULT_
     return report, rows
 
 
+def compare_reports(baseline: dict, candidate: dict) -> dict:
+    """Field-level F1 deltas. Refuses to compare different episode sets or scorers,
+    because the difference would then not be attributable to the prompt/model."""
+    if baseline["episodes"] != candidate["episodes"]:
+        raise ValueError("Reports cover different episodes; compare runs on the same split")
+    if baseline["matching"] != candidate["matching"] or baseline["schema_version"] != candidate["schema_version"]:
+        raise ValueError("Reports used different scoring settings")
+
+    def f1(report, key):
+        block = report["primary"]["micro"] if key == "micro" else report["primary"]["fields"][key]
+        return block["f1"]
+
+    rows = {key: {"baseline": f1(baseline, key), "candidate": f1(candidate, key),
+                  "delta": None if f1(baseline, key) is None or f1(candidate, key) is None
+                  else round(f1(candidate, key) - f1(baseline, key), 4)}
+            for key in ("micro", *FIELDS)}
+    return {"baseline": {"prompt_versions": baseline.get("prompt_versions"), "models": baseline.get("models")},
+            "candidate": {"prompt_versions": candidate.get("prompt_versions"), "models": candidate.get("models")},
+            "split": candidate.get("split"), "n_episodes": candidate["n_episodes"],
+            "failed_episodes": {"baseline": len(baseline["failed_episodes"]),
+                                "candidate": len(candidate["failed_episodes"])},
+            "f1": rows}
+
+
 def write_outputs(report: dict, rows: list[dict], output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2), encoding="utf-8")
@@ -360,6 +384,9 @@ def main(argv=None):
     score = sub.add_parser("score", help="Score an existing predictions JSONL")
     score.add_argument("--predictions", required=True)
     score.add_argument("--output")
+    compare = sub.add_parser("compare", help="Per-field F1 differences between two metrics files")
+    compare.add_argument("baseline")
+    compare.add_argument("candidate")
     human = sub.add_parser("score-human", help="Score human extraction forms (CSV)")
     human.add_argument("--csv", required=True)
     human.add_argument("--output", default=str(ROOT / "logs" / "extraction_eval" / "human_extraction_metrics.json"))
@@ -367,6 +394,11 @@ def main(argv=None):
     if not 0 < args.threshold <= 1:
         parser.error("--threshold must be in (0, 1]")
     try:
+        if args.command == "compare":
+            print(json.dumps(compare_reports(json.loads(Path(args.baseline).read_text(encoding="utf-8")),
+                                             json.loads(Path(args.candidate).read_text(encoding="utf-8"))),
+                             indent=2))
+            return 0
         data = load_dataset()
         if args.command == "run":
             ids = args.episodes or select_episodes(data, args.split)
@@ -378,8 +410,10 @@ def main(argv=None):
             if isinstance(client, FakeLLM):
                 raise ValueError("FakeLLM is configured (FACTORY_FAKE_LLM or missing key); "
                                  "K7 numbers require the team's real model")
-            out_dir = Path(args.output_dir)
-            label = "custom" if args.episodes else args.split
+            from project.agents.a2_extraction import prompt_path
+            prompt = prompt_path().stem  # EXTRACTION_PROMPT; part of every file name so
+            out_dir = Path(args.output_dir)  # resuming never mixes prompt versions.
+            label = f"{'custom' if args.episodes else args.split}_{prompt}"
             preds = run_extraction(ids, data, out_dir / f"predictions_{label}.jsonl", client=client,
                                    retry_errors=args.retry_errors)
             if preds and all(p.get("error") for p in preds):
