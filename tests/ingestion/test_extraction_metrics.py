@@ -140,6 +140,28 @@ def test_provider_failure_is_recorded_as_a_scored_miss(tmp_path, data):
     assert retried[0]["error"] is None  # Last row per episode wins after a retry.
 
 
+def test_rejected_key_stops_the_run_without_metrics(monkeypatch, tmp_path, data):
+    client = Mock()
+    client.model_name = "test-rejected-key"
+    client.generate_structured.side_effect = RuntimeError("Error code: 401 - Invalid API Key")
+    monkeypatch.setattr("project.core.llm.get_llm_client", lambda: client)
+    ids = km.select_episodes(data, "dev")[:3]
+    assert km.main(["run", "--episodes", *ids, "--output-dir", str(tmp_path)]) == 2
+    assert client.generate_structured.call_count == 1  # Stopped after the first rejection.
+    assert not list(tmp_path.glob("extraction_metrics_*.json"))
+    rows = [json.loads(l) for l in (tmp_path / "predictions_custom.jsonl").read_text().splitlines()]
+    assert len(rows) == 1 and "401" in rows[0]["error"]
+
+
+def test_run_with_every_episode_failing_writes_no_metrics(monkeypatch, tmp_path, data):
+    client = Mock()
+    client.model_name = "test-down"
+    client.generate_structured.side_effect = TimeoutError("simulated outage")
+    monkeypatch.setattr("project.core.llm.get_llm_client", lambda: client)
+    assert km.main(["run", "--episodes", "EP-0002", "--output-dir", str(tmp_path)]) == 1
+    assert not list(tmp_path.glob("extraction_metrics_*.json"))
+
+
 def test_live_run_refuses_the_offline_fake_llm(monkeypatch, tmp_path):
     monkeypatch.setenv("FACTORY_FAKE_LLM", "1")
     assert km.main(["run", "--episodes", "EP-0002", "--output-dir", str(tmp_path)]) == 1

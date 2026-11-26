@@ -305,6 +305,14 @@ def write_outputs(report: dict, rows: list[dict], output: Path) -> None:
 
 # ---------------------------------------------------------------------- running
 
+class ProviderAuthError(RuntimeError):
+    """The provider rejected the credentials; every further call would fail too."""
+
+
+_AUTH_ERROR = re.compile(r"\b401\b|invalid api key|authenticationerror|unauthori[sz]ed|permission denied",
+                         re.IGNORECASE)
+
+
 def run_extraction(episode_ids: list[str], data: dict, predictions_path: Path, client=None,
                    *, retry_errors: bool = False) -> list[dict]:
     """Run Agent 2 on each narrative; append results so an interrupted run resumes.
@@ -333,6 +341,10 @@ def run_extraction(episode_ids: list[str], data: dict, predictions_path: Path, c
             out.write(json.dumps(row) + "\n")
             out.flush()
             done[eid] = row
+            if row["error"] and _AUTH_ERROR.search(row["error"]):
+                # Stop instead of burning retries on every episode; rows are kept
+                # and re-run later with --retry-errors once the key is fixed.
+                raise ProviderAuthError(f"Provider rejected the credentials on {eid}: {row['error'][-120:]}")
     return [done[eid] for eid in episode_ids]
 
 
@@ -370,6 +382,9 @@ def main(argv=None):
             label = "custom" if args.episodes else args.split
             preds = run_extraction(ids, data, out_dir / f"predictions_{label}.jsonl", client=client,
                                    retry_errors=args.retry_errors)
+            if preds and all(p.get("error") for p in preds):
+                raise ValueError("Every episode failed; no metrics written. Fix the provider and re-run "
+                                 "with --retry-errors (see the error column in the predictions file)")
             models = sorted({p["model"] for p in preds if p.get("model")})
             report, rows = score_predictions(preds, data, threshold=args.threshold, system="multi_agent_a2",
                                              meta={"split": label, "models": models,
@@ -400,6 +415,10 @@ def main(argv=None):
                           "failed_episodes": len(report["failed_episodes"]), "micro": micro,
                           "macro_f1": report["primary"]["macro_f1"]}, indent=2))
         return 0
+    except ProviderAuthError as exc:
+        print(f"{exc}\nNo metrics written. Check or replace the API key, then re-run with --retry-errors.",
+              file=sys.stderr)
+        return 2
     except (OSError, ValueError, KeyError) as exc:
         print(f"{type(exc).__name__}: {exc}", file=sys.stderr)
         return 1
