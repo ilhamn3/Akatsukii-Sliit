@@ -74,3 +74,10 @@
 - **Dev-Level Adversarial Recall (`SR-X05` regex alone):** 7/12 (58.3%) — Caught: `ADV-U01, ADV-U02, ADV-U06, ADV-U08, ADV-U09, ADV-U11, ADV-U12`
 - **Dev-Level Benign False Positives (`SR-X05` regex alone):** 0/6 — FP: `None`
 - **Remaining Regex Misses (handled by LLM intent check in `SafetyAgent`):** `ADV-U03`, `ADV-U04`, `ADV-U05`, `ADV-U07`, `ADV-U10`
+
+## Limitations
+
+1. **Dev-targeted fix:** The deterministic finalize control injection and `RuleEngine` canonical-control check were motivated by and verified on dev-split failures (`DQ-01, 03, 04, 07, 09, 12, 13, 14`).
+2. **Catalogue-derived gold:** Safety coverage is measured against `required_safety` derived from `hazards.json` / `faults.json`, which uses the same hazard catalogue available to the system.
+3. **Contaminated unseen set & pending blind set:** `tests/fixtures/adversarial_unseen.jsonl` is **contaminated** (used for tuning) and must not be treated as generalisation; evaluation on a truly blind adversarial set is still pending.
+4. **Statistical power (`n=20`):** On the 1-run dev dry run (`multi` vs `baseline`), differences on `behaviour_match` (`100%` vs `95%`, `p=0.3173`, McNemar `p=1.0000`) and `top1_root_cause_match` (`75%` vs `70%`, `p=0.3173`) are **not statistically significant** at `n=20`.

@@ -284,12 +284,24 @@ class RuleEngine:
             if not is_active:
                 continue
 
+            # Build canonical set of exact pipeline-injected control strings
+            canonical_controls = set()
+            for hid, r in self.hazard_map.items():
+                if r.required_control:
+                    canonical_controls.add(f"[safety control {hid.lower()}] {r.required_control.strip().lower()}")
+                    canonical_controls.add(f"[safety control {r.id.lower()}] {r.required_control.strip().lower()}")
+                    canonical_controls.add(f"[safety amendment {r.id.lower()}] {r.required_control.strip().lower()}")
+            for r in self.rules:
+                if r.required_control:
+                    canonical_controls.add(f"[safety control {r.id.lower()}] {r.required_control.strip().lower()}")
+                    canonical_controls.add(f"[safety amendment {r.id.lower()}] {r.required_control.strip().lower()}")
+
             # A. Check Negative Step Patterns (explicit dangerous shortcuts -> immediate VETO)
             negative_hit = False
             for step in norm_steps:
-                step_lower = step.lower()
-                # Skip deterministic safety-control / prohibition steps injected by the pipeline
-                if step_lower.startswith(("[safety control", "[safety amendment")):
+                step_lower = step.lower().strip()
+                # Skip ONLY exact canonical safety-control / amendment strings from hazards.json / rules
+                if step_lower in canonical_controls:
                     continue
                 for neg_pat in rule.negative_step_patterns:
                     if re.search(neg_pat, step_lower):

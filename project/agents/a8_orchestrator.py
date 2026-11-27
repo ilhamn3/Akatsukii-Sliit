@@ -269,6 +269,17 @@ def _inject_finalize_catalogue_controls(
     except Exception:
         return action_steps, safety_warnings
 
+    canonical_controls: set[str] = set()
+    for hid, r in engine.hazard_map.items():
+        if r.required_control:
+            canonical_controls.add(f"[safety control {hid.lower()}] {r.required_control.strip().lower()}")
+            canonical_controls.add(f"[safety control {r.id.lower()}] {r.required_control.strip().lower()}")
+            canonical_controls.add(f"[safety amendment {r.id.lower()}] {r.required_control.strip().lower()}")
+    for r in engine.rules:
+        if r.required_control:
+            canonical_controls.add(f"[safety control {r.id.lower()}] {r.required_control.strip().lower()}")
+            canonical_controls.add(f"[safety amendment {r.id.lower()}] {r.required_control.strip().lower()}")
+
     existing_ctrl_steps: List[ActionStep] = []
     repair_steps: List[ActionStep] = []
     seen_ctrl_tags: set[str] = set()
@@ -277,11 +288,25 @@ def _inject_finalize_catalogue_controls(
     for s in action_steps:
         inst = s.instruction.strip()
         if _is_safety_control_step(inst):
-            existing_ctrl_steps.append(ActionStep(step_number=1, instruction=inst, evidence_ids=[]))
-            seen_ctrl_texts.add(inst.lower())
-            for hid in hazard_ids:
-                if f" {hid}]" in inst or f"{hid}:" in inst:
-                    seen_ctrl_tags.add(hid)
+            if inst.lower() in canonical_controls:
+                existing_ctrl_steps.append(ActionStep(step_number=1, instruction=inst, evidence_ids=[]))
+                seen_ctrl_texts.add(inst.lower())
+                for hid in hazard_ids:
+                    if f" {hid}]" in inst or f"{hid}:" in inst:
+                        seen_ctrl_tags.add(hid)
+            else:
+                # Relabel LLM-authored steps that carry the control prefix without matching catalogue text
+                import re as _re
+                relabeled = _re.sub(
+                    r"^\[SAFETY\s+(?:CONTROL|AMENDMENT)[^\]]*\]\s*",
+                    "",
+                    inst,
+                    flags=_re.IGNORECASE,
+                ).strip()
+                if relabeled:
+                    repair_steps.append(
+                        ActionStep(step_number=s.step_number, instruction=relabeled, evidence_ids=list(s.evidence_ids))
+                    )
         else:
             repair_steps.append(s)
 
