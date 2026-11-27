@@ -181,7 +181,8 @@ Three episodes failed Agent 2's own checks and count as complete misses:
 | safety_warnings | 0.824 | 0.875 | 0.848 |
 
 The headline is **0.833, just below the O1 target of 0.85**, on templated synthetic
-narratives. Expect lower on real recordings.
+narratives. Expect lower on real recordings. This v3 result stays as recorded; the later
+v5 run on the same split is reported separately below.
 
 ### Error analysis
 
@@ -260,10 +261,54 @@ to real causes and were replaced before any run.
 - Each prediction row records the call's `tokens`, for budgeting the provider quota.
 - `run --wait-on-rate-limit MINUTES` waits as long as the provider suggests, retries the
   same episode and continues, up to that total waiting budget (default 0: stop at once).
+- `score` uses the last row per episode, as `run` does. Before this fix, re-scoring a
+  log that still held superseded failed attempts counted those episodes twice. A test
+  re-scores every committed results folder and requires its reported numbers exactly.
 
-**Next:** run the eval split **once** with v5 for the reported number, ideally on a
-fresh quota day (50 episodes, about 200k tokens), and report it beside the v3 eval run.
-No further prompt changes are made from eval results.
+## Eval result with prompt v5 (27 Nov 2026)
+
+The one eval-split run for v5, on the same 50 episodes and model as the v3 run. v5 was
+fixed before this run, and no prompt change was made after seeing it.
+
+Run details:
+- **Model and split:** `openai/gpt-oss-120b` via Groq, prompt `extraction_v5`, eval split (50 episodes).
+- **Scorer:** `extraction_metrics/v1`, commit `c49957d`. Includes A2's one corrective retry (K8).
+- **Files:** `project/evaluation/results/2026-11-27_eval_groq-gpt-oss-120b_v5/`.
+- **Failures:** 0 of 50. EP-0185 needed the corrective retry and carries a reviewer flag.
+
+| | Precision | Recall | F1 |
+|---|---:|---:|---:|
+| **Micro, threshold 0.5 (O1 headline)** | 0.869 | 0.927 | **0.897** |
+| Macro F1 over the 8 fields | | | 0.897 |
+| Micro, exact normalized match | 0.662 | 0.706 | 0.683 |
+| Audio debriefs (39) | 0.861 | 0.938 | 0.898 |
+| Shift logs (11) | 0.912 | 0.874 | 0.893 |
+
+| Field | v3 F1 | v5 P | v5 R | v5 F1 |
+|---|---:|---:|---:|---:|
+| machine_type | 0.804 | 0.909 | 0.800 | 0.851 |
+| symptoms | 0.844 | 0.887 | 0.839 | 0.862 |
+| root_cause | 0.864 | 1.000 | 0.980 | **0.990** |
+| steps | 0.857 | 0.873 | 0.965 | 0.917 |
+| tools | 0.807 | 0.903 | 1.000 | 0.949 |
+| parts | 0.675 | 0.604 | 0.889 | 0.719 |
+| failed_attempts | 0.933 | 1.000 | 1.000 | 1.000 |
+| safety_warnings | 0.848 | 0.800 | 1.000 | 0.889 |
+| **micro** | **0.833** | 0.869 | 0.927 | **0.897** |
+
+**What the improvement comes from.** The v3 run predates K8's corrective retry, and its
+3 failed episodes counted as complete misses. Scored on only the **47 episodes both runs
+completed**, v5 still improves micro F1 from 0.864 to 0.890 and root cause from 0.894 to
+0.989. On those 47, symptoms (-0.014), safety warnings (-0.028) and parts (-0.001) are
+slightly lower. So most of the root-cause gain is from the prompt, and the rest of the
+full-split gain is from the retry removing failures.
+
+The headline is **0.897, above the O1 target of 0.85**, with the caveats that still
+apply: templated synthetic narratives, one run, a development provider, and parts
+precision (0.604) as the weakest field. Expect lower on real recordings.
+
+Still open from the v3 error analysis: machine type from shift-log asset codes (K5) and
+the parts gold rule (team decision).
 
 Each episode costs roughly 3k tokens. Groq's free tier allows 200k tokens per day, so
 dev (12) and eval (50) runs may need separate days, or the team's agreed provider
