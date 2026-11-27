@@ -24,16 +24,16 @@ Factory Memory has two pipelines around one shared knowledge store:
   verified repairs, proposes steps with citations, and an independent safety agent can veto
   unsafe steps. If the evidence is weak, it abstains instead of guessing.
 
-## Current status (26 Nov 2026)
+## Current status (28 Nov 2026)
 
 | Part | State |
 |---|---|
 | Pipeline B: diagnose, retrieve, plan, safety veto loop, finalize | Working end to end with Gemini, or offline with `--fake-llm` |
 | Pipeline A: capture, extraction, validation, review queue, store write on approval | Working; `scripts/demo_e2e.py` runs A then B |
 | Knowledge store: SQLite + FAISS + NetworkX | Working; loads the synthetic episodes |
-| Synthetic data: 40 faults, 400 episodes, frozen 60-query test set | Done |
-| Streamlit UI | Pages built on **mock data**; not yet connected to the agents |
-| 3-way benchmark (multi-agent vs single agent vs humans) | In progress |
+| Synthetic data: 40 faults, 400 episodes, frozen 60-query test set | Done ([docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md)) |
+| Streamlit UI | Wired to the real pipeline, review queue, and audit trace ([docs/UI.md](docs/UI.md)) |
+| 3-way benchmark (multi-agent vs single agent vs humans) | Benchmark harness merged ([docs/BASELINE.md](docs/BASELINE.md)); full test-set run pending |
 
 ---
 
@@ -174,7 +174,7 @@ python scripts/demo_e2e.py
 This needs a real API key. `--fake-llm` currently stops at the extraction stage, because
 the offline fake LLM has no canned output for Agent 2 yet.
 
-**5. UI** (currently mock data only):
+**5. UI** (see [docs/UI.md](docs/UI.md); load the store first with step 2 so queries do not abstain):
 
 ```powershell
 python project/main.py --mode ui
@@ -248,8 +248,10 @@ logs/                     audit traces (generated, git-ignored)
 | [docs/PROJECT_DETAILS.md](docs/PROJECT_DETAILS.md) | Objectives and metrics, dataset, stack, AI tools disclosure |
 | [docs/SYNTHETIC_DATA.md](docs/SYNTHETIC_DATA.md) | What is synthetic, what is not, limitations |
 | [docs/UI_API.md](docs/UI_API.md) | `project/core/api.py`, the entry point for the UI |
+| [docs/UI.md](docs/UI.md) | Streamlit UI setup, pages, and verified screenshots |
+| [docs/BASELINE.md](docs/BASELINE.md) | Single-agent baseline and 3-way benchmark harness |
 | [docs/DEV_RESULTS.md](docs/DEV_RESULTS.md) | Dev-split evaluation results |
-| [docs/CAPTURE_SETUP.md](docs/CAPTURE_SETUP.md), [EXTRACTION_SETUP.md](docs/EXTRACTION_SETUP.md), [VALIDATION_REVIEW.md](docs/VALIDATION_REVIEW.md), [ENTITY_GRAPH.md](docs/ENTITY_GRAPH.md), [KNOWLEDGE_STORE.md](docs/KNOWLEDGE_STORE.md), [RETRIEVAL.md](docs/RETRIEVAL.md) | Per-agent setup and contracts |
+| [docs/CAPTURE_SETUP.md](docs/CAPTURE_SETUP.md), [EXTRACTION_SETUP.md](docs/EXTRACTION_SETUP.md), [VALIDATION_REVIEW.md](docs/VALIDATION_REVIEW.md), [ENTITY_GRAPH.md](docs/ENTITY_GRAPH.md), [KNOWLEDGE_STORE.md](docs/KNOWLEDGE_STORE.md), [RETRIEVAL.md](docs/RETRIEVAL.md), [EXTRACTION_METRICS.md](docs/EXTRACTION_METRICS.md), [HARDENING.md](docs/HARDENING.md) | Per-agent setup, contracts, extraction metrics (K7), and hardening (K8) |
 | [project/human_study/protocol.md](project/human_study/protocol.md) | Human baseline study |
 | [docs/team/](docs/team/README.md) | Work plans and progress |
 

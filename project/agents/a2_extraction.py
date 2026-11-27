@@ -2,7 +2,9 @@
 
 import argparse
 import json
+import os
 from pathlib import Path
+import re
 import sys
 
 from project.agents.base import BaseAgent
@@ -13,7 +15,33 @@ from project.core.extraction_schemas import (
 from project.core.llm import FakeLLM, get_llm_client
 from project.core.state import create_initial_state
 
-PROMPT = Path(__file__).resolve().parents[1] / "core" / "prompts" / "extraction_v3.md"
+PROMPTS = Path(__file__).resolve().parents[1] / "core" / "prompts"
+# v5 became the default after the dev-split comparison with v3 (docs/EXTRACTION_METRICS.md).
+DEFAULT_PROMPT = "extraction_v5"
+PROMPT = PROMPTS / f"{DEFAULT_PROMPT}.md"  # Kept for callers that read the default prompt.
+
+
+def prompt_path() -> Path:
+    """Prompt selected with EXTRACTION_PROMPT (e.g. extraction_v3); default v5.
+
+    The version is recorded in every draft, so results always name their prompt.
+    """
+    name = os.getenv("EXTRACTION_PROMPT", DEFAULT_PROMPT).strip()
+    path = PROMPTS / f"{name}.md"
+    if not re.fullmatch(r"extraction_v\d+", name) or not path.is_file():
+        raise ValueError(f"Unknown extraction prompt {name!r}; expected extraction_vN in core/prompts")
+    return path
+# Total model calls per capture when the OUTPUT is invalid (bad JSON/schema or a
+# quote/segment that does not match). Transport errors and timeouts are retried by
+# the shared LLM client itself and are not multiplied here (K8).
+DEFAULT_MAX_ATTEMPTS = 2
+
+
+def max_attempts() -> int:
+    value = int(os.getenv("EXTRACTION_MAX_ATTEMPTS", str(DEFAULT_MAX_ATTEMPTS)))
+    if not 1 <= value <= 5:
+        raise ValueError("EXTRACTION_MAX_ATTEMPTS must be between 1 and 5")
+    return value
 
 
 def facts(record):
@@ -66,6 +94,9 @@ class ExtractionAgent(BaseAgent):
         return super().run(state)
 
     def process(self, state):
+        if state.get("capture_result") is None and state.get("errors"):
+            # Upstream capture already failed and was traced; don't add a derivative error.
+            return {"decision": "SKIPPED_UPSTREAM_FAILURE"}
         capture = CaptureResult.model_validate(state.get("capture_result"))
         if not capture.segments:
             raise ValueError("No timestamped speech available for extraction; review capture first")
@@ -79,12 +110,26 @@ class ExtractionAgent(BaseAgent):
             {"segment_id": s.evidence_id, "text": s.text, "quality_flags": s.quality_flags}
             for s in capture.segments
         ]}, ensure_ascii=False)
-        generated = client.generate_structured(
-            prompt=prompt, response_model=ExtractedRepair,
-            system_prompt=PROMPT.read_text(encoding="utf-8"),
-        )
-        record = ExtractedRepair.model_validate(generated)
-        evidence = ground(record, capture)
+        selected_prompt = prompt_path()
+        system_prompt = selected_prompt.read_text(encoding="utf-8")
+        attempts, feedback = max_attempts(), None
+        for call in range(1, attempts + 1):
+            request = prompt if feedback is None else json.dumps({
+                "segments": json.loads(prompt)["segments"],
+                "previous_output_rejected": feedback,
+                "instruction": ("Return the complete JSON again. Copy every quote exactly from the cited "
+                                "segment's text; use null or [] when the source does not state a fact."),
+            }, ensure_ascii=False)
+            try:
+                generated = client.generate_structured(
+                    prompt=request, response_model=ExtractedRepair, system_prompt=system_prompt)
+                record = ExtractedRepair.model_validate(generated)
+                evidence = ground(record, capture)
+                break
+            except ValueError as exc:  # Invalid output only (pydantic errors are ValueErrors).
+                if call == attempts:
+                    raise ValueError(f"Extraction output invalid after {attempts} attempt(s): {exc}") from exc
+                feedback = str(exc)[:500]  # Our own validator message, sent back as data.
         missing = [name for name in type(record).model_fields if not getattr(record, name)]
         for index, attempt in enumerate(record.failed_attempts):
             for field in ("outcome", "why_failed"):
@@ -97,13 +142,16 @@ class ExtractionAgent(BaseAgent):
             reasons.append("capture_quality_flags")
         if self.is_stub:
             reasons.append("offline_fixture_output")
+        if call > 1:
+            reasons.append("extraction_retried_after_invalid_output")
         draft = DraftRepairRecord(
             capture_id=capture.capture_id, source_sha256=capture.source_sha256,
             source_path=capture.source_path, source_type=capture.media_type,
             extraction=record, evidence=evidence, missing_fields=missing,
-            review_reasons=reasons, model=self.llm_name, prompt_version=PROMPT.stem,
+            review_reasons=reasons, model=self.llm_name, prompt_version=selected_prompt.stem,
         )
-        return {"draft_record": draft.model_dump(mode="json"), "decision": "EXTRACTION_DRAFT_CREATED"}
+        decision = "EXTRACTION_DRAFT_CREATED" if call == 1 else f"EXTRACTION_DRAFT_CREATED_AFTER_{call}_ATTEMPTS"
+        return {"draft_record": draft.model_dump(mode="json"), "decision": decision}
 
 
 def main(argv=None):
