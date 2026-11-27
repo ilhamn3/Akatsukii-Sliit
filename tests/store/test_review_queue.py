@@ -32,7 +32,7 @@ def test_approval_publishes_verified_episode_with_identity_and_provenance(tmp_pa
     assert episode.verified_at.utcoffset() is not None
     assert episode.outcome == "conveyor ran again"
     assert episode.provenance.evidence_spans == item.draft.evidence  # Original draft field paths kept.
-    assert episode.provenance.prompt_version == "extraction_v3"
+    assert episode.provenance.prompt_version == item.draft.prompt_version  # Draft's prompt kept.
     assert episode.provenance.reviewer_supplied_fields == []
     assert store.get(episode.episode_id, trace_id="TR-READ") == episode
     decided = queue.get(item.item_id)

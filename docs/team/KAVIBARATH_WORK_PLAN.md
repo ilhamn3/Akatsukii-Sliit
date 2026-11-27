@@ -12,13 +12,13 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 20.4 / 30 points · 68% complete**
+**Overall: 23.2 / 30 points · 77% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP3 | Ingestion agents 1-4 and review queue | 18 | 10.8 | 60% |
+| WP3 | Ingestion agents 1-4 and review queue | 18 | 11.5 | 64% |
 | WP4 | Knowledge store and retrieval | 10 | 9.7 | 97% |
-| WP10 | Hardening and unit tests | 2 | 0 | 0% |
+| WP10 | Hardening and unit tests | 2 | 2 | 100% |
 <!-- PROGRESS:END -->
 
 **How to update:** edit only the **Done %** column below (0-100). Points earned = Pts x Done %. A subtask is 100% only when it meets its "done when" in section 3 and has been reviewed. Partial progress is fine (25 / 50 / 75%).
@@ -33,7 +33,7 @@
 | 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 50% |
 | 3.5 | Agent 4: entity resolution and graph writes | 3 | 26 Nov | 75% |
 | 3.6 | Review-queue backend for low-confidence records | 2 | 26 Nov | 75% |
-| 3.7 | Extraction precision / recall / F1 numbers exported to the harness | 1 | 27 Nov | 0% |
+| 3.7 | Extraction precision / recall / F1 numbers exported to the harness | 1 | 27 Nov | 75% |
 
 #### WP4 – Knowledge store and retrieval (10 pts)
 
@@ -49,8 +49,8 @@
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 10.1 | Retries, timeouts and fallbacks in ingestion and store modules | 1 | 28 Nov | 0% |
-| 10.2 | pytest for ingestion and store modules | 1 | 28 Nov | 0% |
+| 10.1 | Retries, timeouts and fallbacks in ingestion and store modules | 1 | 28 Nov | 100% |
+| 10.2 | pytest for ingestion and store modules | 1 | 28 Nov | 100% |
 
 ## 2. Files and folders you own
 
@@ -193,5 +193,8 @@ After merging origin/main at f735884, all 80 tests and pip check passed locally.
 | [#15](https://github.com/ilhamn3/Akatsukii-Sliit/pull/15) (K6) | 25 Nov 2026 | [WP4] Agent 6: hybrid retrieval including failed attempts | 4.4 (0->75%), 4.5 (0->75%) | RetrievalEngine contract: K5 machine resolution and filter-before-rank, MiniLM/FAISS symptom cosine fused (support-only) with NetworkX traversal and alarm-code/asset hops; Evidence carries failed attempts, outcome, step-level evidence IDs, verification and provenance; RetrievalAgent node and proven Pipeline B wiring. 195 tests and pip check pass. The synthetic catalogue check in this PR was later withdrawn (its queries resembled the test set's easy tier); see the follow-up row. Evidence: docs/RETRIEVAL.md | 51% -> 61% (15.25/30 -> 18.25/30 pts) | Ilham MM (approved, merged) |
 | [#21](https://github.com/ilhamn3/Akatsukii-Sliit/pull/21) (K3-K6 review follow-ups) | 25 Nov 2026 | [WP4] Review follow-ups: store caching, flat evidence metadata, dev-split retrieval evaluation | 4.1-4.3 (75->100% each), 4.4 (75->100%), 4.5 (75->100%) | Addresses Ilham's #12-#15 reviews. Revision-keyed projection cache: 2,000 writes in ~31 s instead of ~444 ms per write and rising; queries ~40-70 ms steady instead of 665 ms. Flat `verified`, `recorded_at` (+source), `root_cause`, `outcome_status` (A8's own rules), `kind`/`step_order` metadata, checked against A8's normalize_evidence. Dev-split-only evaluation (test split refused) over an oracle store: hybrid hit@1 20/20, single signals 19/20 (synthetic, not a benchmark). A4 note in Workflow.md. 230 tests pass with and without FACTORY_MEMORY_STORAGE. Done-when criteria met and #12/#15 approved | 61% -> 69% (18.25/30 -> 20.75/30 pts) | Ilham MM (approved, merged; asked 4.4 -> 90%, see next row) |
 | [#22](https://github.com/ilhamn3/Akatsukii-Sliit/pull/22) (4.4 tracker correction) | 26 Nov 2026 | [WP4] Set 4.4 to 90% per #21 review | 4.4 (100->90%) | Reviewer correction: hybrid retrieval has only been evaluated on the synthetic oracle store, not yet through the real pipeline (Pipeline A ingestion -> verified store -> Pipeline B). Remaining 10%: retrieval evaluated on episodes ingested by the real pipeline. Progress recomputed with scripts/progress.py | 69% -> 68% (20.75/30 -> 20.45/30 pts) | Ilham MM (requested) |
+| [#23](https://github.com/ilhamn3/Akatsukii-Sliit/pull/23) (K7; builds on #22) | 26 Nov 2026 | [WP3] Extraction P/R/F1 export for the benchmark harness | 3.7 (0->75%) | Code-driven field-level precision/recall/F1 (8 O1 fields): gold = what each synthetic narrative says (narrative_coverage); deterministic one-to-one token-Dice matching (0.5, plus exact), K5 machine resolution; narrative-to-capture adapter (new `text` media type); resumable Agent 2 runner on shared get_llm_client() that refuses FakeLLM; seeded dev/eval splits; human-form scoring; `extraction_metrics/v1` JSON + per-episode JSONL for the harness. 243 tests pass; oracle check F1 1.0 on 400 episodes. Development live run (Groq gpt-oss-120b, prompt v3, eval split of 50): micro F1 0.833 (P 0.848, R 0.818) at threshold 0.5, exact-match F1 0.606, 3 episodes failed A2's own checks and count as misses; outputs committed under project/evaluation/results/ for the harness. The run stops on a rejected key and never reports an all-failed run. Evidence: docs/EXTRACTION_METRICS.md. Harness ingestion, final team model and review pending | 68% -> 71% (20.45/30 -> 21.2/30 pts) | Ilham MM (pending) |
+| [#24](https://github.com/ilhamn3/Akatsukii-Sliit/pull/24) (K8; builds on #23) | 26 Nov 2026 | [WP10] Retries, timeouts, fallbacks and pytest | 10.1 (0->100%), 10.2 (0->100%) | A2 makes one bounded corrective retry on invalid output (not on transport errors, which the shared client retries), configurable 1-5, flagged for reviewers; downstream agents skip with SKIPPED_UPSTREAM_FAILURE instead of cascading errors; A3 dedup failures (locked store, unavailable embeddings) become review warnings and the draft is still queued; A6 falls back to graph-only retrieval flagged `degraded`; concurrent store writers tested. Done-when met: a simulated API timeout runs through the real Pipeline A graph without crashing, failures are traced, and a fresh clean-checkout clone without FACTORY_MEMORY_STORAGE gives 249 passed, 3 skipped (FFmpeg media tests by design). 252 tests pass in the activated environment. Shared-client retry recommendation for core/llm.py documented. Evidence: docs/HARDENING.md | 71% -> 77% (21.2/30 -> 23.2/30 pts) | Ilham MM (pending) |
+| [#27](https://github.com/ilhamn3/Akatsukii-Sliit/pull/27) (root-cause prompt; also lands #23 and #24 on main) | 27 Nov 2026 | [WP3] Extraction prompt v5 as default after dev-split comparison | 3.3 (50%, unchanged), 3.7 (75%, unchanged) | Prompt work on the 12 dev episodes only (eval and test splits untouched). v4: any wording presenting a cause as the finding counts as a stated root cause; hedged or unstated causes stay null. v5 adds clean values with exact quotes and keeps failed actions out of steps. Dev result, Groq gpt-oss-120b, 0 failures in both runs: root cause F1 0.957 -> 1.000, micro F1 0.887 -> 0.874 (single-item differences in steps, symptoms, tools and parts, documented). v5 is now the default; v3 stays selectable. Runner tooling: provider vs output failure labels, compare refuses incomplete runs, stop on rate limit, per-call token counts, optional `--wait-on-rate-limit`. 264 tests pass. No % change: 3.3 still needs team samples, and the reported v5 eval-split number is not run yet. Evidence: docs/EXTRACTION_METRICS.md | 77% -> 77% (23.2/30 pts) | Ilham MM (pending) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
