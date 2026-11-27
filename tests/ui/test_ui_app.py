@@ -9,7 +9,8 @@ from unittest.mock import patch
 from streamlit.testing.v1 import AppTest
 
 UI_DIR = Path(__file__).resolve().parents[2] / "project" / "ui"
-APP_PATH = UI_DIR / "app.py"
+APP_PATH = UI_DIR / "chat_page.py"
+ENTRY_PATH = UI_DIR / "app.py"
 REVIEW_PATH = UI_DIR / "pages" / "1_Review_Queue.py"
 TRACE_PATH = UI_DIR / "pages" / "2_Trace_Viewer.py"
 

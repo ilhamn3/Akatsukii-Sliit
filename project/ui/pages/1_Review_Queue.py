@@ -14,7 +14,10 @@ if str(ROOT) not in sys.path:
 
 from project.core import api as core_api  # noqa: E402
 
-st.set_page_config(page_title="Review Queue", page_icon="📝", layout="wide")
+try:
+    st.set_page_config(page_title="Review Queue", page_icon="📝", layout="wide")
+except Exception:
+    pass
 st.title("📝 Technician Review Queue")
 st.caption("Pending extracted repair drafts from K4 ReviewQueue (`project.core.api`).")
 
@@ -56,12 +59,13 @@ def _render_fact_with_quotes(label: str, fact: Any) -> None:
 for item in pending_items:
     item_id = item.get("item_id", "")
     draft = item.get("draft") or {}
+    ext = draft.get("extraction") if isinstance(draft.get("extraction"), dict) else draft
     report = item.get("report") or {}
     issues = report.get("issues") or []
     blocking_issues = [i for i in issues if i.get("severity") == "blocking"]
     warning_issues = [i for i in issues if i.get("severity") == "warning"]
 
-    mt_val = (draft.get("machine_type") or {}).get("value") or "unspecified"
+    mt_val = (ext.get("machine_type") or {}).get("value") or "unspecified"
     ep_id = item.get("episode_id", "")
     conf = float(item.get("confidence", 0.0))
 
@@ -69,22 +73,22 @@ for item in pending_items:
         st.subheader(f"{item_id} · Episode `{ep_id}` ({mt_val})")
         st.write(f"**Priority:** `{item.get('priority', 'standard')}` · **Confidence:** `{conf:.0%}`")
 
-        _render_fact_with_quotes("Root Cause", draft.get("root_cause"))
-        _render_fact_with_quotes("Outcome", draft.get("outcome"))
+        _render_fact_with_quotes("Root Cause", ext.get("root_cause"))
+        _render_fact_with_quotes("Outcome", ext.get("outcome"))
 
-        symptoms = draft.get("symptoms") or []
+        symptoms = ext.get("symptoms") or []
         if symptoms:
             st.markdown("**Symptoms & Source Quotes:**")
             for idx, sym in enumerate(symptoms, start=1):
                 _render_fact_with_quotes(f"Symptom {idx}", sym)
 
-        steps = draft.get("steps") or []
+        steps = ext.get("steps") or []
         if steps:
             st.markdown("**Steps & Source Quotes:**")
             for idx, step in enumerate(steps, start=1):
                 _render_fact_with_quotes(f"Step {idx}", step)
 
-        safety_warnings = draft.get("safety_warnings") or []
+        safety_warnings = ext.get("safety_warnings") or []
         if safety_warnings:
             st.markdown("**Safety Warnings:**")
             for idx, sw in enumerate(safety_warnings, start=1):

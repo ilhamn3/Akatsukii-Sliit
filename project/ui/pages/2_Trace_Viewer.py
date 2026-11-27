@@ -14,7 +14,10 @@ if str(ROOT) not in sys.path:
 
 from project.core.trace import DEFAULT_LOG_PATH, read_trace  # noqa: E402
 
-st.set_page_config(page_title="Trace Viewer", page_icon="🔍", layout="wide")
+try:
+    st.set_page_config(page_title="Trace Viewer", page_icon="🔍", layout="wide")
+except Exception:
+    pass
 st.title("🔍 Audit Trace Viewer")
 st.caption("Inspect ordered agent handoffs from `logs/audit_trace.jsonl`.")
 
