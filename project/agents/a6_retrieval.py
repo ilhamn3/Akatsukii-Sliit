@@ -173,12 +173,18 @@ class HybridRetriever:
                     if machine is None or label_key(e.record.machine_type) == label_key(machine)}
         if not selected:
             return []
-        cosine = {}
+        cosine, degraded = {}, []
         if self.use_vector:
             embedder = self.store.embedder
-            query_vector = normalized(embedder.encode([query]), embedder.dimension)
-            cosine = {key: max(0.0, score) for key, score in projection.index().search(
-                query_vector[0], k=len(projection.episodes)) if key in selected}
+            try:
+                query_vector = normalized(embedder.encode([query]), embedder.dimension)
+                cosine = {key: max(0.0, score) for key, score in projection.index().search(
+                    query_vector[0], k=len(projection.episodes)) if key in selected}
+            except Exception as exc:
+                # K8 fallback: if the embedding model cannot load or encode (e.g. offline,
+                # missing weights), rank on graph evidence alone and say so in every
+                # result. Scores then stay low (<= graph_weight), so A8 tends to abstain.
+                degraded.append(f"vector_unavailable:{type(exc).__name__}")
         graph = projection.graph().graph  # Shared read-only; traversal is filtered to `selected`.
         query_terms, query_codes = terms(query), codes(query)
         reached = projection.memo(("a6_reach", machine), lambda: self._reach(graph, machine))
@@ -202,10 +208,10 @@ class HybridRetriever:
                 1 - (self.asset_weight if on_asset else 0.0))
             ranked.append((round(min(1.0, max(0.0, fused)), 6), episode_id, cos, feature, on_asset))
         ranked.sort(key=lambda item: (-item[0], item[1]))
-        return [self._evidence(selected[eid], fused, cos, feature, on_asset, machine, resolution)
+        return [self._evidence(selected[eid], fused, cos, feature, on_asset, machine, resolution, degraded)
                 for fused, eid, cos, feature, on_asset in ranked[:k]]
 
-    def _evidence(self, episode, fused, cos, feature, on_asset, machine, resolution):
+    def _evidence(self, episode, fused, cos, feature, on_asset, machine, resolution, degraded=()):
         r = episode.record
         graph_part = self.graph_weight * feature["score"]
         hazards = sorted({l.entity_id for l in episode.provenance.entity_links
@@ -245,6 +251,7 @@ class HybridRetriever:
                     "matched_codes": feature["matched_codes"], "matched_nodes": feature["matched_nodes"],
                     "weights": {"graph": self.graph_weight, "asset": self.asset_weight},
                     "machine_filter": machine, "cross_machine": machine is None,
+                    "degraded": list(degraded),  # e.g. ["vector_unavailable:OSError"]; empty when healthy
                     "machine_resolution": None if resolution is None else resolution.model_dump(mode="json"),
                 },
             },

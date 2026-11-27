@@ -1,0 +1,259 @@
+{
+  "schema_version": "extraction_metrics/v1",
+  "system": "multi_agent_a2",
+  "synthetic_data_only": true,
+  "generated_at": "2026-11-26T08:50:19.237170+00:00",
+  "code_commit": "ba6b3d6",
+  "split": "eval",
+  "models": [
+    "openai/gpt-oss-120b"
+  ],
+  "prompt_versions": [
+    "extraction_v3"
+  ],
+  "n_episodes": 50,
+  "episodes": [
+    "EP-0014",
+    "EP-0016",
+    "EP-0028",
+    "EP-0053",
+    "EP-0056",
+    "EP-0065",
+    "EP-0067",
+    "EP-0069",
+    "EP-0080",
+    "EP-0088",
+    "EP-0103",
+    "EP-0131",
+    "EP-0150",
+    "EP-0161",
+    "EP-0170",
+    "EP-0178",
+    "EP-0185",
+    "EP-0186",
+    "EP-0189",
+    "EP-0190",
+    "EP-0191",
+    "EP-0196",
+    "EP-0199",
+    "EP-0205",
+    "EP-0221",
+    "EP-0243",
+    "EP-0260",
+    "EP-0267",
+    "EP-0274",
+    "EP-0276",
+    "EP-0278",
+    "EP-0284",
+    "EP-0293",
+    "EP-0311",
+    "EP-0314",
+    "EP-0316",
+    "EP-0320",
+    "EP-0321",
+    "EP-0323",
+    "EP-0328",
+    "EP-0336",
+    "EP-0337",
+    "EP-0342",
+    "EP-0351",
+    "EP-0354",
+    "EP-0355",
+    "EP-0356",
+    "EP-0378",
+    "EP-0390",
+    "EP-0399"
+  ],
+  "failed_episodes": [
+    "EP-0150",
+    "EP-0199",
+    "EP-0336"
+  ],
+  "matching": {
+    "method": "greedy one-to-one token Dice",
+    "threshold": 0.5,
+    "machine_type": "K5 resolver to catalogue ID"
+  },
+  "fields_scored": [
+    "machine_type",
+    "symptoms",
+    "root_cause",
+    "steps",
+    "tools",
+    "parts",
+    "failed_attempts",
+    "safety_warnings"
+  ],
+  "primary": {
+    "fields": {
+      "machine_type": {
+        "tp": 37,
+        "fp": 5,
+        "fn": 13,
+        "precision": 0.881,
+        "recall": 0.74,
+        "f1": 0.8043
+      },
+      "symptoms": {
+        "tp": 89,
+        "fp": 10,
+        "fn": 23,
+        "precision": 0.899,
+        "recall": 0.7946,
+        "f1": 0.8436
+      },
+      "root_cause": {
+        "tp": 38,
+        "fp": 0,
+        "fn": 12,
+        "precision": 1.0,
+        "recall": 0.76,
+        "f1": 0.8636
+      },
+      "steps": {
+        "tp": 177,
+        "fp": 37,
+        "fn": 22,
+        "precision": 0.8271,
+        "recall": 0.8894,
+        "f1": 0.8571
+      },
+      "tools": {
+        "tp": 48,
+        "fp": 6,
+        "fn": 17,
+        "precision": 0.8889,
+        "recall": 0.7385,
+        "f1": 0.8067
+      },
+      "parts": {
+        "tp": 28,
+        "fp": 19,
+        "fn": 8,
+        "precision": 0.5957,
+        "recall": 0.7778,
+        "f1": 0.6747
+      },
+      "failed_attempts": {
+        "tp": 14,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1.0,
+        "recall": 0.875,
+        "f1": 0.9333
+      },
+      "safety_warnings": {
+        "tp": 14,
+        "fp": 3,
+        "fn": 2,
+        "precision": 0.8235,
+        "recall": 0.875,
+        "f1": 0.8485
+      }
+    },
+    "micro": {
+      "tp": 445,
+      "fp": 80,
+      "fn": 99,
+      "precision": 0.8476,
+      "recall": 0.818,
+      "f1": 0.8326
+    },
+    "macro_f1": 0.829
+  },
+  "exact_match": {
+    "fields": {
+      "machine_type": {
+        "tp": 37,
+        "fp": 5,
+        "fn": 13,
+        "precision": 0.881,
+        "recall": 0.74,
+        "f1": 0.8043
+      },
+      "symptoms": {
+        "tp": 48,
+        "fp": 51,
+        "fn": 64,
+        "precision": 0.4848,
+        "recall": 0.4286,
+        "f1": 0.455
+      },
+      "root_cause": {
+        "tp": 26,
+        "fp": 12,
+        "fn": 24,
+        "precision": 0.6842,
+        "recall": 0.52,
+        "f1": 0.5909
+      },
+      "steps": {
+        "tp": 130,
+        "fp": 84,
+        "fn": 69,
+        "precision": 0.6075,
+        "recall": 0.6533,
+        "f1": 0.6295
+      },
+      "tools": {
+        "tp": 44,
+        "fp": 10,
+        "fn": 21,
+        "precision": 0.8148,
+        "recall": 0.6769,
+        "f1": 0.7395
+      },
+      "parts": {
+        "tp": 25,
+        "fp": 22,
+        "fn": 11,
+        "precision": 0.5319,
+        "recall": 0.6944,
+        "f1": 0.6024
+      },
+      "failed_attempts": {
+        "tp": 14,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1.0,
+        "recall": 0.875,
+        "f1": 0.9333
+      },
+      "safety_warnings": {
+        "tp": 0,
+        "fp": 17,
+        "fn": 16,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "micro": {
+      "tp": 324,
+      "fp": 201,
+      "fn": 220,
+      "precision": 0.6171,
+      "recall": 0.5956,
+      "f1": 0.6062
+    },
+    "macro_f1": 0.5944
+  },
+  "micro_by_source": {
+    "audio_debrief": {
+      "tp": 366,
+      "fp": 71,
+      "fn": 83,
+      "precision": 0.8375,
+      "recall": 0.8151,
+      "f1": 0.8262
+    },
+    "shift_log": {
+      "tp": 79,
+      "fp": 9,
+      "fn": 16,
+      "precision": 0.8977,
+      "recall": 0.8316,
+      "f1": 0.8634
+    }
+  }
+}
