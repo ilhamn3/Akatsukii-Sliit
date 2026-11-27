@@ -85,3 +85,4 @@ Thumbs.db
 
 # Human study: signed consent forms and the code list never leave the study lead
 project/human_study/private/
+results/dev_eval_cache_*.jsonl
