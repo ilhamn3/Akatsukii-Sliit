@@ -1,42 +1,29 @@
+"""Factory Memory — Streamlit App Entrypoint (WP6).
+
+Uses `st.navigation` so the first sidebar page is labelled "Chat" instead of "app".
+Run with: `streamlit run project/ui/app.py`
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+import sys
+
 import streamlit as st
-from mock_data import mock_answer, get_repair
 
-st.set_page_config(page_title="Factory Memory", page_icon="🏭")
-st.title("🏭 Factory Memory")
-st.error("🚫 MOCK DATA - NOT A REAL DIAGNOSIS - NOT SAFETY CHECKED")
-st.caption("Ask about a machine problem. Advisory only.")
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+st.set_page_config(page_title="Factory Memory", page_icon="🏭", layout="wide")
 
+UI_DIR = Path(__file__).resolve().parent
 
-def show_answer(result: dict):
-    st.write(result["answer"])
-    st.write(
-        "🚫 **MOCK safety: NOT CHECKED (no safety evaluation was run).** · "
-        f"**MOCK confidence (not validated):** {result['confidence']:.0%}"
-    )
-
-    st.markdown("**Mock citations (not real sources; click to view mock repair data):**")
-    for repair_id in result["citations"]:
-        repair = get_repair(repair_id)
-        with st.expander(f"📄 [MOCK] {repair_id}: {repair.get('machine', 'Unknown')}"):
-            st.write(f"**Symptom:** {repair.get('symptom')}")
-            st.write(f"**Root cause:** {repair.get('root_cause')}")
-            st.write(f"**Fix:** {repair.get('fix')}")
-            st.write(f"**Failed attempts:** {repair.get('failed_attempts')}")
-            st.warning(f"MOCK safety note (not safety checked): {repair.get('safety_warning')}")
-
-
-for m in st.session_state.messages:
-    with st.chat_message(m["role"]):
-        if m["role"] == "user":
-            st.write(m["text"])
-        else:
-            show_answer(m["result"])
-
-query = st.chat_input("Describe the problem...")
-if query:
-    st.session_state.messages.append({"role": "user", "text": query})
-    st.session_state.messages.append({"role": "assistant", "result": mock_answer(query)})
-    st.rerun()
+pg = st.navigation(
+    [
+        st.Page(str(UI_DIR / "chat_page.py"), title="Chat", icon="💬", default=True),
+        st.Page(str(UI_DIR / "pages" / "1_Review_Queue.py"), title="Review Queue", icon="📝"),
+        st.Page(str(UI_DIR / "pages" / "2_Trace_Viewer.py"), title="Trace Viewer", icon="🔍"),
+    ]
+)
+pg.run()

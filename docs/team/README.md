@@ -14,8 +14,8 @@ This directory contains individual work plans, allocations, reviewers, subtasks,
 | Ilham MM | 30 | 29.2 | 98% |
 | Kavibarath S | 30 | 23.2 | 77% |
 | Tharshanth A | 20 | 9.8 | 49% |
-| Kajanan K | 20 | 7.5 | 38% |
-| **Team** | **100** | **69.8** | **70%** |
+| Kajanan K | 20 | 12.5 | 62% |
+| **Team** | **100** | **74.7** | **75%** |
 <!-- ROLLUP:END -->
 
 ---

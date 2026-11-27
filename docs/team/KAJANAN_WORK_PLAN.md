@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 7.5 / 20 points · 38% complete**
+**Overall: 12.5 / 20 points · 62% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP6 | User interface | 8 | 3 | 38% |
+| WP6 | User interface | 8 | 8 | 100% |
 | WP7 | Single-agent baseline and benchmark | 9 | 4.5 | 50% |
 | WP9 | Demo and slides (Kajanan's part) | 3 | 0 | 0% |
 <!-- PROGRESS:END -->
@@ -27,10 +27,10 @@
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 6.1 | Streamlit skeleton and chat page | 3 | 22 Nov | 60% |
-| 6.2 | Cited answers display (evidence links to source repairs) | 1 | 24 Nov | 25% |
-| 6.3 | Technician review-queue page | 2 | 24 Nov | 25% |
-| 6.4 | Trace viewer showing every agent handoff | 2 | 26 Nov | 25% |
+| 6.1 | Streamlit skeleton and chat page | 3 | 22 Nov | 100% |
+| 6.2 | Cited answers display (evidence links to source repairs) | 1 | 24 Nov | 100% |
+| 6.3 | Technician review-queue page | 2 | 24 Nov | 100% |
+| 6.4 | Trace viewer showing every agent handoff | 2 | 26 Nov | 100% |
 
 #### WP7 – Single-agent baseline and benchmark (9 pts)
 
@@ -169,5 +169,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | #10 | 25 Nov | [WP6] Streamlit UI skeleton and pages on mock data | 6.1 (0->60%), 6.2-6.4 (0->25%) | Chat, mock citations, review queue, and trace viewer | 0% -> 15% | Tharshanth A |
 | J4+J5 | 27 Nov | [WP7] Single-agent baseline, harness and statistics | 7.1 (0->75%), 7.2 (0->75%), 7.3 (0->75%) | baseline_single_agent.py + baseline_v1.md, deterministic metrics.py (Top-3 Dice, cause_family, safety, must_not, already_tried, step-level citation_validity & groundedness), harness.py (--final + FROZEN.sha256 guard, resume cache, optional extraction/human ingestion), stats.py (paired bootstrap 10k, Wilcoxon, Cohen's d, McNemar), docs/BASELINE.md, merged origin/main dev dry run (0/40 degraded: multi beh 90.00% / cit 100.00% / grd 100.00% / saf 51.67%; baseline beh 100.00% / cit 55.00% / grd 40.00% / saf 88.33%), 289 pytest passed (3 skipped); pending 3-run frozen test execution in J6 | 15% -> 38% | Tharshanth A |
 | J5b | 27 Nov | [WP7] Quota-aware paired benchmark harness (--rpm, --max-calls, RPD stop) | 7.2 (75%), 7.3 (75%) | Paired multi+baseline execution in seeded cross-tier shuffle; shared client-side RPM limiter + DailyQuotaExhaustedError (no retry/wait on RPD, midnight Pacific reset message) in llm.py; --max-calls clean stop & resume; per-query progress projection; offline 429/quota tests; free-tier recipe in docs/BASELINE.md | 38% -> 38% | Tharshanth A |
+| J2+J3 | 27 Nov | [WP6] Connect Streamlit UI to real Pipeline B, ReviewQueue, and audit trace | 6.1 (60->100%), 6.2 (25->100%), 6.3 (25->100%), 6.4 (25->100%) | st.navigation sidebar ("Chat" default page in chat_page.py) wired to project.core.api.run_query with citations, evidence panel (snippet, similarity, verified_by, outcome), refusal, abstained/escalated + ticket ID, failed attempts, safety notes, fake/stub/llm_check banners, error panel, elapsed spinner, st.cache_resource; Review Queue wired to list_pending_reviews/approve_review_item/reject_review_item with quotes & blocking/warning issues; Trace Viewer wired to logs/audit_trace.jsonl; headless AppTest suite (295 pytest passed, 3 skipped); docs/UI.md with First run guide + 5 Playwright screenshots (chat_answer, chat_refusal, chat_abstain, review_queue, trace_viewer) | 38% -> 63% | Tharshanth A |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
