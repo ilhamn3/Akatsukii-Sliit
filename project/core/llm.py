@@ -7,11 +7,108 @@ with timeout management and offline simulation capabilities.
 from abc import ABC, abstractmethod
 import json
 import os
+import threading
 import time
 from typing import Any, Dict, List, Optional, Type, TypeVar
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
+
+
+class DailyQuotaExhaustedError(RuntimeError):
+    """Raised immediately when Gemini returns a daily (RPD / per-day) quota 429 error."""
+
+
+def is_rate_limit_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return "429" in msg or "resource_exhausted" in msg or "rate limit" in msg
+
+
+def is_daily_quota_error(exc: Exception) -> bool:
+    if isinstance(exc, DailyQuotaExhaustedError):
+        return True
+    if not is_rate_limit_error(exc):
+        return False
+    msg = str(exc).lower()
+    return any(
+        tok in msg
+        for tok in (
+            "per day",
+            "per_day",
+            "perday",
+            "rpd",
+            "requestsperday",
+            "daily",
+        )
+    )
+
+
+class _GlobalRateLimiter:
+    """Thread-safe shared RPM spacer and daily-quota state across all agents."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._rpm: Optional[float] = None
+        self._next_allowed: float = 0.0
+        self.daily_exhausted: bool = False
+        self.daily_error_message: Optional[str] = None
+        self.total_calls: int = 0
+
+    def configure_rpm(self, rpm: Optional[float]) -> None:
+        with self._lock:
+            self._rpm = float(rpm) if (rpm is not None and rpm > 0) else None
+            self._next_allowed = 0.0
+
+    def reset_daily_flag(self) -> None:
+        with self._lock:
+            self.daily_exhausted = False
+            self.daily_error_message = None
+
+    def mark_daily_exhausted(self, message: str) -> None:
+        with self._lock:
+            self.daily_exhausted = True
+            self.daily_error_message = message
+
+    def wait_slot(self) -> None:
+        while True:
+            with self._lock:
+                self.total_calls += 1
+                if self._rpm is None:
+                    return
+                interval = 60.0 / self._rpm
+                now = time.monotonic()
+                if now >= self._next_allowed:
+                    self._next_allowed = now + interval
+                    return
+                sleep_for = self._next_allowed - now
+                self._next_allowed = self._next_allowed + interval
+            if sleep_for > 0:
+                time.sleep(sleep_for)
+            return
+
+
+_GLOBAL_LIMITER = _GlobalRateLimiter()
+
+
+def set_global_rpm(rpm: Optional[float]) -> None:
+    """Configure shared client-side RPM throttle across all LLM calls."""
+    _GLOBAL_LIMITER.configure_rpm(rpm)
+
+
+def reset_daily_quota_flag() -> None:
+    _GLOBAL_LIMITER.reset_daily_flag()
+
+
+def mark_daily_quota_exhausted(message: str) -> None:
+    _GLOBAL_LIMITER.mark_daily_exhausted(message)
+
+
+def is_daily_quota_exhausted() -> bool:
+    return _GLOBAL_LIMITER.daily_exhausted
+
+
+def get_global_llm_calls() -> int:
+    return _GLOBAL_LIMITER.total_calls
 
 
 class LLMClient(ABC):
@@ -130,6 +227,7 @@ class GeminiLLMClient(LLMClient):
         for attempt in range(self.max_retries):
             t_start = time.perf_counter()
             try:
+                _GLOBAL_LIMITER.wait_slot()
                 response = client.models.generate_content(
                     model=self.model,
                     contents=prompt,
@@ -147,6 +245,9 @@ class GeminiLLMClient(LLMClient):
                     json.loads(text)
                 return text
             except Exception as e:
+                if is_daily_quota_error(e):
+                    _GLOBAL_LIMITER.mark_daily_exhausted(str(e))
+                    raise DailyQuotaExhaustedError(str(e)) from e
                 # If thinking_budget=0 is rejected by model with 400 Invalid Argument, fallback to MINIMAL
                 if "invalid argument" in str(e).lower() and config_kwargs.get("thinking_config"):
                     try:
