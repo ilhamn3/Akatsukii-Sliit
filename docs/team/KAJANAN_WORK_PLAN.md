@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 8.1 / 20 points · 41% complete**
+**Overall: 7.5 / 20 points · 38% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP6 | User interface | 8 | 3 | 38% |
-| WP7 | Single-agent baseline and benchmark | 9 | 5.1 | 57% |
+| WP7 | Single-agent baseline and benchmark | 9 | 4.5 | 50% |
 | WP9 | Demo and slides (Kajanan's part) | 3 | 0 | 0% |
 <!-- PROGRESS:END -->
 
@@ -36,8 +36,8 @@
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 7.1 | Single-agent baseline with equal tuning effort (prompt published) | 2 | 27 Nov | 90% |
-| 7.2 | Harness for all metrics | 2 | 27 Nov | 90% |
+| 7.1 | Single-agent baseline with equal tuning effort (prompt published) | 2 | 27 Nov | 75% |
+| 7.2 | Harness for all metrics | 2 | 27 Nov | 75% |
 | 7.3 | Three runs per query; paired bootstrap CIs and Wilcoxon tests | 2 | 28 Nov | 75% |
 | 7.4 | Result tables and charts generated from logs | 1 | 28 Nov | 0% |
 | 7.5 | Robustness and fault-injection runs | 1 | 28 Nov | 0% |
@@ -167,6 +167,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | PR # | Date | Title | Subtasks | Work done in this PR | My progress before -> after | Reviewer |
 |---|---|---|---|---|---|---|
 | #10 | 25 Nov | [WP6] Streamlit UI skeleton and pages on mock data | 6.1 (0->60%), 6.2-6.4 (0->25%) | Chat, mock citations, review queue, and trace viewer | 0% -> 15% | Tharshanth A |
-| J4+J5 | 27 Nov | [WP7] Single-agent baseline, harness and statistics | 7.1 (0->90%), 7.2 (0->90%), 7.3 (0->75%) | baseline_single_agent.py + baseline_v1.md, deterministic metrics.py (Top-3 Dice, cause_family, safety, must_not, already_tried, citation, groundedness), harness.py (--final + FROZEN.sha256 guard, resume cache, optional extraction/human ingestion), stats.py (paired bootstrap 10k, Wilcoxon, Cohen's d, McNemar), docs/BASELINE.md, 1-run dev dry run (0/40 degraded: multi beh 65.00%, baseline beh 95.00%), 284 pytest passed (3 skipped); pending 3-run frozen test execution in J6 | 15% -> 41% | Tharshanth A |
+| J4+J5 | 27 Nov | [WP7] Single-agent baseline, harness and statistics | 7.1 (0->75%), 7.2 (0->75%), 7.3 (0->75%) | baseline_single_agent.py + baseline_v1.md, deterministic metrics.py (Top-3 Dice, cause_family, safety, must_not, already_tried, step-level citation_validity & groundedness), harness.py (--final + FROZEN.sha256 guard, resume cache, optional extraction/human ingestion), stats.py (paired bootstrap 10k, Wilcoxon, Cohen's d, McNemar), docs/BASELINE.md, merged origin/main dev dry run (0/40 degraded: multi beh 90.00% / cit 100.00% / grd 100.00% / saf 51.67%; baseline beh 100.00% / cit 55.00% / grd 40.00% / saf 88.33%), 289 pytest passed (3 skipped); pending 3-run frozen test execution in J6 | 15% -> 38% | Tharshanth A |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*

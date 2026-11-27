@@ -168,3 +168,29 @@ def test_baseline_refuses_fake_llm_by_default_and_validates_schema(capsys):
     assert res["llm_calls"] == 1
     ans = FinalAnswer.model_validate(res["final_answer"])
     assert ans.steps[0].evidence_ids == ["EV-EP-0001-S1"]
+
+
+def test_step_level_evidence_ids_for_multi_and_baseline():
+    """Verify citation_validity and groundedness accept step-level IDs (-S<n>) for both multi and baseline."""
+    # Multi-agent api.run_query returns episode-level summary without metadata.steps
+    multi_evidence = [{"evidence_id": "EV-CMP-0010", "episode_id": "EP-0010"}]
+    # Baseline returns full normalized evidence with metadata.steps
+    base_evidence = [
+        {
+            "evidence_id": "EV-CMP-0010",
+            "episode_id": "EP-0010",
+            "metadata": {"steps": [{"evidence_id": "EV-CMP-0010-S1", "step": "Check belt tension"}]},
+        }
+    ]
+    ans = {
+        "steps": [
+            {"step_number": 1, "instruction": "Check belt tension", "evidence_ids": ["EV-CMP-0010-S1"]},
+            {"step_number": 2, "instruction": "Inspect pulley alignment", "evidence_ids": ["EV-CMP-0010-S2"]},
+        ],
+        "abstained": False,
+    }
+    assert citation_validity(ans, multi_evidence) == 1.0
+    assert groundedness(ans, multi_evidence, ["EP-0010"]) == 1.0
+    assert groundedness(ans, multi_evidence, ["EP-9999"]) == 0.0
+    assert citation_validity(ans, base_evidence) == 1.0
+    assert groundedness(ans, base_evidence, ["EP-0010"]) == 1.0

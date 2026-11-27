@@ -723,6 +723,25 @@ class OrchestratorAgent(BaseAgent):
             unavail_msg = "LLM safety oversight unavailable: deterministic rules only"
             if unavail_msg not in safety_warnings:
                 safety_warnings.append(unavail_msg)
+        if meta.get("llm_intent_unavailable"):
+            intent_msg = "LLM intent check unavailable"
+            if intent_msg not in safety_warnings:
+                safety_warnings.append(intent_msg)
+        for note in meta.get("informational_notes") or []:
+            info_msg = f"[INFO NOTE] {note}"
+            if info_msg not in safety_warnings:
+                safety_warnings.append(info_msg)
+
+        cfg: Dict[str, Any] = {}
+        try:
+            cfg = load_config()
+        except Exception:
+            pass
+        llm_only_concerns_block = bool(cfg.get("system", {}).get("llm_only_concerns_block", False))
+        rule_ids = list(safety_verdict.get("rule_ids") or [])
+        has_det_violations = bool(meta.get("has_det_violations", False)) or any(
+            str(rid).startswith("SR-") and rid != "SR-X05" for rid in rule_ids
+        )
 
         escalated = bool(state.get("escalated_to_supervisor", False) or state.get("escalated", False))
         if not plan_abstained and not safety_approved:
@@ -735,7 +754,7 @@ class OrchestratorAgent(BaseAgent):
                 query=raw_query,
                 machine=machine_type,
                 reasons=safety_warnings or [str(safety_verdict.get("reason") or "Safety escalation")],
-                rule_ids=list(safety_verdict.get("rule_ids") or []),
+                rule_ids=rule_ids,
             )
 
         if plan_abstained:
@@ -754,7 +773,7 @@ class OrchestratorAgent(BaseAgent):
                 escalation_ticket_id=ticket_id,
                 trace_id=trace_id,
             )
-        elif not safety_approved:
+        elif not safety_approved and (has_det_violations or llm_only_concerns_block or not state.get("candidate_steps")):
             safety_reason = (
                 safety_verdict.get("reason")
                 or state.get("abstention_reason")
@@ -776,6 +795,11 @@ class OrchestratorAgent(BaseAgent):
                 trace_id=trace_id,
             )
         else:
+            # Either safety_approved=True, OR only LLM-only advisory concerns remained (llm_only_concerns_block=False)
+            if not safety_approved:
+                adv_note = "LLM advisory concerns unresolved after max revision loops; supervisor review recommended."
+                if adv_note not in safety_warnings:
+                    safety_warnings.append(adv_note)
             candidate_steps = state.get("candidate_steps") or []
             action_steps = [
                 ActionStep(

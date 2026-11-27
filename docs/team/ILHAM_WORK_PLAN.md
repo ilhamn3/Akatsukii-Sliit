@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 28 / 30 points · 93% complete**
+**Overall: 28.7 / 30 points · 96% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP1 | Foundation and architecture | 12 | 12 | 100% |
-| WP5 | Assistance agents 5, 7 and 8 | 18 | 16 | 89% |
+| WP5 | Assistance agents 5, 7 and 8 | 18 | 16.7 | 93% |
 <!-- PROGRESS:END -->
 
 **How to update:** edit only the **Done %** column below (0-100). Points earned = Pts x Done %. A subtask is 100% only when it meets its "done when" in section 3 and has been reviewed. Partial progress is fine (25 / 50 / 75%).
@@ -40,9 +40,9 @@
 | 5.2 | Diagnostic agent: clarifying-question flow | 2 | 24 Nov | 100% |
 | 5.3 | Safety rule base (from Tharshanth's hazard list) | 3 | 24 Nov | 100% |
 | 5.4 | Safety Verification agent: approve / amend / veto with reason | 3 | 26 Nov | 100% |
-| 5.5 | Orchestrator: task delegation and adaptive routing | 3 | 26 Nov | 90% |
-| 5.6 | Orchestrator: conflict ranking, veto loop (max 2), abstention, human escalation | 3 | 26 Nov | 65% |
-| 5.7 | End-to-end integration run and adversarial safety tests | 1 | 28 Nov | 40% |
+| 5.5 | Orchestrator: task delegation and adaptive routing | 3 | 26 Nov | 95% |
+| 5.6 | Orchestrator: conflict ranking, veto loop (max 2), abstention, human escalation | 3 | 26 Nov | 75% |
+| 5.7 | End-to-end integration run and adversarial safety tests | 1 | 28 Nov | 55% |
 
 ## 2. Files and folders you own
 
@@ -168,5 +168,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | I5a | 25 Nov | [WP5] Orchestrator: real retrieval wiring, routing, conflict ranking and safety-wins finalize | 5.5 (0->70%) | Real: HybridRetriever wiring in RetrievalNode (no silent stub fallback), normalize_evidence for K6 metadata, step-level citations, FAST/FULL routing, conflict ranking, safety-wins finalize/revise, n400 store loader, 222 pytest tests; Pending (5.6 / I5b): full LLM-guided revision loop, escalation UX, and adversarial end-to-end suite | 77% -> 84% | Kavibarath S |
 | I5b | 25 Nov | [WP5] Safety-aware revise loop, unsafe-request rule, escalation tickets, dev eval | 5.5 (70->90%), 5.6 (0->60%) | Safety-control-aware planning, LLM-guided revise loop, diagnosis from top episode root_cause + disagreement trace, SR-X05 unsafe-request refusal (5/5 dev adversarial caught, 0/15 FP), LLM-unavailable disclosure, escalation tickets (logs/escalations.jsonl), embedder caching + main revision-keyed store cache; Dev eval n=10 of 20, unbalanced; flash hit 20 requests/day free-tier cap so models are not comparable; SR-X05 patterns tuned on dev | 84% -> 91.7% | Kavibarath S |
 | I6 | 26 Nov | [WP5] Dev diagnosis, unseen adversarial check, UI API, e2e demo | 5.6 (60->65%), 5.7 (0->40%) | Deterministic catalogue control insertion in plan/revise; 20 dev queries run, 0 degraded: behaviour match 55%, root-cause match 40%, safety coverage 60%, unseen adversarial recall 1/12 (0/6 false positives), avg latency 33 s; gaps documented in docs/DEV_RESULTS.md; project/core/api.py + docs/UI_API.md, scripts/demo_e2e.py real A1-A4->B run, full pytest suite | 91.7% -> 93.5% | Kavibarath S |
+| I6b | 26 Nov | [WP5] Safety LLM advisory categorisation, unsafe-intent v2, 2x20 dev eval | 5.5 (90->95%), 5.6 (65->75%), 5.7 (40->55%) | Evidence-first diagnosed_cause + safety/other concern split in SafetyAgent; system.llm_only_concerns_block=false delivery with warnings/escalation; generic SR-X05 regexes + UnsafeIntentOutput LLM check (confidence >= 0.8 + valid hazard_id, with 429/timeout disclosure); temperature=0.0 & version-hashed resume cache; 2x20 dev eval (flash-lite minimal, 0 degraded) mean (min-max): beh 85.00% (80.00%-90.00%), RC 80.00% (73.33%-86.67%), safety cov 50.83% (45.00%-56.67%), ret top-1 100%, citations 100%, must-not 0, 2 disagreements; adversarial_unseen.jsonl marked contaminated/dev-only; 6 benign re-run: 0/6 refusals (3/6 revise abstentions); blind script scripts/run_blind_adversarial.py | 93.5% -> 95.5% | Kavibarath S |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*

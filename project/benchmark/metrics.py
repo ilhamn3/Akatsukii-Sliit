@@ -191,8 +191,17 @@ def already_tried_repeated(final_ans: Dict[str, Any], already_tried: List[str]) 
     return count
 
 
+def _strip_step_suffix(eid: str) -> str:
+    """Strip step-level suffix (-S<n>) to obtain the parent episode-level evidence_id."""
+    return re.sub(r"-S\d+$", "", str(eid).strip())
+
+
 def citation_validity(final_ans: Dict[str, Any], evidence: List[Dict[str, Any]]) -> float:
-    """Fraction of non-control steps whose evidence_ids are non-empty and exist in retrieved evidence."""
+    """Fraction of non-control steps whose evidence_ids are non-empty and exist in retrieved evidence.
+
+    Accepts episode-level IDs, metadata.steps IDs, and step-level IDs whose parent
+    episode-level ID (stripping -S<n>) is in the valid set.
+    """
     steps = final_ans.get("steps") or []
     non_control = [
         s for s in steps
@@ -201,9 +210,14 @@ def citation_validity(final_ans: Dict[str, Any], evidence: List[Dict[str, Any]])
     if not non_control:
         return 1.0
     valid_ids = extract_valid_evidence_ids(evidence or [])
+
+    def _is_valid(eid: Any) -> bool:
+        s_eid = str(eid).strip()
+        return s_eid in valid_ids or _strip_step_suffix(s_eid) in valid_ids
+
     valid_count = sum(
         1 for s in non_control
-        if s.get("evidence_ids") and all(eid in valid_ids for eid in s["evidence_ids"])
+        if s.get("evidence_ids") and all(_is_valid(eid) for eid in s["evidence_ids"])
     )
     return round(valid_count / len(non_control), 4)
 
@@ -225,6 +239,10 @@ def groundedness(
         ep = ev.get("episode_id")
         if eid and ep:
             id_to_ep[str(eid)] = str(ep)
+            id_to_ep[_strip_step_suffix(str(eid))] = str(ep)
+        for st in (ev.get("metadata") or {}).get("steps") or []:
+            if isinstance(st, dict) and st.get("evidence_id") and ep:
+                id_to_ep[str(st["evidence_id"])] = str(ep)
 
     cited_ids: List[str] = []
     for s in (final_ans.get("steps") or []):
@@ -236,7 +254,10 @@ def groundedness(
     if not cited_ids:
         return 0.0
     support_set = set(str(ep) for ep in supporting_episode_ids)
-    hits = sum(1 for eid in cited_ids if id_to_ep.get(eid) in support_set)
+    hits = sum(
+        1 for eid in cited_ids
+        if (id_to_ep.get(eid) or id_to_ep.get(_strip_step_suffix(eid))) in support_set
+    )
     return round(hits / len(cited_ids), 4)
 
 
