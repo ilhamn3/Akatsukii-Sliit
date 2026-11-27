@@ -288,6 +288,9 @@ class RuleEngine:
             negative_hit = False
             for step in norm_steps:
                 step_lower = step.lower()
+                # Skip deterministic safety-control / prohibition steps injected by the pipeline
+                if step_lower.startswith(("[safety control", "[safety amendment")):
+                    continue
                 for neg_pat in rule.negative_step_patterns:
                     if re.search(neg_pat, step_lower):
                         hits.append(

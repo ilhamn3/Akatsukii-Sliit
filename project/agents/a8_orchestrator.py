@@ -191,6 +191,129 @@ def _is_safety_control_step(instruction: str) -> bool:
     return low.startswith("[safety control") or low.startswith("[safety amendment")
 
 
+_FAULTS_CATALOGUE_CACHE: Optional[List[Dict[str, Any]]] = None
+
+
+def _get_faults_catalogue() -> List[Dict[str, Any]]:
+    global _FAULTS_CATALOGUE_CACHE
+    if _FAULTS_CATALOGUE_CACHE is None:
+        faults_path = Path(__file__).resolve().parent.parent / "data" / "fault_catalogue" / "faults.json"
+        if faults_path.exists():
+            import json as _json
+            _FAULTS_CATALOGUE_CACHE = _json.loads(faults_path.read_text(encoding="utf-8"))
+        else:
+            _FAULTS_CATALOGUE_CACHE = []
+    return _FAULTS_CATALOGUE_CACHE
+
+
+def _collect_required_hazard_ids(
+    state: BlackboardState,
+    diagnosed_cause: Optional[str],
+    rule_ids: List[str],
+) -> List[str]:
+    """Collect deduped hazard IDs from state, retrieved/cited episodes, faults.json, and rule_ids."""
+    ordered: List[str] = []
+    seen: set[str] = set()
+
+    def _add(hid: Optional[str]) -> None:
+        if not hid:
+            return
+        h = str(hid).strip().upper()
+        if h.startswith("SR-"):
+            h = h[3:]
+        if h.startswith("H") and h not in seen:
+            seen.add(h)
+            ordered.append(h)
+
+    for h in (state.get("hazard_ids") or []):
+        _add(h)
+
+    for ev in (state.get("evidence") or []):
+        ev_meta = ev.get("metadata") or {}
+        for h in (ev_meta.get("catalogue_hazards") or []):
+            _add(h)
+        rec = ev_meta.get("record") or {}
+        for h in (rec.get("hazards") or []):
+            _add(h)
+
+    selected_hyp = state.get("selected_hypothesis") or {}
+    hyp_fid = str(selected_hyp.get("fault_id") or "").strip().upper()
+    diag_low = str(diagnosed_cause or "").strip().lower()
+    for f in _get_faults_catalogue():
+        fid = str(f.get("fault_id") or "").strip().upper()
+        rc_low = str(f.get("root_cause") or "").strip().lower()
+        name_low = str(f.get("name") or "").strip().lower()
+        if (hyp_fid and fid == hyp_fid) or (
+            diag_low and ((rc_low and (rc_low in diag_low or diag_low in rc_low)) or (name_low and name_low in diag_low))
+        ):
+            for h in (f.get("hazards") or []):
+                _add(h)
+
+    for rid in rule_ids:
+        if str(rid).upper().startswith("SR-H"):
+            _add(rid)
+
+    return ordered
+
+
+def _inject_finalize_catalogue_controls(
+    action_steps: List[ActionStep],
+    safety_warnings: List[str],
+    hazard_ids: List[str],
+) -> tuple[List[ActionStep], List[str]]:
+    """Deterministically ensure all required catalogue controls appear before repair steps and in warnings."""
+    if not hazard_ids:
+        return action_steps, safety_warnings
+    try:
+        engine = RuleEngine()
+    except Exception:
+        return action_steps, safety_warnings
+
+    existing_ctrl_steps: List[ActionStep] = []
+    repair_steps: List[ActionStep] = []
+    seen_ctrl_tags: set[str] = set()
+    seen_ctrl_texts: set[str] = set()
+
+    for s in action_steps:
+        inst = s.instruction.strip()
+        if _is_safety_control_step(inst):
+            existing_ctrl_steps.append(ActionStep(step_number=1, instruction=inst, evidence_ids=[]))
+            seen_ctrl_texts.add(inst.lower())
+            for hid in hazard_ids:
+                if f" {hid}]" in inst or f"{hid}:" in inst:
+                    seen_ctrl_tags.add(hid)
+        else:
+            repair_steps.append(s)
+
+    new_ctrl_steps: List[ActionStep] = []
+    updated_warnings = list(safety_warnings)
+    warn_corpus = "\n".join(updated_warnings).lower()
+
+    for hid in hazard_ids:
+        rule = engine.hazard_map.get(hid)
+        if not rule or not rule.required_control:
+            continue
+        ctrl_text = rule.required_control.strip()
+        ctrl_inst = f"[SAFETY CONTROL {hid}] {ctrl_text}"
+        warn_entry = f"{hid}: {ctrl_text}"
+
+        if hid not in seen_ctrl_tags and ctrl_inst.lower() not in seen_ctrl_texts and ctrl_text.lower() not in seen_ctrl_texts:
+            new_ctrl_steps.append(ActionStep(step_number=1, instruction=ctrl_inst, evidence_ids=[]))
+            seen_ctrl_tags.add(hid)
+            seen_ctrl_texts.add(ctrl_inst.lower())
+
+        if hid.lower() not in warn_corpus and ctrl_text.lower() not in warn_corpus:
+            updated_warnings.append(warn_entry)
+            warn_corpus += f"\n{warn_entry.lower()}"
+
+    ordered_steps = existing_ctrl_steps + new_ctrl_steps + repair_steps
+    renumbered = [
+        ActionStep(step_number=idx, instruction=s.instruction, evidence_ids=list(s.evidence_ids))
+        for idx, s in enumerate(ordered_steps, start=1)
+    ]
+    return renumbered, updated_warnings
+
+
 def _ensure_catalogue_controls(
     steps: List[Dict[str, Any]],
     hazard_ids: List[str],
@@ -809,6 +932,10 @@ class OrchestratorAgent(BaseAgent):
                 )
                 for i, s in enumerate(candidate_steps)
             ]
+            required_hazards = _collect_required_hazard_ids(state, diagnosed_cause, rule_ids)
+            action_steps, safety_warnings = _inject_finalize_catalogue_controls(
+                action_steps, safety_warnings, required_hazards
+            )
             final_ans = FinalAnswer(
                 machine_type=machine_type,
                 symptoms=[raw_query],
