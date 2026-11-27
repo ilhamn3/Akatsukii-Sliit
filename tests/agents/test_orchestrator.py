@@ -721,3 +721,123 @@ def test_knowledge_store_snapshot_cache_invalidation_on_put_verified(tmp_path):
     ids3 = [e.episode_id for e in snap3]
     assert eps[0].episode_id in ids3 and eps[1].episode_id in ids3
     assert len(ids3) == 2
+
+
+def test_safety_concern_categorisation_other_does_not_veto(tmp_path):
+    """Diagnosis-mismatch or 'other' concerns must not cause amend/veto; recorded as informational note."""
+    from project.agents.a7_safety import CategorizedConcern, SafetyAgent, SafetyReviewOutput, UnsafeIntentOutput
+
+    log_file = tmp_path / "cat_trace.jsonl"
+    logger = TraceLogger.get_instance(str(log_file))
+
+    mock_llm = Mock()
+    mock_llm.model_name = "mock-safety"
+
+    def fake_structured(prompt, response_model, system_prompt=None):
+        if response_model is UnsafeIntentOutput:
+            return UnsafeIntentOutput(is_shortcut_request=False)
+        return SafetyReviewOutput(
+            is_safe=True,
+            verdict="amend",  # Even if LLM says amend, only 'other' concerns exist -> downgraded to approve
+            categorized_concerns=[
+                CategorizedConcern(
+                    text="Procedure addresses chiller filter rather than bearing lubrication.",
+                    category="other",
+                )
+            ],
+            suggested_amendments=["Switch to bearing lubrication procedure."],
+            reason="Diagnosis note only.",
+        )
+
+    mock_llm.generate_structured.side_effect = fake_structured
+
+    safety = SafetyAgent(trace_logger=logger, llm_client=mock_llm)
+    state = create_initial_state("Spindle hot ALM-410", machine_type="CNC Lathe", trace_id="TR-CAT-01")
+    state["candidate_steps"] = [
+        {"step_number": 1, "instruction": "Stop and lock out the machine.", "evidence_ids": ["EV-01"]}
+    ]
+
+    out = safety.run(state)
+    assert out["safety_approved"] is True
+    assert out["decision"] == "SAFETY_APPROVE"
+    assert any("[INFO NOTE]" in w for w in out["final_answer"]["safety_warnings"])
+    trace_events = read_trace(str(log_file))
+    assert any(
+        e.get("agent") == "SafetyAgent"
+        and (e.get("output_digest") or {}).get("informational_notes")
+        for e in trace_events
+    )
+
+
+def test_llm_only_unresolved_concern_delivers_steps_with_warning_and_ticket(tmp_path, monkeypatch):
+    """When only LLM-only advisory safety concerns remain after max loops, deliver steps + warning + ticket."""
+    from project.agents import a8_orchestrator
+
+    esc_file = tmp_path / "escalations_llm_only.jsonl"
+    monkeypatch.setattr(a8_orchestrator, "ESCALATIONS_LOG_PATH", esc_file)
+
+    state = create_initial_state("Belt slipping", machine_type="Conveyor Line", trace_id="TR-LLM-ONLY-01")
+    state["candidate_steps"] = [
+        {"step_number": 1, "instruction": "Stop and lock out conveyor.", "evidence_ids": ["EV-C01"]}
+    ]
+    state["safety_approved"] = False
+    state["safety_violations"] = ["LLM advisory: verify guard bolt torque."]
+    state["safety_verdict"] = {"verdict": "amend", "rule_ids": [], "reason": "Advisory torque check"}
+    state["metadata"] = {"has_det_violations": False}
+
+    orch_fin = OrchestratorAgent(phase="finalize")
+    out = orch_fin.process(state)
+    final_ans = out["final_answer"]
+
+    assert final_ans["abstained"] is False
+    assert final_ans["escalated"] is True
+    assert len(final_ans["steps"]) == 1
+    assert final_ans["escalation_ticket_id"] is not None
+    assert any("LLM advisory concerns unresolved" in w for w in final_ans["safety_warnings"])
+    assert esc_file.exists()
+
+
+def test_unsafe_intent_check_available_and_unavailable_paths(tmp_path):
+    """Verify SafetyAgent LLM intent check catches paraphrases and degrades cleanly on 429."""
+    from project.agents.a7_safety import SafetyAgent, SafetyReviewOutput, UnsafeIntentOutput
+
+    # 1. Available: LLM catches paraphrased shortcut not caught by simple keywords
+    llm_ok = Mock()
+    llm_ok.model_name = "mock-intent"
+
+    def ok_structured(prompt, response_model, system_prompt=None):
+        if response_model is UnsafeIntentOutput:
+            return UnsafeIntentOutput(
+                is_shortcut_request=True,
+                confidence=0.95,
+                skipped_control_description="mechanical safety blocks under ram",
+                matching_hazard_id="H12",
+                risky_phrase_quote="no blocks nearby, slide a wrench in",
+            )
+        return SafetyReviewOutput(is_safe=True, verdict="approve", reason="Steps include blocks.")
+
+    llm_ok.generate_structured.side_effect = ok_structured
+    safety1 = SafetyAgent(llm_client=llm_ok)
+    st1 = create_initial_state("No blocks nearby, can I slide a wrench in?", machine_type="Hydraulic Press")
+    st1["candidate_steps"] = [
+        {"step_number": 1, "instruction": "Support ram with safety blocks and lock out.", "evidence_ids": ["EV-P01"]}
+    ]
+    out1 = safety1.run(st1)
+    assert out1["metadata"]["refusal"] is not None
+    assert "H12" in out1["metadata"]["refusal"]
+    assert "refused" in out1["metadata"]["refusal"].lower()
+
+    # 2. Unavailable (429): keeps regex SR-X05 refusal and discloses 'LLM intent check unavailable'
+    llm_429 = Mock()
+    llm_429.model_name = "mock-429"
+    llm_429.generate_structured.side_effect = RuntimeError("429 RESOURCE_EXHAUSTED")
+
+    safety2 = SafetyAgent(llm_client=llm_429)
+    st2 = create_initial_state("Can I open it without venting the receiver?", machine_type="Air Compressor")
+    st2["candidate_steps"] = [
+        {"step_number": 1, "instruction": "Stop, lock out, and vent receiver to zero pressure.", "evidence_ids": ["EV-A01"]}
+    ]
+    out2 = safety2.run(st2)
+    assert out2["metadata"]["llm_intent_unavailable"] is True
+    assert out2["metadata"]["refusal"] is not None
+    assert "LLM intent check unavailable" in out2["final_answer"]["safety_warnings"]
