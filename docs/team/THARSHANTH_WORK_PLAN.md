@@ -12,13 +12,13 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 9.8 / 20 points · 49% complete**
+**Overall: 11.2 / 20 points · 56% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP2 | Synthetic data and test set | 12 | 9 | 75% |
 | WP8 | Human baseline study | 5 | 0.8 | 15% |
-| WP9 | Documentation (Tharshanth's part) | 3 | 0 | 0% |
+| WP9 | Documentation (Tharshanth's part) | 3 | 1.5 | 50% |
 <!-- PROGRESS:END -->
 
 **How to update:** edit only the **Done %** column below (0-100). Points earned = Pts x Done %. A subtask is 100% only when it meets its "done when" in section 3 and has been reviewed. Partial progress is fine (25 / 50 / 75%).
@@ -48,8 +48,8 @@
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 9.1 | README.md (overview, setup, execution guide) | 1 | 29 Nov | 0% |
-| 9.2 | docs/Workflow.md | 1 | 29 Nov | 0% |
+| 9.1 | README.md (overview, setup, execution guide) | 1 | 29 Nov | 75% |
+| 9.2 | docs/Workflow.md | 1 | 29 Nov | 75% |
 | 9.3 | docs/PROJECT_DETAILS.md with every AI model/tool declared | 1 | 29 Nov | 0% |
 
 ## 2. Files and folders you own
@@ -179,5 +179,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | #17 | 25 Nov | [WP2] Frozen 60-query test set and dev split | 2.5 (0->75%) | 60 test queries (20 easy / 20 medium / 10 hard / 10 adversarial) with gold answers, separate 20-query dev split, FROZEN.sha256 with --verify and an overwrite guard, no-tuning rule in README, 9 tests | 26% -> 34% | Ilham MM |
 | #18 | 25 Nov | [WP8] Consent form and human-study protocol | 8.1 (0->75%), 2.1 (75->100%) | Consent form template, full protocol (packets, session script, timing, CSV formats, anonymisation and blind-grading steps), private/ folder git-ignored. 2.1 to 100%: #6 merged and the Safety agent loads hazards.json | 34% -> 41% | Ilham MM |
 | #19 | 26 Nov | [WP2] Audio subset and expanded stores | 2.4 (0->50%), 2.6 (0->100%) | 12 synthetic audio clips (7.3 min, 5 machines, 6 clean / 6 with plant noise, reference transcripts); nested stores n100 / n400 / n2000 as VerifiedEpisode envelopes, all 2,500 validated against the store model; 7 tests. All three stores load through scripts/load_expanded_store.py into KnowledgeStore (100 / 400 / 2,000 rows, reload is idempotent). Pending: Agent 1 transcription check (Kavibarath) | 41% -> 49% | Ilham MM |
+| #28 | 27 Nov | [Docs] README and Workflow.md match the code on main | 9.1 (0->75%), 9.2 (0->75%) | README rewritten from the code: honest status table, real setup (Python 3.10-3.13, .venv, env variables the code reads), run guide, data checks, troubleshooting, docs index, team. Every command run: smoke test, store load, query, UI, data checks, safety cases, 237 tests pass; 4 errors found and fixed (missing machine type, dev-eval overwriting committed results, demo --fake-llm crash, slow-network model download). Workflow.md rewritten to the real graph (safety after plan, FAISS not ChromaDB, every draft human-reviewed, abstention and LOTO checks, real trace format, HITL status). Pending: real Gemini run, teammate clean-machine check | 49% -> 56% | Ilham MM |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
