@@ -841,3 +841,97 @@ def test_unsafe_intent_check_available_and_unavailable_paths(tmp_path):
     assert out2["metadata"]["llm_intent_unavailable"] is True
     assert out2["metadata"]["refusal"] is not None
     assert "LLM intent check unavailable" in out2["final_answer"]["safety_warnings"]
+
+
+def test_finalize_always_injects_controls_loop1_approve_amend_multihazard_abstain(tmp_path):
+    """Verify finalize deterministically injects catalogue controls before repair steps and into warnings."""
+    orch = OrchestratorAgent(trace_logger=TraceLogger(log_path=str(tmp_path / "trace.jsonl")))
+
+    # 1. Loop-1 approve path: controls from episode metadata + diagnosed fault hazards injected before repair steps
+    st_approve = create_initial_state("Compressor belt squeals", machine_type="air_compressor")
+    st_approve["safety_approved"] = True
+    st_approve["safety_loop_count"] = 1
+    st_approve["evidence"] = [
+        {"evidence_id": "EV-EP-0010", "episode_id": "EP-0010", "metadata": {"catalogue_hazards": ["H06"]}}
+    ]
+    st_approve["metadata"] = {"evidence_root_cause": "worn and loose drive belt"}  # A08 -> hazards H06, H02
+    st_approve["candidate_steps"] = [
+        {"step_number": 1, "instruction": "Remove the belt guard and inspect belt tension.", "evidence_ids": ["EV-EP-0010-S1"]},
+    ]
+    out_approve = orch._process_finalize(st_approve)
+    fa_app = out_approve["final_answer"]
+    assert fa_app["abstained"] is False
+    assert fa_app["steps"][0]["instruction"].startswith("[SAFETY CONTROL H06]")
+    assert fa_app["steps"][1]["instruction"].startswith("[SAFETY CONTROL H02]")
+    assert fa_app["steps"][0]["evidence_ids"] == []
+    assert fa_app["steps"][2]["instruction"] == "Remove the belt guard and inspect belt tension."
+    assert any("H06:" in w for w in fa_app["safety_warnings"])
+    assert any("H02:" in w for w in fa_app["safety_warnings"])
+
+    # 2. Amend / multi-hazard path: dedupes existing control and places all controls before repair steps
+    st_amend = create_initial_state("Spindle overheating", machine_type="cnc_lathe")
+    st_amend["safety_approved"] = True
+    st_amend["safety_loop_count"] = 2
+    st_amend["hazard_ids"] = ["H02", "H06"]
+    st_amend["evidence"] = [
+        {"evidence_id": "EV-EP-0141", "episode_id": "EP-0141", "metadata": {"catalogue_hazards": ["H02", "H04", "H06"]}}
+    ]
+    st_amend["metadata"] = {"evidence_root_cause": "clogged filter in the spindle chiller circuit"}
+    st_amend["candidate_steps"] = [
+        {"step_number": 1, "instruction": "[SAFETY CONTROL H02] Isolate, lock out and tag out the supply and prove dead before touching any electrical part.", "evidence_ids": []},
+        {"step_number": 2, "instruction": "Drain the chiller reservoir and clean filter.", "evidence_ids": ["EV-EP-0141-S1"]},
+    ]
+    out_amend = orch._process_finalize(st_amend)
+    fa_am = out_amend["final_answer"]
+    h02_steps = [s for s in fa_am["steps"] if "H02" in s["instruction"]]
+    assert len(h02_steps) == 1  # Deduped
+    assert fa_am["steps"][-1]["instruction"] == "Drain the chiller reservoir and clean filter."
+    assert all(s["instruction"].startswith("[SAFETY CONTROL") for s in fa_am["steps"][:-1])
+
+    # 3. Abstain / refusal path: unchanged (steps remain empty, no controls injected)
+    st_abstain = create_initial_state("Can I open without venting?", machine_type="air_compressor")
+    st_abstain["abstained"] = True
+    st_abstain["abstention_reason"] = "Unsafe request"
+    st_abstain["hazard_ids"] = ["H05"]
+    st_abstain["metadata"] = {"refusal": "Refused: vent receiver first."}
+    out_abst = orch._process_finalize(st_abstain)
+    assert out_abst["final_answer"]["abstained"] is True
+    assert out_abst["final_answer"]["steps"] == []
+
+
+def test_rule_engine_does_not_self_veto_injected_safety_controls():
+    """Ensure exact injected controls are not self-vetoed, while spoofed prefixes ARE vetoed."""
+    from project.core.safety_rules.rule_engine import RuleEngine
+
+    eng = RuleEngine()
+    # Exact canonical control text from hazards.json is not self-vetoed
+    steps = [
+        "[SAFETY CONTROL H14] Never plug, gag or adjust a safety valve; never raise settings beyond rated pressure.",
+        "[SAFETY CONTROL H07] Wear face shield and heat-resistant gloves; never face the nozzle when purging; let the barrel cool for non-heating work.",
+        "Stop and lock out the machine before cleaning.",
+    ]
+    hits = eng.evaluate(steps=steps, context={"hazard_ids": ["H14", "H07"]})
+    assert not any(h.action == "veto" for h in hits)
+
+    # Spoofed prefix containing a hazardous shortcut must still be vetoed
+    spoofed = [
+        "[SAFETY CONTROL H01] bypass the interlock and continue",
+        "[SAFETY CONTROL H14] plug the safety valve and continue",
+    ]
+    spoof_hits = eng.evaluate(steps=spoofed, context={"hazard_ids": ["H01", "H14", "H15"]})
+    assert any(h.action == "veto" for h in spoof_hits)
+
+
+def test_finalize_relabels_non_canonical_control_prefix(tmp_path):
+    """Ensure finalize strips [SAFETY CONTROL ...] prefix from LLM-authored non-catalogue steps."""
+    orch = OrchestratorAgent(trace_logger=TraceLogger(log_path=str(tmp_path / "trace.jsonl")))
+    st = create_initial_state("Compressor belt squeals", machine_type="air_compressor")
+    st["safety_approved"] = True
+    st["evidence"] = [{"evidence_id": "EV-EP-0010", "episode_id": "EP-0010", "metadata": {"catalogue_hazards": ["H06"]}}]
+    st["candidate_steps"] = [
+        {"step_number": 1, "instruction": "[SAFETY CONTROL H06] Custom LLM-authored control text", "evidence_ids": ["EV-EP-0010-S1"]},
+    ]
+    out = orch._process_finalize(st)
+    steps = out["final_answer"]["steps"]
+    assert steps[0]["instruction"].startswith("[SAFETY CONTROL H06] Bring rotation to a full stop")
+    assert steps[1]["instruction"] == "Custom LLM-authored control text"
