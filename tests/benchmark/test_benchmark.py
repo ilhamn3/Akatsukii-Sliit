@@ -194,3 +194,146 @@ def test_step_level_evidence_ids_for_multi_and_baseline():
     assert groundedness(ans, multi_evidence, ["EP-9999"]) == 0.0
     assert citation_validity(ans, base_evidence) == 1.0
     assert groundedness(ans, base_evidence, ["EP-0010"]) == 1.0
+
+
+def test_gemini_429_daily_vs_rpm_handling(monkeypatch):
+    """Daily-quota 429 raises DailyQuotaExhaustedError immediately; per-minute 429 retries with backoff."""
+    from unittest.mock import MagicMock
+    from project.core.llm import (
+        DailyQuotaExhaustedError,
+        GeminiLLMClient,
+        is_daily_quota_exhausted,
+        reset_daily_quota_flag,
+        set_global_rpm,
+    )
+
+    reset_daily_quota_flag()
+    set_global_rpm(None)
+
+    sleep_calls = []
+    monkeypatch.setattr("project.core.llm.time.sleep", lambda s: sleep_calls.append(s))
+
+    # 1. Daily quota (RPD) 429: NO retry, NO sleep, raises DailyQuotaExhaustedError immediately
+    client = GeminiLLMClient(api_key="test-key-123", model="gemini-3.5-flash-lite", max_retries=3)
+    mock_genai = MagicMock()
+    mock_genai.models.generate_content.side_effect = RuntimeError(
+        "429 RESOURCE_EXHAUSTED: GenerateRequestsPerDayPerProjectPerModel-FreeTier exceeded (RPD)"
+    )
+    monkeypatch.setattr(client, "_get_client", lambda: mock_genai)
+
+    with pytest.raises(DailyQuotaExhaustedError):
+        client.generate("hello")
+    assert mock_genai.models.generate_content.call_count == 1
+    assert sleep_calls == []
+    assert is_daily_quota_exhausted() is True
+    reset_daily_quota_flag()
+
+    # 2. Per-minute (RPM) 429: retries with backoff and succeeds on 2nd attempt
+    mock_ok_resp = MagicMock()
+    mock_ok_resp.text = "ok"
+    mock_ok_resp.usage_metadata = None
+    mock_genai2 = MagicMock()
+    mock_genai2.models.generate_content.side_effect = [
+        RuntimeError("429 RESOURCE_EXHAUSTED: GenerateRequestsPerMinute limit exceeded"),
+        mock_ok_resp,
+    ]
+    monkeypatch.setattr(client, "_get_client", lambda: mock_genai2)
+
+    out = client.generate("hello")
+    assert out == "ok"
+    assert mock_genai2.models.generate_content.call_count == 2
+    assert len(sleep_calls) == 1
+
+
+def test_harness_paired_max_calls_daily_stop_and_resume(tmp_path, monkeypatch, capsys):
+    """Verify paired execution, --max-calls clean stop, daily-429 stop, and --resume."""
+    from project.core.llm import DailyQuotaExhaustedError, reset_daily_quota_flag
+
+    reset_daily_quota_flag()
+
+    calls = []
+
+    def fake_multi(query, machine_type):
+        calls.append(("multi", query[:15]))
+        return {
+            "final_answer": {"diagnosed_cause": "belt", "steps": [], "safety_warnings": [], "abstained": False},
+            "evidence": [],
+            "trace_id": "TR-M1",
+            "clarification_needed": False,
+            "latency_ms": 10.0,
+            "llm_calls": 3,
+            "token_count": 100,
+            "degraded": False,
+            "error": None,
+        }
+
+    def fake_base(query, machine_type=None, allow_fake=False):
+        calls.append(("baseline", query[:15]))
+        return {
+            "final_answer": {"diagnosed_cause": "belt", "steps": [], "safety_warnings": [], "abstained": False},
+            "evidence": [],
+            "trace_id": "TR-B1",
+            "latency_ms": 5.0,
+            "llm_calls": 1,
+            "token_count": 50,
+            "degraded": False,
+            "error": None,
+        }
+
+    monkeypatch.setattr("project.benchmark.harness._run_multi_once", fake_multi)
+    monkeypatch.setattr("project.benchmark.harness.run_baseline_query", fake_base)
+
+    out_dir = tmp_path / "bench_run"
+    # Stop after 4 calls (1 full multi+baseline pair = 3 + 1 = 4 calls)
+    rc = harness_main([
+        "--system", "both",
+        "--split", "dev",
+        "--runs", "1",
+        "--limit", "3",
+        "--max-calls", "4",
+        "--rpm", "0",
+        "--out", str(out_dir),
+    ])
+    assert rc == 0
+    captured = capsys.readouterr().out
+    assert "resume with the same command" in captured
+    assert "[PROGRESS] calls_used=4 | pairs_complete=1/3" in captured
+    assert len(calls) == 2  # 1 complete pair (multi, then baseline)
+
+    # Resume with higher --max-calls finishes remaining 2 pairs without re-running pair 1
+    calls.clear()
+    rc2 = harness_main([
+        "--system", "both",
+        "--split", "dev",
+        "--runs", "1",
+        "--limit", "3",
+        "--max-calls", "20",
+        "--rpm", "0",
+        "--resume",
+        "--out", str(out_dir),
+    ])
+    assert rc2 == 0
+    assert len(calls) == 4  # Only the 2 remaining pairs (multi+baseline each)
+
+    # Daily quota 429 mid-way marks query degraded and stops cleanly with midnight Pacific message
+    out_dir2 = tmp_path / "bench_daily"
+
+    def fake_base_daily(query, machine_type=None, allow_fake=False):
+        raise DailyQuotaExhaustedError("429 RESOURCE_EXHAUSTED per day RPD")
+
+    monkeypatch.setattr("project.benchmark.harness.run_baseline_query", fake_base_daily)
+    rc3 = harness_main([
+        "--system", "both",
+        "--split", "dev",
+        "--runs", "1",
+        "--limit", "2",
+        "--rpm", "0",
+        "--out", str(out_dir2),
+    ])
+    assert rc3 == 0
+    cap3 = capsys.readouterr().out
+    assert "midnight Pacific" in cap3
+    assert "resume with the same command" in cap3
+    # Baseline record must be logged as degraded=True so --resume re-runs it
+    base_lines = [json.loads(l) for l in (out_dir2 / "raw_baseline.jsonl").read_text().splitlines() if l.strip()]
+    assert len(base_lines) == 1 and base_lines[0]["degraded"] is True
