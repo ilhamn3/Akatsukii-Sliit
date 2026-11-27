@@ -268,9 +268,17 @@ def _git_commit() -> str | None:
 
 def score_predictions(predictions: list[dict], data: dict, *, threshold=DEFAULT_THRESHOLD,
                       system: str, meta: dict | None = None) -> tuple[dict, list[dict]]:
-    """predictions: [{episode_id, prediction (dict|None), error?}] -> (report, per-episode rows)."""
+    """predictions: [{episode_id, prediction (dict|None), error?}] -> (report, per-episode rows).
+
+    The last row per episode wins, as in run_extraction, so a predictions log that
+    still holds superseded failed attempts is scored once per episode.
+    """
     from project.agents.a4_graph import default_resolver
     resolver = default_resolver()
+    latest = {}
+    for item in predictions:
+        latest[item["episode_id"]] = item  # Keeps first-seen episode order, last row's content.
+    predictions = list(latest.values())
     rows = []
     for item in predictions:
         gold = gold_for(item["episode_id"], data)
