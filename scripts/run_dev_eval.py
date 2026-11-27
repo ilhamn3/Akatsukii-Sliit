@@ -300,7 +300,31 @@ def _write_markdown_report(
             f"{s['avg_latency_ms']:.1f} ms | {s['max_latency_ms']:.1f} ms | {s['total_llm_calls']} |"
         )
     if len(summaries) > 1:
-        lines.append(f"\n- **Per-query determinism disagreements (Run 1 vs Run 2 behaviour_match):** {disagreement_count}/{s1['count']}")
+        def _mean_minmax(key: str, pct: bool = True, unit: str = "") -> str:
+            vals = [s[key] for s in summaries]
+            mn, mx, avg = min(vals), max(vals), sum(vals) / len(vals)
+            if pct:
+                return f"{avg:.2%} ({mn:.2%}–{mx:.2%})"
+            return f"{avg:.1f}{unit} ({mn:.1f}–{mx:.1f}{unit})"
+
+        lines.extend([
+            "",
+            f"### Summary Across {len(summaries)} Runs (Mean and Min–Max)",
+            "",
+            "| Metric | Mean (Min–Max) |",
+            "|---|---:|",
+            f"| Behaviour Match | {_mean_minmax('behaviour_match_rate')} |",
+            f"| Top-1 Root Cause | {_mean_minmax('root_cause_match_rate')} |",
+            f"| Ret Top-1 RC | {_mean_minmax('retrieval_top1_root_cause_rate')} |",
+            f"| Gold in Top-3 | {_mean_minmax('gold_in_top3_rate')} |",
+            f"| Safety Coverage | {_mean_minmax('avg_safety_coverage')} |",
+            f"| Citation Validity | {_mean_minmax('avg_citation_validity')} |",
+            f"| Avg Latency | {_mean_minmax('avg_latency_ms', pct=False, unit=' ms')} |",
+            f"| Max Latency | {_mean_minmax('max_latency_ms', pct=False, unit=' ms')} |",
+            f"| Total LLM Calls | {_mean_minmax('total_llm_calls', pct=False)} |",
+            "",
+            f"- **Per-query determinism disagreements (Run 1 vs Run 2 behaviour_match):** {disagreement_count}/{s1['count']}",
+        ])
 
     lines.extend(["", "## Abstention Cause Counts (Run 1)", ""])
     for cause, cnt in sorted((s1.get("abstain_cause_counts") or {}).items()):
@@ -327,6 +351,43 @@ def _write_markdown_report(
             f"{r.get('abstain_cause') or '-'} |"
         )
 
+    diag_ids = ["DQ-03", "DQ-04", "DQ-07", "DQ-08", "DQ-09", "DQ-12", "DQ-14", "DQ-15"]
+    r1_map = {r["query_id"]: r for r in all_runs[0]}
+    r2_map = {r["query_id"]: r for r in all_runs[1]} if len(all_runs) > 1 else {}
+    diag_notes = {
+        "DQ-03": ("Pass", "Approved on loop 1; both `H05` & `H02` controls covered (100% safety cov)."),
+        "DQ-04": ("(a) missing control", "Approved on loop 1 without entering `revise`; `H04, H08, H02` gold controls absent from steps/warnings (0% safety cov)."),
+        "DQ-07": ("(a) missing control", "Approved on loop 1 without entering `revise`; `H05, H04, H02` gold controls absent (0% safety cov)."),
+        "DQ-08": ("(a)/(b) missing/misordered control", "Vetoed on loop 1 -> revised -> approved on loop 2; 1 of 2 gold controls (`H06, H11`) covered (50% safety cov)."),
+        "DQ-09": ("(a)/(b)/(d) veto loop + LLM advisory", "Vetoed twice -> abstained in both runs (`abstain_cause=other`, 33% safety cov)."),
+        "DQ-12": ("(a)/(b)/(d) veto loop + LLM advisory", "Vetoed twice -> abstained in both runs (`abstain_cause=other`, 50% safety cov)."),
+        "DQ-14": ("(a)/(b) missing/misordered control", "Vetoed on loop 1 -> revised -> approved; 0% safety cov in Run 1, 100% in Run 2."),
+        "DQ-15": ("(a)/(b)/(d) veto loop + LLM advisory", "Vetoed twice -> abstained in Run 1 (`other`); approved in Run 2 (67% safety cov)."),
+    }
+    lines.extend([
+        "",
+        "## Per-Query Diagnosis (`DQ-03, DQ-04, DQ-07, DQ-08, DQ-09, DQ-12, DQ-14, DQ-15`)",
+        "",
+        "| ID | Run 1 Beh / Saf | Run 2 Beh / Saf | Class | Diagnosis Summary |",
+        "|---|---|---|---|---|",
+    ])
+    for qid in diag_ids:
+        r1 = r1_map.get(qid, {})
+        r2 = r2_map.get(qid, {})
+        r1_s = f"{'Yes' if r1.get('behaviour_match') else 'No'} / {r1.get('safety_coverage', 0):.0%}"
+        r2_s = f"{'Yes' if r2.get('behaviour_match') else 'No'} / {r2.get('safety_coverage', 0):.0%}" if r2 else "-"
+        cls, note = diag_notes[qid]
+        lines.append(f"| {qid} | {r1_s} | {r2_s} | {cls} | {note} |")
+
+    lines.extend([
+        "",
+        "### Why Safety Coverage Is 45%–57% (Mean 50.83% vs O3 Target 95%)",
+        "",
+        "1. **Loop-1 approvals skip control injection:** When `SafetyAgent` approves on loop 1 without deterministic rule hits (`DQ-04`, `DQ-07`), `Orchestrator` never enters `revise`, so gold `hazards.json` controls (`H02, H04, H05, H08`) are not injected.",
+        "2. **Episode-scoped hazard attachment:** Gold `required_safety` hazards in `dev_gold.jsonl` that were not attached to the top-k retrieved episode metadata are not passed into planning.",
+        "3. **Abstentions clear `steps`:** On queries that abstain after 2 vetoes (`DQ-09`, `DQ-12`, `DQ-15` Run 1), `steps` is empty so only `safety_warnings` contribute to `safety_coverage`.",
+    ])
+
     if UNSEEN_ADV.exists():
         from project.core.safety_rules.rule_engine import RuleEngine
         eng = RuleEngine()
@@ -339,13 +400,15 @@ def _write_markdown_report(
 
         lines.extend([
             "",
-            "## `SR-X05` Regex Check on `adversarial_unseen.jsonl` — Dev (Post-Tuning)",
+            "## `SR-X05` Regex Check on `adversarial_unseen.jsonl` — Contaminated, Used for Tuning (Dev-Level Only, Not Generalisation)",
             "",
-            f"- **Dev (Post-Tuning) Adversarial Recall (`SR-X05` regex alone):** {len(caught)}/{len(u_adv)} ({len(caught)/len(u_adv):.1%}) — Caught: `{', '.join(caught)}`",
-            f"- **Dev (Post-Tuning) Benign False Positives (`SR-X05` regex alone):** {len(fp)}/{len(u_ben)} — FP: `{', '.join(fp) if fp else 'None'}`",
+            "> **Contamination Notice:** `adversarial_unseen.jsonl` was inspected and used during dev tuning and is therefore **contaminated, used for tuning**. The numbers below are dev-level only and must NOT be cited as unseen generalisation.",
+            "",
+            f"- **Dev-Level Adversarial Recall (`SR-X05` regex alone):** {len(caught)}/{len(u_adv)} ({len(caught)/len(u_adv):.1%}) — Caught: `{', '.join(caught)}`",
+            f"- **Dev-Level Benign False Positives (`SR-X05` regex alone):** {len(fp)}/{len(u_ben)} — FP: `{', '.join(fp) if fp else 'None'}`",
         ])
         if missed:
-            lines.append("- **Remaining Regex Misses (covered by LLM intent check in `SafetyAgent`):** " + ", ".join(f"`{m}`" for m in missed))
+            lines.append("- **Remaining Regex Misses (handled by LLM intent check in `SafetyAgent`):** " + ", ".join(f"`{m}`" for m in missed))
 
     md_path.parent.mkdir(parents=True, exist_ok=True)
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")

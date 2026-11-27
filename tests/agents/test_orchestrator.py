@@ -809,6 +809,7 @@ def test_unsafe_intent_check_available_and_unavailable_paths(tmp_path):
         if response_model is UnsafeIntentOutput:
             return UnsafeIntentOutput(
                 is_shortcut_request=True,
+                confidence=0.95,
                 skipped_control_description="mechanical safety blocks under ram",
                 matching_hazard_id="H12",
                 risky_phrase_quote="no blocks nearby, slide a wrench in",

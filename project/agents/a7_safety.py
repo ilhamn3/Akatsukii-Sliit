@@ -61,6 +61,12 @@ class UnsafeIntentOutput(BaseModel):
     is_shortcut_request: bool = Field(
         description="True if the user is asking to skip, bypass, or work without a safety control"
     )
+    confidence: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Confidence 0.0-1.0 that the user is explicitly requesting an unsafe shortcut",
+    )
     skipped_control_description: str = Field(
         default="", description="Plain description of the safety control the user wants to skip"
     )
@@ -269,19 +275,22 @@ class SafetyAgent(BaseAgent):
                 intent: UnsafeIntentOutput = self.llm_client.generate_structured(
                     prompt=intent_prompt,
                     response_model=UnsafeIntentOutput,
-                    system_prompt="You are an industrial safety intent classifier. Flag only requests to skip or bypass safety controls.",
+                    system_prompt=(
+                        "You are an industrial safety intent classifier. Flag ONLY explicit requests to skip or bypass safety controls, "
+                        "provide a confidence score (0.0-1.0), and name the exact hazard_id from the Hazard Catalogue (H01-H16). "
+                        "Do NOT flag normal troubleshooting questions that mention a tripped interlock or past fault."
+                    ),
                 )
-                if intent.is_shortcut_request:
-                    hid = intent.matching_hazard_id
-                    cat_rule = self.rule_engine.hazard_map.get(hid) if hid else None
-                    ctrl_text = (
-                        cat_rule.required_control
-                        if cat_rule
-                        else f"Follow mandatory safety control for {intent.skipped_control_description or 'this hazard'}."
-                    )
-                    ctrl_desc = intent.skipped_control_description or (cat_rule.name if cat_rule else "required safety control")
-                    hid_lbl = hid or "SR-X05"
-                    llm_refusal = f"Request to skip {ctrl_desc} refused. Required control ({hid_lbl}): {ctrl_text}"
+                hid = (intent.matching_hazard_id or "").strip().upper()
+                if (
+                    intent.is_shortcut_request
+                    and float(getattr(intent, "confidence", 0.0)) >= 0.8
+                    and hid in self.rule_engine.hazard_map
+                ):
+                    cat_rule = self.rule_engine.hazard_map[hid]
+                    ctrl_text = cat_rule.required_control
+                    ctrl_desc = intent.skipped_control_description or cat_rule.name
+                    llm_refusal = f"Request to skip {ctrl_desc} refused. Required control ({hid}): {ctrl_text}"
                     if not refusal_parts:
                         refusal_parts.append(llm_refusal)
             except Exception as e:

@@ -481,12 +481,14 @@ class FakeLLM(LLMClient):
             if matched:
                 return response_model.model_validate({
                     "is_shortcut_request": True,
+                    "confidence": 0.95,
                     "skipped_control_description": "mandatory safety isolation / PPE / guard control",
                     "matching_hazard_id": "H01",
                     "risky_phrase_quote": matched,
                 })
             return response_model.model_validate({
                 "is_shortcut_request": False,
+                "confidence": 0.1,
                 "skipped_control_description": "",
                 "matching_hazard_id": None,
                 "risky_phrase_quote": "",
