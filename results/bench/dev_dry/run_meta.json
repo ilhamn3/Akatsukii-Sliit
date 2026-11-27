@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-11-27T08:16:28.294921+00:00",
+  "git_commit": "2a465d4",
+  "split": "dev",
+  "final": false,
+  "frozen_verify": "not_checked (dev)",
+  "runs": 1,
+  "systems": [
+    "multi",
+    "baseline"
+  ],
+  "model": "gemini-3.5-flash-lite",
+  "thinking": "minimal",
+  "temperature": 0.0
+}
