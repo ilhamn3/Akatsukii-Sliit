@@ -25,6 +25,45 @@ from project.core.capture_schemas import (
 from project.core.state import BlackboardState, create_initial_state
 
 
+NOISE_FRAME_SECONDS = 0.02
+# Background-noise flag threshold on the estimated SNR (dB). Chosen on 48 development clips
+# (project/evaluation/noise_flag_eval.py, 28 Nov 2026), never on the 12 committed clips:
+# clean 60.0 (capped), 20 dB noise 25.7-26.2, 15 dB 20.7-21.2, 10 dB 15.8-16.3. Rule fixed
+# before measuring: midpoint of lowest clean and highest 15 dB estimate, rounded down.
+# Synthetic voices leave digital silence, so real recordings need this rechecked.
+NOISE_SNR_THRESHOLD_DB = 40.0
+
+
+def estimate_snr_db(samples, sample_rate: int = 16000) -> float | None:
+    """Signal-to-noise estimate from the audio itself, independent of Whisper's confidence.
+
+    Splits the audio into 20 ms frames and compares the loud frames (90th percentile RMS,
+    speech) with the quiet ones (10th percentile, the floor between words). Digital silence
+    is capped at 60 dB. Returns None for clips too short to measure. A rough indicator of
+    steady background noise, not a calibrated SNR.
+    """
+    import numpy as np
+
+    x = np.asarray(samples, dtype=np.float64).ravel()
+    n = max(1, int(sample_rate * NOISE_FRAME_SECONDS))
+    if x.size < n * 20:
+        return None
+    rms = np.sqrt((x[: x.size // n * n].reshape(-1, n) ** 2).mean(axis=1))
+    loud, quiet = float(np.percentile(rms, 90)), float(np.percentile(rms, 10))
+    if loud <= 0:
+        return None
+    return round(min(60.0, 20 * math.log10(loud / max(quiet, loud * 1e-3))), 1)
+
+
+def default_noise_estimate(source) -> float | None:
+    """SNR estimate for a media file via Whisper's FFmpeg loader; None if it cannot be read."""
+    try:
+        import whisper
+        return estimate_snr_db(whisper.load_audio(str(source)))
+    except Exception:
+        return None
+
+
 def _binary(name):
     executable = shutil.which(name)
     if executable is None:
@@ -126,13 +165,14 @@ def normalize_transcript(raw, capture_id):
 class CaptureAgent(BaseAgent):
     """Agent 1. Reads capture_request and writes JSON-compatible capture_result."""
 
-    def __init__(self, trace_logger=None, model=None, frame_sampler=None):
+    def __init__(self, trace_logger=None, model=None, frame_sampler=None, noise_estimator=None):
         super().__init__(
             name="CaptureAgent", role="Capture and transcription", pipeline="A",
             trace_logger=trace_logger,
         )
         self._model = model
         self._frame_sampler = frame_sampler or sample_video_frames
+        self._noise_estimator = noise_estimator or default_noise_estimate
 
     def run(self, state: BlackboardState) -> BlackboardState:
         # A failed retry must not leave a previous recording's successful output.
@@ -171,13 +211,18 @@ class CaptureAgent(BaseAgent):
         capture_id = f"CAP-{fingerprint[:24]}"
         raw = self._transcribe(source, request.language)
         text, segments, flags = normalize_transcript(raw, capture_id)
+        # Whisper can stay confident under steady background noise, so the audio itself is
+        # checked too; a noisy capture is routed to review like any other quality flag.
+        snr = self._noise_estimator(source)
+        if snr is not None and snr < NOISE_SNR_THRESHOLD_DB:
+            flags = sorted(set(flags) | {"background_noise"})
         frames = []
         if request.media_type == "video":
             frames = self._frame_sampler(source, request, capture_id)
         result = CaptureResult(
             capture_id=capture_id, source_path=str(source), source_sha256=fingerprint,
             media_type=request.media_type, language=raw.get("language") or request.language,
-            text=text, segments=segments, frames=frames, quality_flags=flags,
+            text=text, segments=segments, frames=frames, quality_flags=flags, estimated_snr_db=snr,
             review_required=bool(flags or any(s.quality_flags for s in segments)),
         )
         return {

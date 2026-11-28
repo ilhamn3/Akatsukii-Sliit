@@ -58,3 +58,5 @@ class CaptureResult(CaptureModel):
     frames: List[VideoFrame] = Field(default_factory=list)
     quality_flags: List[str] = Field(default_factory=list)
     review_required: bool
+    # Rough signal-to-noise estimate from the audio (A1 estimate_snr_db); None if not measured.
+    estimated_snr_db: Optional[float] = None
