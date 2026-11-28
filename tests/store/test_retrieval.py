@@ -102,7 +102,7 @@ def test_asset_hop_prefers_repairs_on_the_same_asset(tmp_path):
     hits = HybridRetriever(store).retrieve("belt slipping at the drive", "conveyor_line", k=2,
                                            machine_id="conveyor line 2")
     assert hits[0].episode_id == "SYN-TWIN-B" and hits[0].metadata["retrieval"]["asset_match"]
-    assert hits[0].metadata["record"]["machine_id"] == "CONV-02"
+    assert hits[0].metadata["record"]["machine_id"] == "CNV-02"
     assert hits[0].similarity_score > hits[1].similarity_score
 
 
