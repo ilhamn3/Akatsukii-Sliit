@@ -262,7 +262,16 @@ By kind of error:
 
 ### 4. Fixes and re-run (28 Nov, same day)
 
-Three changes, each made without looking at the eval drafts for its setting:
+Three changes. **Held-out status, per change** (added after Ilham's #47 review):
+
+- Change 1 fixes a bug that the eval measurement exposed (the check could never fire on
+  text). It has no setting to tune, but it was found on eval data.
+- Change 2's threshold was chosen on the **dev** split only, before the eval re-run.
+- Change 3 was decided **after seeing the eval-split result** (47 of 50 drafts pushed to
+  low priority). The eval numbers after the fixes are therefore **not held-out** for
+  this change: they show what the change does, not an unbiased estimate.
+
+The changes:
 
 1. **Step order on text captures.** The check now breaks start-time ties by the A1
    segment index in the evidence ID (`…-S0003`). Reversed steps are now caught in
@@ -276,13 +285,20 @@ Three changes, each made without looking at the eval drafts for its setting:
    0.676-0.932 and the closest other-fault episode on the same machine 0.280-0.434. The
    rule, fixed before re-running eval, was the midpoint of that gap rounded to 0.05: 0.55.
    Only 9 dev points, so this is a first setting, not a calibration.
+   *Reproducible from the repo since the #48 review:* the dev drafts are committed in
+   `project/evaluation/results/2026-11-27_dev_groq-gpt-oss-120b/`, and
+   `validation_eval.json` carries `dev_cosine_diagnostic`. It is computed with the current
+   K5 resolver (`entities_v2`, #47), which also resolves EP-0002 ("CNC"), so it has 10 dev
+   points: same-fault 0.599-0.932, other-fault 0.280-0.434. 0.55 still separates all 10;
+   the same midpoint rule on these 10 points would round to 0.50. The threshold stays
+   0.55 (and `config.yaml` is frozen until the final benchmark).
 3. **A known-fault match no longer raises priority.** At 0.55, `possible_duplicate`
    mostly means "this fault is already known". Measured against a store of the 350 other
    gold episodes, it pushed **47 of 50** drafts to `low_confidence`, 34 of them for that
    reason alone, which would make the priority meaningless. It now stays a warning listing
    the matching records; exact duplicate recordings still block.
 
-Re-run on the eval drafts:
+Re-run on the eval drafts (not held-out for change 3; see above):
 
 | | First measurement (0.90) | Re-run (0.55, fixes) |
 |---|---:|---:|

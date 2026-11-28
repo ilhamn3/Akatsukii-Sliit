@@ -129,6 +129,11 @@ real A2 drafts (Groq gpt-oss-120b, prompt v5; 12 dev + 50 eval episodes)
 
 - **Command:** `python -m project.evaluation.retrieval_pipeline_eval`. Results:
   `project/evaluation/results/2026-11-28_retrieval_pipeline_eval/` (code `fd75460`).
+- **Inputs, all committed:** the 50 eval drafts in
+  `project/evaluation/results/2026-11-27_eval_groq-gpt-oss-120b_v5/` and the 12 dev drafts
+  in `project/evaluation/results/2026-11-27_dev_groq-gpt-oss-120b/` (final row per
+  episode; added after the #48 review, which noted they were only in local logs). The
+  re-run from the committed files gives identical results.
 - **Ingestion:** 56 of 62 drafts approved as extracted. 6 stayed pending, because A3
   blocked them (missing root cause or `why_failed`, or a machine named only by a part)
   and no reviewer filled the gap. The store holds 56 episodes of 30 faults.
@@ -169,10 +174,11 @@ What the gap is:
 - Narrated records also make scores lower overall: unanswerable queries are abstained
   on more often (4 of 5 instead of 2 of 5), but 2 answerable queries also fall below
   0.55. The threshold was set on the oracle store and is not retuned here.
-- Hybrid ranks better than vector-only on ingested records (hit@3 0.93 vs 0.80).
-  Graph-only is slightly better at hit@1 here (0.87 vs 0.80) with the same hit@3, but
-  its scores are not on the cosine scale, so it cannot drive abstention; n = 15 is too
-  small to separate the two. The weights were not changed.
+- **Hybrid's advantage here is hit@3 and abstention, not hit@1.** Graph-only has the
+  higher hit@1 on these 15 queries (0.867 vs 0.80) and the same hit@3 (0.93). Against
+  vector-only, hybrid wins on hit@3 (0.93 vs 0.80). Hybrid keeps scores on the cosine
+  scale, so A8 can abstain on them; graph-only scores cannot drive abstention. n = 15 is
+  too small to rank hybrid and graph-only at hit@1. The weights were not changed.
 
 ## Latency at 2,000 records
 

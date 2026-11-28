@@ -243,8 +243,10 @@ or run the generated-media integration tests.
 1. **Done 28 Nov:** run on Tharshanth's 12 synthetic clips (6 with plant noise). WER 6.0%
    pooled, 0 failures, about 9x faster than real time on CPU. A1 flagged none of the noisy
    clips, because Whisper stayed confident; see [AUDIO_CAPTURE_EVAL.md](AUDIO_CAPTURE_EVAL.md).
-2. A noise flag that does not rely on Whisper's confidence (e.g. an SNR estimate), developed
-   on separate clips; and real recordings, which the project does not have.
+2. **Done 28 Nov:** a `background_noise` flag from a signal-level SNR estimate, with the
+   threshold (40 dB) chosen on 48 separate dev clips: 6 of 6 noisy committed clips flagged,
+   0 of 6 clean. Remaining: recheck the threshold on real recordings, which the project
+   does not have.
 3. Have Ilham review the additive capture schema and blackboard handoff.
 4. Update the tracked work plan and PR log with actual evidence, run
    `python scripts/progress.py --write`, and submit K1 for review.

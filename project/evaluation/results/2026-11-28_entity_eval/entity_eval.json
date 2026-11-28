@@ -1,8 +1,8 @@
 {
   "schema_version": "entity_eval/v1",
   "synthetic_data_only": true,
-  "generated_at": "2026-11-28T07:36:58+00:00",
-  "code_commit": "b2a2956",
+  "generated_at": "2026-11-28T10:36:19+00:00",
+  "code_commit": "91bff3c",
   "vocabulary_version": "entities_v2",
   "gold_ids": {
     "v2": {

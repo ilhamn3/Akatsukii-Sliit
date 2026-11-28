@@ -2,8 +2,8 @@
   "schema_version": "retrieval_pipeline_eval/v1",
   "split": "dev",
   "synthetic_data_only": true,
-  "generated_at": "2026-11-28T10:25:17+00:00",
-  "code_commit": "fd75460",
+  "generated_at": "2026-11-28T10:36:16+00:00",
+  "code_commit": "91bff3c",
   "embedding_model": "sentence-transformers/all-MiniLM-L6-v2@c9745ed1d9f207416be6d2e6f8de32d1f16199bf",
   "drafts": {
     "dev": 12,

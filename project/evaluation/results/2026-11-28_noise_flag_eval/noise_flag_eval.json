@@ -1,0 +1,415 @@
+{
+  "schema_version": "noise_flag_eval/v1",
+  "synthetic_data_only": true,
+  "generated_at": "2026-11-28T10:47:39+00:00",
+  "dev": {
+    "seed": 2811,
+    "clips": [
+      {
+        "episode_id": "EP-0073",
+        "snr_db": null,
+        "file": "clean\\EP-0073.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0073",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0073.wav",
+        "estimated_snr_db": 26.0
+      },
+      {
+        "episode_id": "EP-0073",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0073.wav",
+        "estimated_snr_db": 21.0
+      },
+      {
+        "episode_id": "EP-0073",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0073.wav",
+        "estimated_snr_db": 16.1
+      },
+      {
+        "episode_id": "EP-0078",
+        "snr_db": null,
+        "file": "clean\\EP-0078.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0078",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0078.wav",
+        "estimated_snr_db": 25.7
+      },
+      {
+        "episode_id": "EP-0078",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0078.wav",
+        "estimated_snr_db": 20.7
+      },
+      {
+        "episode_id": "EP-0078",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0078.wav",
+        "estimated_snr_db": 15.8
+      },
+      {
+        "episode_id": "EP-0080",
+        "snr_db": null,
+        "file": "clean\\EP-0080.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0080",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0080.wav",
+        "estimated_snr_db": 25.9
+      },
+      {
+        "episode_id": "EP-0080",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0080.wav",
+        "estimated_snr_db": 20.9
+      },
+      {
+        "episode_id": "EP-0080",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0080.wav",
+        "estimated_snr_db": 16.0
+      },
+      {
+        "episode_id": "EP-0144",
+        "snr_db": null,
+        "file": "clean\\EP-0144.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0144",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0144.wav",
+        "estimated_snr_db": 25.9
+      },
+      {
+        "episode_id": "EP-0144",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0144.wav",
+        "estimated_snr_db": 20.9
+      },
+      {
+        "episode_id": "EP-0144",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0144.wav",
+        "estimated_snr_db": 16.0
+      },
+      {
+        "episode_id": "EP-0155",
+        "snr_db": null,
+        "file": "clean\\EP-0155.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0155",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0155.wav",
+        "estimated_snr_db": 25.8
+      },
+      {
+        "episode_id": "EP-0155",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0155.wav",
+        "estimated_snr_db": 20.9
+      },
+      {
+        "episode_id": "EP-0155",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0155.wav",
+        "estimated_snr_db": 16.0
+      },
+      {
+        "episode_id": "EP-0188",
+        "snr_db": null,
+        "file": "clean\\EP-0188.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0188",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0188.wav",
+        "estimated_snr_db": 26.1
+      },
+      {
+        "episode_id": "EP-0188",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0188.wav",
+        "estimated_snr_db": 21.2
+      },
+      {
+        "episode_id": "EP-0188",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0188.wav",
+        "estimated_snr_db": 16.3
+      },
+      {
+        "episode_id": "EP-0193",
+        "snr_db": null,
+        "file": "clean\\EP-0193.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0193",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0193.wav",
+        "estimated_snr_db": 25.8
+      },
+      {
+        "episode_id": "EP-0193",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0193.wav",
+        "estimated_snr_db": 20.8
+      },
+      {
+        "episode_id": "EP-0193",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0193.wav",
+        "estimated_snr_db": 15.9
+      },
+      {
+        "episode_id": "EP-0205",
+        "snr_db": null,
+        "file": "clean\\EP-0205.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0205",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0205.wav",
+        "estimated_snr_db": 26.0
+      },
+      {
+        "episode_id": "EP-0205",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0205.wav",
+        "estimated_snr_db": 21.0
+      },
+      {
+        "episode_id": "EP-0205",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0205.wav",
+        "estimated_snr_db": 16.1
+      },
+      {
+        "episode_id": "EP-0226",
+        "snr_db": null,
+        "file": "clean\\EP-0226.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0226",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0226.wav",
+        "estimated_snr_db": 26.0
+      },
+      {
+        "episode_id": "EP-0226",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0226.wav",
+        "estimated_snr_db": 21.1
+      },
+      {
+        "episode_id": "EP-0226",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0226.wav",
+        "estimated_snr_db": 16.2
+      },
+      {
+        "episode_id": "EP-0278",
+        "snr_db": null,
+        "file": "clean\\EP-0278.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0278",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0278.wav",
+        "estimated_snr_db": 25.8
+      },
+      {
+        "episode_id": "EP-0278",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0278.wav",
+        "estimated_snr_db": 20.8
+      },
+      {
+        "episode_id": "EP-0278",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0278.wav",
+        "estimated_snr_db": 15.9
+      },
+      {
+        "episode_id": "EP-0340",
+        "snr_db": null,
+        "file": "clean\\EP-0340.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0340",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0340.wav",
+        "estimated_snr_db": 26.2
+      },
+      {
+        "episode_id": "EP-0340",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0340.wav",
+        "estimated_snr_db": 21.2
+      },
+      {
+        "episode_id": "EP-0340",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0340.wav",
+        "estimated_snr_db": 16.3
+      },
+      {
+        "episode_id": "EP-0381",
+        "snr_db": null,
+        "file": "clean\\EP-0381.wav",
+        "estimated_snr_db": 60.0
+      },
+      {
+        "episode_id": "EP-0381",
+        "snr_db": 20.0,
+        "file": "snr20\\EP-0381.wav",
+        "estimated_snr_db": 25.8
+      },
+      {
+        "episode_id": "EP-0381",
+        "snr_db": 15.0,
+        "file": "snr15\\EP-0381.wav",
+        "estimated_snr_db": 20.8
+      },
+      {
+        "episode_id": "EP-0381",
+        "snr_db": 10.0,
+        "file": "snr10\\EP-0381.wav",
+        "estimated_snr_db": 15.9
+      }
+    ],
+    "summary": {
+      "clean": {
+        "n": 12,
+        "min": 60.0,
+        "max": 60.0
+      },
+      "20 dB": {
+        "n": 12,
+        "min": 25.7,
+        "max": 26.2
+      },
+      "15 dB": {
+        "n": 12,
+        "min": 20.7,
+        "max": 21.2
+      },
+      "10 dB": {
+        "n": 12,
+        "min": 15.8,
+        "max": 16.3
+      }
+    }
+  },
+  "rule_threshold_db": 40.0,
+  "a1_threshold_db": 40.0,
+  "committed_clips": {
+    "clips": [
+      {
+        "file": "clips/EP-0001_clean.wav",
+        "noise": "none",
+        "noisy": false,
+        "estimated_snr_db": 60.0,
+        "flagged": false
+      },
+      {
+        "file": "clips/EP-0043_noisy.wav",
+        "noise": "plant noise, 15 dB SNR",
+        "noisy": true,
+        "estimated_snr_db": 20.8,
+        "flagged": true
+      },
+      {
+        "file": "clips/EP-0088_clean.wav",
+        "noise": "none",
+        "noisy": false,
+        "estimated_snr_db": 60.0,
+        "flagged": false
+      },
+      {
+        "file": "clips/EP-0120_noisy.wav",
+        "noise": "plant noise, 15 dB SNR",
+        "noisy": true,
+        "estimated_snr_db": 21.1,
+        "flagged": true
+      },
+      {
+        "file": "clips/EP-0156_clean.wav",
+        "noise": "none",
+        "noisy": false,
+        "estimated_snr_db": 60.0,
+        "flagged": false
+      },
+      {
+        "file": "clips/EP-0224_noisy.wav",
+        "noise": "plant noise, 15 dB SNR",
+        "noisy": true,
+        "estimated_snr_db": 21.1,
+        "flagged": true
+      },
+      {
+        "file": "clips/EP-0228_clean.wav",
+        "noise": "none",
+        "noisy": false,
+        "estimated_snr_db": 60.0,
+        "flagged": false
+      },
+      {
+        "file": "clips/EP-0257_noisy.wav",
+        "noise": "plant noise, 15 dB SNR",
+        "noisy": true,
+        "estimated_snr_db": 20.9,
+        "flagged": true
+      },
+      {
+        "file": "clips/EP-0287_clean.wav",
+        "noise": "none",
+        "noisy": false,
+        "estimated_snr_db": 60.0,
+        "flagged": false
+      },
+      {
+        "file": "clips/EP-0307_noisy.wav",
+        "noise": "plant noise, 15 dB SNR",
+        "noisy": true,
+        "estimated_snr_db": 21.0,
+        "flagged": true
+      },
+      {
+        "file": "clips/EP-0309_clean.wav",
+        "noise": "none",
+        "noisy": false,
+        "estimated_snr_db": 60.0,
+        "flagged": false
+      },
+      {
+        "file": "clips/EP-0368_noisy.wav",
+        "noise": "plant noise, 15 dB SNR",
+        "noisy": true,
+        "estimated_snr_db": 21.0,
+        "flagged": true
+      }
+    ],
+    "noisy_flagged": 6,
+    "noisy_total": 6,
+    "clean_flagged": 0,
+    "clean_total": 6
+  },
+  "code_commit": "97e2119"
+}
