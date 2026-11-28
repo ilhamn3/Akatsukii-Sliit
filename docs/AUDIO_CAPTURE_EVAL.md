@@ -59,20 +59,60 @@ identical across runs (temperature 0).
 3. **A1 flagged none of the noisy clips for review (0 of 6), and no clean ones (0 of 6).**
    A1's flags come from Whisper's own confidence (avg_logprob < -1.0, no_speech_prob > 0.6,
    compression ratio > 2.4). Whisper stayed confident on every clip: the lowest avg_logprob
-   was -0.36 and the highest no_speech_prob 0.141. So A1 currently flags silence and
-   garbled speech (unit-tested), **not** steady background noise. On this subset that did
-   not cost accuracy, but the noisy clips are only identified by the manifest label.
+   was -0.36 and the highest no_speech_prob 0.141. So A1's confidence flags catch silence
+   and garbled speech (unit-tested), **not** steady background noise. On this subset that
+   did not cost accuracy. (Fixed later the same day by a signal-level noise flag: 6 of 6
+   noisy clips flagged, 0 of 6 clean; see below. The table above is the earlier run.)
 4. **The errors that matter downstream are domain words, not noise**:
    - "lathe four" -> "late 4" (EP-0120): the machine type is lost unless A2 or K5
      recovers it from context.
    - "four oh alarm" -> "40 alarm" (EP-0309): the alarm code changes form.
    - "yeah" -> "yet" (several clips) and "two" -> "too": harmless for extraction.
 
+## Background-noise flag (added later on 28 Nov)
+
+Finding 3 is now addressed. Agent 1 also estimates the signal-to-noise ratio from the
+audio itself (`a1_capture.estimate_snr_db`: 90th vs 10th percentile RMS of 20 ms frames,
+digital silence capped at 60 dB) and adds a `background_noise` capture flag below a
+threshold. The capture then goes to review, and A2/A3 carry it as `capture_quality_flags`.
+The estimate is stored as `CaptureResult.estimated_snr_db`.
+
+**Threshold chosen on development clips only.** `project/evaluation/noise_flag_eval.py`
+made 48 dev clips: 12 *other* audio debriefs (seed 2811, none of the committed episodes),
+each clean and with the committed set's plant noise at 20, 15 and 10 dB SNR. The WAVs
+stay in local storage (52 MB); their estimates are in the report.
+
+| Dev condition (12 clips each) | Estimated SNR (dB) |
+|---|---|
+| clean | 60.0 (all capped) |
+| 20 dB plant noise | 25.7-26.2 |
+| 15 dB plant noise | 20.7-21.2 |
+| 10 dB plant noise | 15.8-16.3 |
+
+The rule, written in the code before measuring, is the midpoint between the lowest clean
+and the highest 15 dB estimate, rounded down: **40 dB**. The 12 committed clips were then
+measured once:
+
+| Committed clips | Flagged before (Whisper confidence only) | Flagged now |
+|---|---:|---:|
+| noisy (15 dB) | 0 / 6 | **6 / 6** (estimates 20.8-21.1) |
+| clean | 0 / 6 | **0 / 6** (all 60.0) |
+
+Results: `project/evaluation/results/2026-11-28_noise_flag_eval/noise_flag_eval.json`. An
+end-to-end Agent 1 run on `EP-0043_noisy.wav` gives `quality_flags: ["background_noise"]`,
+`review_required: true`; `EP-0001_clean.wav` gives no flag. Transcripts and WER are
+unchanged (the flag only adds review routing).
+
+**Caveat.** The separation is easy here because the computer voices leave pure digital
+silence between words, so every clean clip hits the 60 dB cap. A real quiet room has a
+noise floor, so real clean recordings will read lower, and some may be flagged. The 40 dB
+threshold must be rechecked on real recordings before it is trusted. The flag marks
+steady background noise; it says nothing about intelligibility, which WER showed was not
+hurt at 15 dB.
+
 ## What this does not show
 
 - Real recordings: the voices are synthetic and very clear.
-- Noise robustness in general: only one noise type at one level (15 dB SNR).
-- A tuned noise flag: no threshold was fitted on these 12 clips, because they are the
-  only labelled audio. A signal-level noise estimate (e.g. an SNR check) would need its own
-  development clips (`project/data/audio/make_audio.py` can generate more with another
-  seed) before it is evaluated here.
+- Noise robustness in general: only one noise type, at 10-20 dB in the dev clips and
+  15 dB in the committed ones.
+- The noise flag on real audio (see the caveat above).

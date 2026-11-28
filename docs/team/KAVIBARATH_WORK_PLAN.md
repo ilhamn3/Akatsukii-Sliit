@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 28.8 / 30 points · 96% complete**
+**Overall: 29 / 30 points · 97% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP3 | Ingestion agents 1-4 and review queue | 18 | 16.8 | 93% |
+| WP3 | Ingestion agents 1-4 and review queue | 18 | 17 | 94% |
 | WP4 | Knowledge store and retrieval | 10 | 10 | 100% |
 | WP10 | Hardening and unit tests | 2 | 2 | 100% |
 <!-- PROGRESS:END -->
@@ -28,7 +28,7 @@
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
 | 3.1 | Agent 1: Whisper transcription (timestamped transcript) | 3 | 24 Nov | 100% |
-| 3.2 | Agent 1: video frame sampling and unclear-audio flagging | 1 | 24 Nov | 75% |
+| 3.2 | Agent 1: video frame sampling and unclear-audio flagging | 1 | 24 Nov | 100% |
 | 3.3 | Agent 2: structured extraction (steps, tools, root cause, failed attempts, warnings) | 4 | 24 Nov | 90% |
 | 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 90% |
 | 3.5 | Agent 4: entity resolution and graph writes | 3 | 26 Nov | 100% |
@@ -206,5 +206,6 @@ After merging origin/main at f735884, all 80 tests and pip check passed locally.
 | [#47](https://github.com/ilhamn3/Akatsukii-Sliit/pull/47) (A4 entities_v2; builds on #46) | 28 Nov 2026 | [WP3] A4 uses the data's asset prefixes; machine type from an asset ID | 3.5 (75->100%) | aliases.yaml now uses the plant convention in the team's data (CNC/HYD/INJ/CNV/CMP-NN): A4 had rewritten every data asset ID to provisional prefixes (CNC-03 -> LATHE-03; 0/400 gold IDs kept, now 400/400). A bare prefix names its machine ("CNC"), spoken numbers read as digits ("three" -> CNV-03), and an asset ID with a prefix or full machine name supplies a missing machine type, shown as a machine_type_from_asset_id warning and kept in provenance; loose words ("line 2") never do. K7 scoring keeps the prefix rule off, so committed K7 scores are unchanged. Developed on the 12 dev drafts (blocked 3 -> 0); eval drafts measured once: blocked on machine type 10 -> 3 (the rest name a part or nothing), machine correct 40 -> 47, 0 wrong, asset ID correct 0 -> 19. A3 re-run: low_confidence 13 -> 6, because those drafts now resolve correctly. project/evaluation/entity_eval.py, 364 tests pass. Done-when met and the vocabulary is checked against the team's asset names. Evidence: docs/ENTITY_GRAPH.md | 92.3% -> 94.8% (27.7/30 -> 28.45/30 pts) | Ilham MM (merged; review: held-out note added in #48, freeze on config/A5/A7/A8/api/prompts/safety_rules until the final benchmark) |
 | [#48](https://github.com/ilhamn3/Akatsukii-Sliit/pull/48) (retrieval on pipeline-ingested episodes; builds on #47) | 28 Nov 2026 | [WP4] Hybrid retrieval evaluated on episodes ingested by the real Pipeline A | 4.4 (90->100%) | The remaining 10% from the #21 review. project/evaluation/retrieval_pipeline_eval.py sends the real A2 drafts (12 dev + 50 eval, v5) through A3, the review queue (approved as extracted), A4 and the store, then runs A6 on the 20 dev queries; scored by source-episode fault, and compared with an oracle store of the same episodes. 56/62 drafts approved (6 blocked by A3, left pending). Hybrid on the 15 answerable queries: hit@1 0.80, hit@3 0.93, MRR 0.856 (oracle, same episodes: 1.00/1.00/1.00); all slips are one fault whose narration never mentioned the queried symptom. Abstention at 0.55: 4/5 unanswerable below (oracle 2/5), 2/15 answerable below (oracle 0/15). Pipeline B's LLM agents not run (Gemini reserved); nothing tuned; test split refused. Evidence: docs/RETRIEVAL.md | 94.8% -> 95.8% (28.45/30 -> 28.75/30 pts) | Ilham MM (merged; wording and reproducibility follow-ups in the next row) |
 | [#50](https://github.com/ilhamn3/Akatsukii-Sliit/pull/50) (#47/#48 review follow-ups) | 28 Nov 2026 | [WP4] Review follow-ups for #47 and #48: held-out note, hit@1 wording, committed dev drafts | none | #48 was merged before two commits arrived; they are here: the tracker link and the #47 review's held-out note (the priority change was decided after the eval result; the step-order bug was found on eval; the threshold came from dev). #48 review: RETRIEVAL.md says hybrid's advantage is hit@3 and abstention, not hit@1 (graph-only 0.867 vs 0.80); the 12 dev drafts (v3 and v5, final rows, no account IDs) are committed and the retrieval, entity and A3 evaluators read them; all three re-runs give identical results. The A3 report adds the dev cosine diagnostic (10 dev points with entities_v2: 0.55 still separates them; the midpoint rule would now round to 0.50, threshold unchanged, config frozen). The re-score test now covers every committed report, dev included. No frozen files touched. No % change | 95.8% (28.75/30 pts) | Ilham MM (pending) |
+| #TBD (Agent 1 noise flag; builds on #50) | 28 Nov 2026 | [WP3] Agent 1 background-noise flag from a signal-level SNR estimate | 3.2 (75->100%) | #44 found A1 flagged 0/6 noisy clips (Whisper stayed confident). A1 now estimates SNR from the audio (90th vs 10th percentile 20 ms frame RMS) and adds background_noise below 40 dB, routing the capture to review; estimated_snr_db is recorded. Threshold chosen on 48 dev clips (12 other debriefs, seed 2811, clean and 20/15/10 dB plant noise; WAVs local, estimates committed) by a rule fixed before measuring. Committed 12 clips measured once: noisy 6/6 flagged (20.8-21.1 dB), clean 0/6 (60.0). End-to-end A1 run confirms the flag and review routing; transcripts unchanged. Caveat: synthetic voices leave digital silence, so the threshold needs rechecking on real recordings. A1 and capture_schemas only; no frozen files. Evidence: docs/AUDIO_CAPTURE_EVAL.md | 95.8% -> 96.7% (28.75/30 -> 29.0/30 pts) | Ilham MM (pending) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
