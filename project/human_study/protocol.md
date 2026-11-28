@@ -198,5 +198,6 @@ No group room could be arranged, so the sessions run **remotely and individually
 - **Packet B AI arm.** An AI-written answer set for packet B is kept in `../simulated/`,
   labelled `AI-BASELINE`, with no times. It is never counted as human data. See its README.
 - **Background** (self-reported, by code in `results/participants.csv`): 3 engineering, 2 IT; hands-on machine experience: 4 some, 1 none, 0 a lot. No participant is a trained maintenance technician, so the baseline is informed non-experts searching the log, not expert technicians.
+- **Consent (deviation from section 11a):** all 5 participants gave written consent ("I agree" to the consent text) on 28 Nov 2026, **after** their sessions and before the withdrawal deadline, not before the session as 11a requires. Each was told what is kept and how it is used, and could still withdraw. Screenshots are kept in `private/` only. Answers from anyone who had not agreed by the deadline would have been removed.
 - **Report as:** "remote, self-timed, n = 5, 48 of 60 queries". Human-vs-system
   comparisons use those 48 queries only.
