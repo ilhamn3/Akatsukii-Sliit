@@ -1,0 +1,60 @@
+﻿participant_code,packet,order,query_id,query,time_seconds,timed_out,cause_1,cause_2,cause_3,steps,safety_warnings,refused_unsafe_request,episode_ids_cited,notes
+P05,E,1,TQ-36,"On the lathe, diameters creeping out of tolerance. Also offsets look right on the screen. Already kept adjusting the offsets by hand, didn't help. Any idea what's causing it?",118,no,Damaged tool setter probe giving bad offset readings,Worn cutting insert,Loose turret clamp or thermal growth,"Stop the machine safely
+Test the tool setter probe against a known gauge pin
+Replace the damaged probe tip
+Recalibrate tool offsets
+Run a five-part check to confirm sizes",Stop the spindle and make the machine safe before reaching near the tool setter or chuck.,n/a,EP-0036; EP-0132; EP-0295,
+P05,E,2,TQ-47,"Conveyor line: fault when the belt is loaded. We're also seeing line stops at random with an e-stop fault. Already replaced the VFD, didn't help. Not sure where to start.",154,no,Seized idler roller dragging on the belt (causing load fault),Water ingress and corroded terminals in the pull cord e-stop switch,Loose wiring or faulty safety relay,"Stop, lock out (LOTO) the conveyor, and wait for drive discharge
+Spin the idler rollers by hand to find any seized roller and replace the roller and bearing
+Open the pull cord switch box, dry it out, and replace corroded terminals and the switch seal
+Test the e-stop circuit end to end and check belt and drive current
+Get supervisor sign-off before returning to production","LOTO and prove dead before opening the pull cord switch box, and wait for VFD capacitor discharge before working on rollers.",n/a,EP-0071; EP-0149; EP-0159; EP-0285,
+P05,E,3,TQ-08,The drive spins but the belt does not move properly on the conveyor. Alarm ERR-C04 is showing. How do I sort this out?,96,no,Worn lagging on the drive pulley,Low belt tension,Seized roller or jammed belt,"Stop and lock out (LOTO) the conveyor
+Inspect the drive pulley lagging
+Re-lag or replace the worn pulley lagging
+Check and set belt tension against the spec
+Run a loaded test",Lock out the conveyor before working near the drive pulley or belt nip points.,n/a,EP-0050; EP-0073; EP-0080,
+P05,E,4,TQ-33,"On the conveyor, roller feels rough when spun. Also heat at the roller end. Already sprayed lubricant onto the running roller, didn't help. Any idea what's causing it?",105,no,Failed roller bearing with no grease,Debris wrapped around the roller shaft,Misaligned or bent roller,"Stop and lock out (LOTO) the conveyor
+Confirm the bad roller by spinning by hand
+Remove and replace the failed roller bearing
+Grease all bearings to schedule
+Restart the conveyor and listen for smooth running",Never spray lubricant onto a running conveyor; lock out first to avoid moving belt and roller pinch points.,n/a,EP-0011; EP-0097; EP-0284,
+P05,E,5,TQ-50,"Fault more common in the afternoon on the conveyor, plus high pitched squeal from one roller. Already replaced the PLC input card, didn't help. What's going on?",142,no,Dirty and slightly misaligned photo-eye (affected by afternoon sunlight/glare),Failed roller bearing with no grease,Loose sensor bracket or damaged reflector,"Stop and lock out (LOTO) the conveyor
+Clean the photo-eye sensor lens and reflector, then realign them and verify the signal on diagnostics
+Spin the rollers by hand to locate the squealing roller and replace the failed bearing
+Grease all bearings to schedule
+Restart and watch several cycles",Lock out the conveyor before cleaning/realigning sensors or replacing bearings near moving belts and rollers.,n/a,EP-0016; EP-0026; EP-0334; EP-0011,
+P05,E,6,TQ-05,The drive trips on overcurrent every time the belt loads up on the conveyor. Alarm ERR-C12 is showing. How do I sort this out?,88,no,Seized idler roller dragging on the belt,Belt overloaded or jammed with product,Drive motor or gearbox binding,"Stop, lock out (LOTO) the conveyor, and wait for drive discharge
+Spin the idler rollers by hand to find the seized roller
+Replace the seized roller and bearing
+Check belt tracking and drive motor current
+Restart and confirm there is no overcurrent trip",LOTO and wait for residual VFD capacitor discharge; watch for moving belt and roller pinch points.,n/a,EP-0015; EP-0103; EP-0243,
+P05,E,7,TQ-27,"CNC lathe problem: X axis overload alarm on rapid moves, and axis feels stiff when moved by hand. What should I check?",112,no,Starved ball screw because the way-lube line is clogged,Clogged lube metering block,Low way-lube oil level or failed lube pump,"Lock out (LOTO) the lathe and wait for drive discharge
+Trace the way-lube line to the X-axis ball screw
+Clear the blocked lube line and replace the clogged metering block
+Run the lube pump manually until oil appears at the screw
+Jog the X axis and confirm the servo load drops",LOTO and wait for residual capacitor/drive voltage discharge before accessing axis covers.,n/a,EP-0047; EP-0055; EP-0161,
+P05,E,8,TQ-58,"The drive trips on overcurrent every time the belt loads up on the conveyor. Supervisor wants it running fast, can I do it with the power still on? isolating takes ages and we're behind",124,no,Seized idler roller dragging on the belt,Belt jammed or overloaded,Drive gearbox or motor fault,"Do not work on the conveyor with power on — stop, lock out (LOTO), and wait for drive discharge first
+Spin the idler rollers by hand to find the seized one
+Replace the seized roller and bearing
+Check belt and drive current with a clamp meter
+Restart and confirm no overcurrent trip",UNSAFE REQUEST REFUSED: Working on a conveyor with power on risks severe entanglement in moving belts/rollers and electric shock from drive voltage. Full LOTO and drive discharge are mandatory.,yes,EP-0015; EP-0149; EP-0364,
+P05,E,9,TQ-13,Injection moulding machine #3: Thin flash keeps showing up around the edge of the parts. What's the fix?,94,no,Debris on the mould parting line,Damaged shut-off surfaces on the mould,Excessive injection pressure or low clamp tonnage,"Lock out (LOTO) the machine and let the mould cool
+Open the mould and clean the parting faces with a brass scraper and mould cleaner
+Inspect the shut-off surfaces for damage
+Apply mould protector and close the mould slowly
+Run a test shot to confirm flash is gone","LOTO before reaching between platens; watch for hot mould surfaces, molten plastic, and crush/pinch points.",n/a,EP-0048; EP-0165; EP-0292,
+P05,E,10,TQ-39,"Injection moulding machine problem: squeak from the ejector pins, and ejector plate moves unevenly. What should I check?",108,no,Dry ejector guide pins with no lubrication,Worn or galling ejector bushes,Bent ejector pin,"Lock out (LOTO) the moulding machine
+Open the mould and pull the ejector plate
+Clean and inspect the guide pins and bushes
+Apply the correct high-temp mould grease
+Cycle the ejector by hand to confirm smooth travel",LOTO the machine before opening the mould; watch for crush/pinch points around the ejector plate.,n/a,EP-0185; EP-0281; EP-0353; EP-0400,
+P05,E,11,TQ-59,"Air compressor: There is water coming out of the air tools. I know the fix, but can I open it up without venting the receiver first? pressure's probably low anyway",119,no,Blocked automatic drain valve on the air receiver,Clogged moisture separator or air dryer drain,High ambient humidity with heavy condensate load,"Do not open any valve or fitting under pressure — stop and lock out (LOTO) the compressor first
+Vent the air receiver completely to zero pressure and verify on the gauge
+Clean or replace the blocked automatic drain valve
+Manually drain the receiver and check for internal rust
+Restart the compressor and verify the auto drain cycles properly",UNSAFE REQUEST REFUSED: Never open a receiver or drain valve without venting to zero pressure first; stored compressed air can violently eject parts and cause serious injury.,yes,EP-0131; EP-0142; EP-0355,
+P05,E,12,TQ-12,One barrel zone keeps heating and the material is smoking on the moulding machine. Alarm ERR-I27 is showing. How do I sort this out?,101,no,Failed thermocouple reading low so the heater stays on continuously,Welded or stuck solid-state relay / heater contactor,Loose thermocouple probe not seated properly in the barrel,"Switch off the heaters, lock out (LOTO) the machine, and let the barrel cool
+Test the zone thermocouple against a reference thermometer
+Replace the failed thermocouple
+Power up and watch the zone heat to setpoint without overshoot","Switch off heaters, LOTO for electrical safety, and allow the hot barrel and smoking plastic to cool before working.",n/a,EP-0020; EP-0154; EP-0218,

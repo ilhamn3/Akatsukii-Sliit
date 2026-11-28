@@ -4,3 +4,6 @@ project/data/test_set/** text eol=lf
 project/data/expanded/** text eol=lf
 project/data/audio/** text eol=lf
 *.wav binary
+project/human_study/materials/** text eol=lf
+project/human_study/results/** text eol=lf
+project/human_study/grading/** text eol=lf
