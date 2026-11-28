@@ -1,0 +1,217 @@
+{
+  "schema_version": "extraction_metrics/v1",
+  "system": "multi_agent_a2",
+  "synthetic_data_only": true,
+  "generated_at": "2026-11-26T12:30:03.818492+00:00",
+  "code_commit": "c525ff6",
+  "split": "dev_extraction_v3",
+  "models": [
+    "openai/gpt-oss-120b"
+  ],
+  "prompt_versions": [
+    "extraction_v3"
+  ],
+  "n_episodes": 12,
+  "episodes": [
+    "EP-0001",
+    "EP-0002",
+    "EP-0003",
+    "EP-0004",
+    "EP-0005",
+    "EP-0006",
+    "EP-0009",
+    "EP-0011",
+    "EP-0012",
+    "EP-0025",
+    "EP-0030",
+    "EP-0040"
+  ],
+  "failed_episodes": [],
+  "matching": {
+    "method": "greedy one-to-one token Dice",
+    "threshold": 0.5,
+    "machine_type": "K5 resolver to catalogue ID"
+  },
+  "fields_scored": [
+    "machine_type",
+    "symptoms",
+    "root_cause",
+    "steps",
+    "tools",
+    "parts",
+    "failed_attempts",
+    "safety_warnings"
+  ],
+  "primary": {
+    "fields": {
+      "machine_type": {
+        "tp": 9,
+        "fp": 1,
+        "fn": 3,
+        "precision": 0.9,
+        "recall": 0.75,
+        "f1": 0.8182
+      },
+      "symptoms": {
+        "tp": 19,
+        "fp": 5,
+        "fn": 8,
+        "precision": 0.7917,
+        "recall": 0.7037,
+        "f1": 0.7451
+      },
+      "root_cause": {
+        "tp": 11,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.9167,
+        "f1": 0.9565
+      },
+      "steps": {
+        "tp": 50,
+        "fp": 6,
+        "fn": 0,
+        "precision": 0.8929,
+        "recall": 1.0,
+        "f1": 0.9434
+      },
+      "tools": {
+        "tp": 14,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.9333,
+        "recall": 1.0,
+        "f1": 0.9655
+      },
+      "parts": {
+        "tp": 6,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.6667,
+        "recall": 1.0,
+        "f1": 0.8
+      },
+      "failed_attempts": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "safety_warnings": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": null,
+        "f1": 0.0
+      }
+    },
+    "micro": {
+      "tp": 114,
+      "fp": 17,
+      "fn": 12,
+      "precision": 0.8702,
+      "recall": 0.9048,
+      "f1": 0.8872
+    },
+    "macro_f1": 0.7786
+  },
+  "exact_match": {
+    "fields": {
+      "machine_type": {
+        "tp": 9,
+        "fp": 1,
+        "fn": 3,
+        "precision": 0.9,
+        "recall": 0.75,
+        "f1": 0.8182
+      },
+      "symptoms": {
+        "tp": 8,
+        "fp": 16,
+        "fn": 19,
+        "precision": 0.3333,
+        "recall": 0.2963,
+        "f1": 0.3137
+      },
+      "root_cause": {
+        "tp": 6,
+        "fp": 5,
+        "fn": 6,
+        "precision": 0.5455,
+        "recall": 0.5,
+        "f1": 0.5217
+      },
+      "steps": {
+        "tp": 36,
+        "fp": 20,
+        "fn": 14,
+        "precision": 0.6429,
+        "recall": 0.72,
+        "f1": 0.6792
+      },
+      "tools": {
+        "tp": 14,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.9333,
+        "recall": 1.0,
+        "f1": 0.9655
+      },
+      "parts": {
+        "tp": 6,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.6667,
+        "recall": 1.0,
+        "f1": 0.8
+      },
+      "failed_attempts": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "safety_warnings": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": null,
+        "f1": 0.0
+      }
+    },
+    "micro": {
+      "tp": 84,
+      "fp": 47,
+      "fn": 42,
+      "precision": 0.6412,
+      "recall": 0.6667,
+      "f1": 0.6537
+    },
+    "macro_f1": 0.6373
+  },
+  "micro_by_source": {
+    "audio_debrief": {
+      "tp": 70,
+      "fp": 15,
+      "fn": 6,
+      "precision": 0.8235,
+      "recall": 0.9211,
+      "f1": 0.8696
+    },
+    "shift_log": {
+      "tp": 44,
+      "fp": 2,
+      "fn": 6,
+      "precision": 0.9565,
+      "recall": 0.88,
+      "f1": 0.9167
+    }
+  }
+}

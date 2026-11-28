@@ -305,17 +305,21 @@ def test_cli_score_and_human_forms(tmp_path, data):
         km.main(["--threshold", "0", "score", "--predictions", str(preds)])
 
 
-@pytest.mark.parametrize("folder", sorted(p.name for p in (km.ROOT / "project/evaluation/results").iterdir()
-                                          if p.is_dir() and any(p.glob("extraction_metrics_*.json"))))
-def test_committed_results_rescore_to_their_reported_numbers(folder, data):
+COMMITTED_REPORTS = sorted(p.relative_to(km.ROOT / "project/evaluation/results").as_posix()
+                           for p in (km.ROOT / "project/evaluation/results").glob("*/extraction_metrics_*.json"))
+
+
+@pytest.mark.parametrize("report_name", COMMITTED_REPORTS)
+def test_committed_results_rescore_to_their_reported_numbers(report_name, data):
     """Committed numbers must come from code: re-scoring the committed predictions reproduces them."""
-    base = km.ROOT / "project/evaluation/results" / folder
-    [report_path] = [p for p in base.glob("extraction_metrics_*.json")]
-    [preds_path] = list(base.glob("predictions_*.jsonl"))
+    report_path = km.ROOT / "project/evaluation/results" / report_name
+    suffix = report_path.stem.removeprefix("extraction_metrics_")  # e.g. eval, dev_extraction_v5
+    preds_path = report_path.with_name(f"predictions_{suffix}.jsonl")
     report = json.loads(report_path.read_text(encoding="utf-8"))
     preds = [json.loads(l) for l in preds_path.read_text(encoding="utf-8").splitlines()]
     rescored, _ = km.score_predictions(preds, data, system="multi_agent_a2")
-    assert rescored["episodes"] == report["episodes"] and len(report["episodes"]) == 50
+    split = "dev" if suffix.startswith("dev") else "eval"
+    assert rescored["episodes"] == report["episodes"] == km.select_episodes(data, split)
     assert rescored["primary"] == report["primary"] and rescored["exact_match"] == report["exact_match"]
     text = preds_path.read_text(encoding="utf-8")
     assert "gsk_" not in text and "org_" not in text  # No credentials or provider account IDs.
