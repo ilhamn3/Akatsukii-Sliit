@@ -42,8 +42,12 @@ WEIGHTS = {"required_completeness": 0.45, "failed_attempt_completeness": 0.15,
 # Symptom-cosine threshold for the possible_duplicate warning (same machine). Chosen on the
 # dev split on 28 Nov 2026 (docs/VALIDATION_REVIEW.md); config.yaml carries the same value.
 DUPLICATE_THRESHOLD = 0.55
-# Warnings that indicate conflicting/duplicate knowledge get review priority.
-CONFLICT_CODES = {"possible_duplicate", "failed_attempt_conflicts_with_step"}
+# Warnings that indicate conflicting knowledge get review priority. possible_duplicate is
+# not one of them: at the dev-chosen threshold it mostly means "this fault is already
+# known" (a recurrence), and on the eval drafts it raised 34 of 50 drafts to low priority
+# against a store of past repairs. It stays a warning listing the matching records; exact
+# duplicates of a recording still block (duplicate_source).
+CONFLICT_CODES = {"failed_attempt_conflicts_with_step"}
 UNITS = (r"psi|bar|kpa|mpa|nm|n·m|n-m|ft-lbs?|lbf|mm|cm|rpm|kw|hz|°c|°f|degc|degf|"
          r"vac|vdc|amps?|volts?|litres?|liters?|ml")
 QUANTITY = re.compile(rf"(\d+(?:[.,]\d+)?)\s*({UNITS})?(?!\w)", re.IGNORECASE)

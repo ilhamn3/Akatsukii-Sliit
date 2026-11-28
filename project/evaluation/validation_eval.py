@@ -268,8 +268,10 @@ def duplicate_eval(rows, *, workdir: Path, embedder=None) -> dict:
     for name, keep in (("without_own", lambda e: e not in eval_ids), ("with_own", lambda e: True)):
         store = store_with(name, keep)
         per, flagged, own_hits, kinds = [], 0, 0, {"same_episode": 0, "same_fault": 0, "other_fault": 0}
+        low_with_store = 0
         for row in rows:
             report = validate_draft(row["draft"], trace_id="TR-K4-EVAL-SEM", store=store)
+            low_with_store += report.priority == "low_confidence"
             matches = next((i.related_ids for i in report.issues if i.code == "possible_duplicate"), [])
             flagged += bool(matches)
             own_hits += row["episode_id"] in matches
@@ -281,6 +283,7 @@ def duplicate_eval(rows, *, workdir: Path, embedder=None) -> dict:
                         "matches": matches})
         conditions[name] = {"store_episodes": sum(keep(e.episode_id) for e in envelopes),
                             "drafts_flagged": flagged, "own_episode_found": own_hits,
+                            "low_confidence_with_store": low_with_store,
                             "matched_ids_by_kind": kinds, "per_draft": per}
     return {"exact": exact, "semantic": conditions, "threshold": DUPLICATE_THRESHOLD, "k": 3,
             "cosine_diagnostic": cosine_diagnostic(rows, envelopes, faults, store.embedder)}
