@@ -84,9 +84,12 @@ for the UI ([UI_API.md](UI_API.md)).
      survives, abstain.
 4. **Safety check (agent 7).** Deterministic rules run first, then an LLM review. The
    rules' verdict cannot be weakened by the LLM. The verdict is `approve`, `amend` or `veto`.
-   - **Unsafe-request detection (`SR-X05`)**: combines a regex fast path with an LLM intent
-     check (`confidence >= 0.8` and a valid hazard ID from `hazards.json`) to refuse
-     requests to skip or bypass required safety controls.
+   - **Unsafe-request detection (`SR-X05`)**: combines a regex fast path, an offline
+     semantic MiniLM exemplar + benign hard-negative margin check
+     (`unsafe_exemplars.yaml`, `tau=0.58`, `margin=0.03`), and an LLM intent check
+     (`confidence >= 0.8` and a valid hazard ID from `hazards.json`) to refuse requests to
+     skip or bypass required safety controls; `sr_x05_sources` (`"regex"` / `"semantic"`) is
+     recorded in the audit trace.
    - **LLM advisory categorisation**: Safety LLM advisory concerns are categorised as
      `"safety"` vs `"other"`; only `"safety"` concerns can trigger `amend` or `veto`.
 5. **Revise (`OrchestratorRevise`, agent 8, revise phase).** On `amend` or `veto`,
