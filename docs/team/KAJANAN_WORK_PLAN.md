@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 12.5 / 20 points · 62% complete**
+**Overall: 13.5 / 20 points · 68% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP6 | User interface | 8 | 8 | 100% |
-| WP7 | Single-agent baseline and benchmark | 9 | 4.5 | 50% |
+| WP7 | Single-agent baseline and benchmark | 9 | 5.5 | 61% |
 | WP9 | Demo and slides (Kajanan's part) | 3 | 0 | 0% |
 <!-- PROGRESS:END -->
 
@@ -41,7 +41,7 @@
 | 7.3 | Three runs per query; paired bootstrap CIs and Wilcoxon tests | 2 | 28 Nov | 75% |
 | 7.4 | Result tables and charts generated from logs | 1 | 28 Nov | 0% |
 | 7.5 | Robustness and fault-injection runs | 1 | 28 Nov | 0% |
-| 7.6 | Scalability runs at 100 / 400 / 2,000 records | 1 | 28 Nov | 0% |
+| 7.6 | Scalability runs at 100 / 400 / 2,000 records | 1 | 28 Nov | 100% |
 
 #### WP9 – Demo and slides (Kajanan's part) (3 pts)
 
@@ -170,5 +170,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | J4+J5 | 27 Nov | [WP7] Single-agent baseline, harness and statistics | 7.1 (0->75%), 7.2 (0->75%), 7.3 (0->75%) | baseline_single_agent.py + baseline_v1.md, deterministic metrics.py (Top-3 Dice, cause_family, safety, must_not, already_tried, step-level citation_validity & groundedness), harness.py (--final + FROZEN.sha256 guard, resume cache, optional extraction/human ingestion), stats.py (paired bootstrap 10k, Wilcoxon, Cohen's d, McNemar), docs/BASELINE.md, merged origin/main dev dry run (0/40 degraded: multi beh 90.00% / cit 100.00% / grd 100.00% / saf 51.67%; baseline beh 100.00% / cit 55.00% / grd 40.00% / saf 88.33%), 289 pytest passed (3 skipped); pending 3-run frozen test execution in J6 | 15% -> 38% | Tharshanth A |
 | J5b | 27 Nov | [WP7] Quota-aware paired benchmark harness (--rpm, --max-calls, RPD stop) | 7.2 (75%), 7.3 (75%) | Paired multi+baseline execution in seeded cross-tier shuffle; shared client-side RPM limiter + DailyQuotaExhaustedError (no retry/wait on RPD, midnight Pacific reset message) in llm.py; --max-calls clean stop & resume; per-query progress projection; offline 429/quota tests; free-tier recipe in docs/BASELINE.md | 38% -> 38% | Tharshanth A |
 | J2+J3 | 27 Nov | [WP6] Connect Streamlit UI to real Pipeline B, ReviewQueue, and audit trace | 6.1 (60->100%), 6.2 (25->100%), 6.3 (25->100%), 6.4 (25->100%) | st.navigation sidebar ("Chat" default page in chat_page.py) wired to project.core.api.run_query with citations, evidence panel (snippet, similarity, verified_by, outcome), refusal, abstained/escalated + ticket ID, failed attempts, safety notes, fake/stub/llm_check banners, error panel, elapsed spinner, st.cache_resource; Review Queue wired to list_pending_reviews/approve_review_item/reject_review_item with quotes & blocking/warning issues; Trace Viewer wired to logs/audit_trace.jsonl; headless AppTest suite (295 pytest passed, 3 skipped); docs/UI.md with First run guide + 5 Playwright screenshots (chat_answer, chat_refusal, chat_abstain, review_queue, trace_viewer) | 38% -> 63% | Tharshanth A |
+| J7 | 28 Nov | [WP7] Retrieval scalability benchmark across n100, n400, n2000 | 7.6 (0->100%) | scripts/run_scalability.py (HybridRetriever-only on 20 dev queries × 3 repeats into temp FACTORY_MEMORY_STORAGE, no LLM calls), results/scalability/results.json, docs/SCALABILITY.md (n100 p50=30.97ms, n400 p50=34.37ms, n2000 p50=67.55ms; disk 1.31/5.19/25.57 MB), offline tiny-store test in tests/benchmark/test_scalability.py | 63% -> 68% | Tharshanth A |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
