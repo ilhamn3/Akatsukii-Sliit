@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 25.4 / 30 points · 84% complete**
+**Overall: 26.1 / 30 points · 87% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP3 | Ingestion agents 1-4 and review queue | 18 | 13.7 | 76% |
+| WP3 | Ingestion agents 1-4 and review queue | 18 | 14.4 | 80% |
 | WP4 | Knowledge store and retrieval | 10 | 9.7 | 97% |
 | WP10 | Hardening and unit tests | 2 | 2 | 100% |
 <!-- PROGRESS:END -->
@@ -27,7 +27,7 @@
 
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
-| 3.1 | Agent 1: Whisper transcription (timestamped transcript) | 3 | 24 Nov | 75% |
+| 3.1 | Agent 1: Whisper transcription (timestamped transcript) | 3 | 24 Nov | 100% |
 | 3.2 | Agent 1: video frame sampling and unclear-audio flagging | 1 | 24 Nov | 75% |
 | 3.3 | Agent 2: structured extraction (steps, tools, root cause, failed attempts, warnings) | 4 | 24 Nov | 90% |
 | 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 50% |
@@ -200,5 +200,6 @@ After merging origin/main at f735884, all 80 tests and pip check passed locally.
 | [#42](https://github.com/ilhamn3/Akatsukii-Sliit/pull/42) (tracker update, included in #42) | 28 Nov 2026 | [WP3] Record review outcomes in the K PR log | none | Reviewer column now shows what actually happened to each PR (#5, #12-#14, #22-#24, #27, #34), from the GitHub reviews. #23 and #24 were approved and merged into their stacked bases and reached main via #27. No code or % change | 77% -> 77% (23.2/30 pts) | Ilham MM (pending) |
 | [#42](https://github.com/ilhamn3/Akatsukii-Sliit/pull/42) (review-page fixes from the #32 review) | 28 Nov 2026 | [WP3] Review page shows everything approval publishes; corrections for blocked drafts | 3.6 (75->90%) | #32 connected the UI to the K4 ReviewQueue and was merged over my requested changes. This PR makes them: the page shows every extracted field approval publishes (failed attempts, tools, parts, machine ID were hidden), review reasons and missing fields (incl. the fixture and K8-retry flags), confidence labelled uncalibrated; blocking issues get correction inputs mapped to the keys A3 accepts, so blocked drafts can be approved once corrected (before, only rejected); duplicate_source can only be rejected; no default reviewer name. Logic in project/store/review_view.py with unit tests; tests/ui/test_review_page.py drives the page against a real ReviewQueue + KnowledgeStore; checked in the running app (correct -> approve -> published, decided_by recorded). UI tests get a 30 s AppTest timeout (the existing trace-viewer test flaked at the 3 s default). 337 tests pass. Done-when met: queue items are approved/rejected through the backend API from the UI. Remaining: review | 77% -> 78% (23.2/30 -> 23.5/30 pts) | Ilham MM (pending) |
 | #TBD (Done % per #34; builds on #42) | 28 Nov 2026 | [WP3] Done % for what the v5 eval proved; harness reads the v5 report | 3.3 (50->90%), 3.7 (75->100%) | 3.7: the harness now loads the newest committed extraction report by default (it matched only the v3 file name, so it still read v3 0.833); a test checks it reads v5 (micro F1 0.897, 50 episodes, 0 failures). Done-when met: CLI script on the labelled set, file the harness reads, numbers from code. 3.3: done-when met on synthetic data: every draft validates on all 12 dev sample narratives and all 50 eval narratives with v5 (0 failures), failed attempts F1 1.000 and safety warnings F1 0.889 on eval, A1 -> A2 handoff traced in Pipeline A. Remaining 10%: a run with the team's final model (Ilham's #23 note) and real recordings, which the project does not have | 78.3% -> 84.5% (23.5/30 -> 25.35/30 pts) | Ilham MM (pending) |
+| #TBD (Agent 1 audio evaluation; builds on the Done % PR) | 28 Nov 2026 | [WP3] Agent 1 on the 12 audio clips: WER, time and review flags | 3.1 (75->100%), 3.2 (75%, unchanged) | project/evaluation/capture_metrics.py runs the real CaptureAgent (Whisper base, CPU, local; no Gemini/Groq) on all 12 synthetic clips, checks SHA-256, times transcription and scores WER against the manifest references. 0 failures; pooled WER 6.0% (8.2% without Whisper normalization); clean 6.5%, noisy 5.6%; 46.7 s for 435.5 s of audio (RTF 0.11). A1 flagged 0 of 6 noisy clips: Whisper stayed confident (min avg_logprob -0.36), so A1 catches silence/garbled speech, not steady 15 dB noise. Domain errors noted (lathe -> late, four oh -> 40). Results committed with transcripts; a test re-scores them. 3.1 done-when met on the team audio. 3.2 stays 75%: unclear-audio flagging misses noise, and a noise flag needs separate development clips. Evidence: docs/AUDIO_CAPTURE_EVAL.md | 84.5% -> 87% (25.35/30 -> 26.1/30 pts) | Ilham MM (pending) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
