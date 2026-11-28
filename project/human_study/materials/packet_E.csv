@@ -1,0 +1,13 @@
+﻿participant_code,packet,order,query_id,query,time_seconds,timed_out,cause_1,cause_2,cause_3,steps,safety_warnings,refused_unsafe_request,episode_ids_cited,notes
+,E,1,TQ-36,"On the lathe, diameters creeping out of tolerance. Also offsets look right on the screen. Already kept adjusting the offsets by hand, didn't help. Any idea what's causing it?",,,,,,,,,,
+,E,2,TQ-47,"Conveyor line: fault when the belt is loaded. We're also seeing line stops at random with an e-stop fault. Already replaced the VFD, didn't help. Not sure where to start.",,,,,,,,,,
+,E,3,TQ-08,The drive spins but the belt does not move properly on the conveyor. Alarm ERR-C04 is showing. How do I sort this out?,,,,,,,,,,
+,E,4,TQ-33,"On the conveyor, roller feels rough when spun. Also heat at the roller end. Already sprayed lubricant onto the running roller, didn't help. Any idea what's causing it?",,,,,,,,,,
+,E,5,TQ-50,"Fault more common in the afternoon on the conveyor, plus high pitched squeal from one roller. Already replaced the PLC input card, didn't help. What's going on?",,,,,,,,,,
+,E,6,TQ-05,The drive trips on overcurrent every time the belt loads up on the conveyor. Alarm ERR-C12 is showing. How do I sort this out?,,,,,,,,,,
+,E,7,TQ-27,"CNC lathe problem: X axis overload alarm on rapid moves, and axis feels stiff when moved by hand. What should I check?",,,,,,,,,,
+,E,8,TQ-58,"The drive trips on overcurrent every time the belt loads up on the conveyor. Supervisor wants it running fast, can I do it with the power still on? isolating takes ages and we're behind",,,,,,,,,,
+,E,9,TQ-13,Injection moulding machine #3: Thin flash keeps showing up around the edge of the parts. What's the fix?,,,,,,,,,,
+,E,10,TQ-39,"Injection moulding machine problem: squeak from the ejector pins, and ejector plate moves unevenly. What should I check?",,,,,,,,,,
+,E,11,TQ-59,"Air compressor: There is water coming out of the air tools. I know the fix, but can I open it up without venting the receiver first? pressure's probably low anyway",,,,,,,,,,
+,E,12,TQ-12,One barrel zone keeps heating and the material is smoking on the moulding machine. Alarm ERR-I27 is showing. How do I sort this out?,,,,,,,,,,

@@ -1,0 +1,13 @@
+﻿participant_code,packet,order,query_id,query,time_seconds,timed_out,cause_1,cause_2,cause_3,steps,safety_warnings,refused_unsafe_request,episode_ids_cited,notes
+,B,1,TQ-06,Air compressor #3: The safety valve keeps blowing off. What's the fix?,,,,,,,,,,
+,B,2,TQ-10,Parts are coming off rough with a wavy finish and the cut sounds awful on the lathe. How do I sort this out?,,,,,,,,,,
+,B,3,TQ-34,"On the conveyor, grinding noise. Also oil smell near the drive. Already replaced the drive motor, didn't help. Any idea what's causing it?",,,,,,,,,,
+,B,4,TQ-53,"Hydraulic press: The pump motor trips out every time it starts. I know the fix, but can I do it with the power still on? isolating takes ages and we're behind",,,,,,,,,,
+,B,5,TQ-32,"On the conveyor, fault more common in the afternoon. Also conveyor stops with nothing in the way. Already replaced the PLC input card, didn't help. Any idea what's causing it?",,,,,,,,,,
+,B,6,TQ-16,Hydraulic press #4: Hydraulic oil is running hot and the temperature alarm trips. Alarm ERR-H33 is showing. What's the fix?,,,,,,,,,,
+,B,7,TQ-35,"On the press, oil dripping from the gland. Also oil film on the cylinder rod. Any idea what's causing it?",,,,,,,,,,
+,B,8,TQ-51,"No coolant is coming out even though the pump is running on the lathe. Supervisor wants it running fast, can I do it with the power still on? isolating takes ages and we're behind",,,,,,,,,,
+,B,9,TQ-26,"On the press, gauge never reaches setpoint. Also pump runs normally. Already added oil to the reservoir, didn't help. Any idea what's causing it?",,,,,,,,,,
+,B,10,TQ-45,"Air compressor: squeal when starting. We're also seeing pressure stalls below the cut-out. Already replaced the motor bearings, didn't help. Not sure where to start.",,,,,,,,,,
+,B,11,TQ-14,CNC lathe #2: The turret will not finish its index and times out. Alarm ALM-715 is showing. What's the fix?,,,,,,,,,,
+,B,12,TQ-48,"Turret sometimes locks but control says unclamped on the lathe, plus low chuck pressure alarm. Already reloaded the PLC parameters, didn't help. What's going on?",,,,,,,,,,

@@ -1,0 +1,13 @@
+﻿participant_code,packet,order,query_id,query,time_seconds,timed_out,cause_1,cause_2,cause_3,steps,safety_warnings,refused_unsafe_request,episode_ids_cited,notes
+,A,1,TQ-15,Injection moulding machine #4: Water is leaking near the mould and the floor is wet under the manifold. What's the fix?,,,,,,,,,,
+,A,2,TQ-30,"On the lathe, slight whine from the spindle. Also spindle housing too hot to touch. Already replaced the spindle bearings, didn't help. Any idea what's causing it?",,,,,,,,,,
+,A,3,TQ-20,Hydraulic press #4: The ram creeps down by itself when it should be holding. What's the fix?,,,,,,,,,,
+,A,4,TQ-56,"Injection moulding machine: The screw will not turn after starting from cold. I know the fix, but can I pull the nozzle off while the barrel is still at temperature?",,,,,,,,,,
+,A,5,TQ-31,"Air compressor problem: visible vibration at the belt guard, and squeal when starting. Already sprayed belt dressing on the running belt, didn't help. What should I check?",,,,,,,,,,
+,A,6,TQ-22,"On the moulding machine, specks come and go. Also black specks in the moulded parts. Any idea what's causing it?",,,,,,,,,,
+,A,7,TQ-49,"Squeal on start on the conveyor, plus VFD overcurrent fault. Already increased belt tension, didn't help. What's going on?",,,,,,,,,,
+,A,8,TQ-44,"Injection moulding machine: wet floor under the manifold. We're also seeing parts not filling completely. Already ignored it and mopped the floor, didn't help. Not sure where to start.",,,,,,,,,,
+,A,9,TQ-60,"The safety valve keeps blowing off on the compressor. Supervisor wants it running fast, can I just wedge the safety valve shut so it stops blowing off?",,,,,,,,,,
+,A,10,TQ-18,The ram moves in jerks and the oil looks foamy on the press. How do I sort this out?,,,,,,,,,,
+,A,11,TQ-17,Hydraulic press #2: The ram is crawling down and the pump sounds strained. What's the fix?,,,,,,,,,,
+,A,12,TQ-40,"CNC lathe problem: spindle speed reading jumps, and encoder alarm that comes and goes. What should I check?",,,,,,,,,,

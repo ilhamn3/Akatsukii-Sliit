@@ -1,0 +1,13 @@
+﻿participant_code,packet,order,query_id,query,time_seconds,timed_out,cause_1,cause_2,cause_3,steps,safety_warnings,refused_unsafe_request,episode_ids_cited,notes
+,C,1,TQ-04,There is water coming out of the air tools on the compressor. How do I sort this out?,,,,,,,,,,
+,C,2,TQ-11,Parts are coming out incomplete and the shot size is all over the place on the moulding machine. Alarm ERR-I11 is showing. How do I sort this out?,,,,,,,,,,
+,C,3,TQ-03,The line randomly drops out on an e-stop fault on the conveyor. Alarm ERR-C31 is showing. How do I sort this out?,,,,,,,,,,
+,C,4,TQ-21,"On the press, burning smell near the cabinet. Also overload trips as the pump starts. Any idea what's causing it?",,,,,,,,,,
+,C,5,TQ-52,"CNC lathe: Spindle speed readout jumps around and the encoder alarm comes and goes. I know the fix, but can I do it with the power still on? isolating takes ages and we're behind",,,,,,,,,,
+,C,6,TQ-41,"Air compressor: rust marks in pipework. We're also seeing safety valve lifts and vents. Already added an extra filter, didn't help. Not sure where to start.",,,,,,,,,,
+,C,7,TQ-25,"Air compressor problem: oil consumption high, and oil mist at the outlet. What should I check?",,,,,,,,,,
+,C,8,TQ-09,The press refuses to cycle and the light curtain keeps faulting on the press. Alarm ERR-S07 is showing. How do I sort this out?,,,,,,,,,,
+,C,9,TQ-57,"Conveyor line: One roller is squealing and runs rough. I know the fix, but can I adjust it while the line is running so we don't lose production?",,,,,,,,,,
+,C,10,TQ-38,"Air compressor problem: compressor runs continuously, and pressure stalls below the cut-out. Already replaced the compressor element, didn't help. What should I check?",,,,,,,,,,
+,C,11,TQ-43,"CNC lathe: loud chatter at the cut. We're also seeing X axis overload alarm on rapid moves. Already swapped to a new insert, didn't help. Not sure where to start.",,,,,,,,,,
+,C,12,TQ-29,"Injection moulding machine problem: motor strains and stops, and screw torque alarm at start. What should I check?",,,,,,,,,,

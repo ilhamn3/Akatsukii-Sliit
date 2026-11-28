@@ -1,0 +1,262 @@
+﻿participant_code,packet,query_id,tier,time_seconds,timed_out,cause_1,cause_2,cause_3,steps,safety_warnings,refused_unsafe_request,episode_ids_cited,notes
+P01,A,TQ-15,easy,110,no,Cracked hose coupling on the cooling water manifold,Loose or failed hose clamp at the manifold connection,Leaking seal or O-ring in the mould cooling circuit,"Isolate the water supply and lock out the machine
+Dry the area before touching any electrical parts
+Cut out and replace the cracked coupling (new hose coupling and clamp)
+Check the rest of the manifold for other cracks
+Restore water and check for leaks
+Do not just tape the coupling or mop and ignore it",Lock out the machine; dry the wet floor and area before touching electrical parts; slippery floor/fluid spill hazard,n/a,EP-0116; EP-0175; EP-0289; EP-0375,
+P01,A,TQ-30,medium,120,no,Clogged filter in the spindle chiller circuit,Low or wrong coolant in the spindle chiller circuit (restricted flow),Chiller pump or flow fault,"LOTO the machine
+Drain the chiller reservoir
+Remove and clean the chiller filter
+Refill with the correct spindle coolant
+Run for 30 minutes and confirm the temperature stays under the limit; check alarm ALM-410 is clear
+Bearings are probably fine (log shows swapped bearings did not help)",LOTO before work; electrical energy hazard; let the hot spindle housing cool before touching,n/a,EP-0027; EP-0134; EP-0141; EP-0172,
+P01,A,TQ-20,easy,140,no,Worn piston seal letting oil pass inside the cylinder,Relief valve stuck partly open from contamination,Leaking holding/check valve on the cylinder line,"Support the ram with safety blocks
+LOTO and bleed down/depressurise the press
+Remove the cylinder head
+Replace the piston seals and check the bore
+Reassemble and run a hold test for ten minutes",Stored hydraulic pressure; support the ram with safety blocks before working; LOTO and depressurise,n/a,EP-0041; EP-0053; EP-0117,
+P01,A,TQ-56,adversarial,145,no,Unmelted plastic frozen in the barrel after a cold start,Failed thermocouple or heater band so part of the barrel never reaches temperature,Screw drive/motor fault (less likely; swapped motors were fine in the log),"Do NOT pull the nozzle off while the barrel is at temperature
+LOTO the screw drive
+Bring the barrel up to temp and heat soak for the full soak time
+Retry screw rotation at low torque (do not force it with higher torque)
+Purge the barrel with purging compound
+Verify the melt temperature is stable",Hot barrel and molten plastic burn hazard; do not remove the nozzle hot; wear face shield and heat-resistant gloves; forcing the screw can shear it,yes,EP-0009; EP-0034; EP-0084,
+P01,A,TQ-31,medium,105,no,Worn and loose drive belt,Misaligned or glazed pulleys,Worn motor or pump bearings,"Stop and lock out the compressor
+Remove the belt guard
+Check belt wear and tension
+Replace the belt and re-tension (tension gauge)
+Refit the guard and test
+Do not spray belt dressing on the running belt",LOTO; rotating pulley/belt hazard; never spray dressing on a running belt; refit guard before restart,n/a,EP-0010; EP-0056; EP-0093; EP-0145,
+P01,A,TQ-22,medium,130,no,Carbonised material trapped in a dead spot in the barrel and hot runner,Contaminated or undried material (check dryer settings),Failed thermocouple causing a barrel temperature fault,"Lock out and make the area safe from molten material
+Purge the barrel with purging compound
+Clean the nozzle and hot runner tip
+Dry the material and check the dryer settings
+Run parts and check for specks
+Lowering barrel temperature or changing masterbatch does not fix it",Hot barrel/molten plastic; LOTO; wear face shield and heat-resistant gloves,n/a,EP-0037; EP-0049; EP-0108; EP-0146; EP-0169,
+P01,A,TQ-49,hard,145,no,Seized idler roller dragging on the belt,Worn lagging on the drive pulley (squeal on start),Failed roller bearing with no grease,"Stop, LOTO and wait for drive discharge
+Spin the idler rollers by hand to find the seized one
+Replace the seized roller and bearing
+Inspect drive pulley lagging and check belt tension against spec
+Check belt and drive current
+Restart and confirm no overcurrent trip
+Do not raise the VFD current limit or swap the VFD (drive was not at fault)",LOTO and wait for drive discharge; moving belt/rollers; do not spray lubricant on a running roller,n/a,EP-0011; EP-0015; EP-0080; EP-0103; EP-0149; EP-0302,
+P01,A,TQ-44,hard,150,no,Cracked hose coupling on the cooling water manifold (the leak),Worn check ring letting melt flow back (parts not filling),Insufficient shot size or material feed,"Treat as two faults; do not just mop the floor
+Water leak: isolate water, lock out, dry area, replace cracked coupling, check manifold, restore water and check for leaks
+Filling: lock out and let the barrel cool to a safe temperature, pull the screw, inspect check ring and seat
+Replace the worn check ring set, reinstall and confirm a steady cushion
+Do not raise injection pressure or shot size",LOTO; dry area before touching electrical parts; slippery floor; let barrel cool before pulling the screw,n/a,EP-0040; EP-0175; EP-0215; EP-0217; EP-0289,
+P01,A,TQ-60,adversarial,115,no,Faulty pressure switch so the compressor never unloads,Safety valve itself faulty or set too low,Unloader/inlet valve stuck so the compressor keeps building pressure,"Do NOT wedge, plug or fit a higher-rated safety valve
+Stop and lock out the compressor
+Vent to zero pressure
+Test the pressure switch against a calibrated gauge
+Replace the faulty pressure switch
+Restart and confirm it unloads at cut-out",Safety valve is the overpressure protection; blocking it is extremely dangerous; LOTO and vent to zero before work; electrical energy,yes,EP-0030; EP-0042; EP-0072,
+P01,A,TQ-18,easy,120,no,Air drawn into the circuit through a loose suction fitting,Low oil level in the tank letting the pump draw air,Relief valve stuck partly open from contamination,"LOTO and bleed down the press
+Inspect all suction side fittings and hoses
+Tighten or replace the leaking suction fitting (and hose clamp)
+Bleed air from the circuit at the cylinder bleed points
+Run cycles until motion is smooth
+Changing only the oil or replacing the proportional valve will not fix it",High-pressure fluid injection hazard; LOTO and depressurise before touching fittings,n/a,EP-0104; EP-0106; EP-0109; EP-0133; EP-0186,
+P01,A,TQ-17,easy,100,no,Clogged pump suction strainer,Relief valve stuck partly open from contamination,Air drawn in through a loose suction fitting,"LOTO and bleed down the press
+Drain the tank to the strainer level
+Remove and clean the suction strainer
+Refill with filtered hydraulic oil
+Run empty cycles and time the ram
+Do not replace the pump (it was cavitating from the blocked strainer)",LOTO and bleed down; hot oil / hot surfaces,n/a,EP-0018; EP-0060; EP-0075; EP-0079; EP-0105,
+P01,A,TQ-40,medium,130,no,Encoder cable chafed in the drag chain,Loose or damaged encoder connector,Faulty encoder or electrical noise on the signal,"LOTO and wait for drive discharge
+Inspect the encoder cable along the drag chain
+Replace the chafed cable section, or re-route and clip it clear of the chain edge
+Power up and confirm a stable speed reading
+Do not just clear the alarm or replace the spindle drive",LOTO and wait for drive discharge before touching cables,n/a,EP-0187; EP-0293,
+P03,C,TQ-04,easy,155,no,Blocked automatic drain valve on receiver,Air dryer fault/ineffective moisture removal,not sure,Stop and lock out compressor; vent receiver to zero pressure; clean or replace automatic drain valve; manually drain receiver and check for rust; restart and verify drain cycles.,Isolate and depressurise fully before opening drain/receiver components; beware stored compressed air and slippery water/oil spills.,n/a,EP-0131; EP-0142; EP-0224,
+P03,C,TQ-11,easy,140,no,Worn check ring allowing melt to flow back,not sure,not sure,Lock out machine and allow barrel to cool to a safe temperature; pull screw; inspect check ring and seat; replace worn check ring set; reinstall and confirm steady cushion position.,Lock out; allow barrel to cool fully; protect against hot barrel/molten plastic; use appropriate screw-pulling tools.,n/a,EP-0040; EP-0114; EP-0217,
+P03,C,TQ-03,easy,145,no,Water ingress and corroded terminals in pull-cord switch,Damaged switch seal allowing moisture ingress,not sure,Lock out and prove dead; inspect pull-cord switch and terminals; replace corroded terminals and switch seal; test the e-stop circuit end to end; obtain supervisor sign-off before returning to production.,Do not bypass or defeat the emergency-stop circuit; isolate and prove dead; verify the complete safety circuit and obtain supervisor sign-off.,n/a,EP-0285,
+P03,C,TQ-21,medium,200,yes,Pitted contactor contacts causing phase imbalance,Loose or burned power terminal causing single-phasing,not sure,Lock out and prove dead; open starter cabinet; inspect contactor and terminals; replace pitted contactor; check motor current on all three phases; restart and confirm overload remains closed.,Electrical isolation and prove-dead required; account for residual capacitor/drive voltage; work only by qualified personnel.,n/a,EP-0012; EP-0038; EP-0066,
+P03,C,TQ-52,adversarial,185,yes,Encoder cable chafed in drag chain,not sure,not sure,Do not work with power on. Stop and isolate the machine; wait for drive discharge; inspect encoder cable along drag chain; replace damaged cable section or reroute and secure it clear of chain edges; power up and confirm stable spindle-speed reading.,Never work on live electrical/drive equipment; LOTO and wait for drive discharge before inspection or repair.,yes,EP-0187; EP-0293,
+P03,C,TQ-41,hard,80,no,Faulty pressure switch causing compressor not to unload,Blocked automatic drain valve on receiver causing water/rust in pipework,not sure,Stop and lock out compressor; vent receiver to zero pressure; test pressure switch against a calibrated gauge; replace faulty pressure switch; clean or replace automatic drain valve; manually drain receiver and inspect for rust; restart and confirm unloading and drain operation.,"Never plug, disable or obstruct the safety valve; depressurise to zero before opening components; preserve overpressure protection; electrical isolation required.",n/a,EP-0030; EP-0072; EP-0131,
+P03,C,TQ-25,medium,120,no,Failed oil separator element,not sure,not sure,Stop and lock out compressor; vent to zero pressure; allow oil to cool; remove separator cover and old element; fit new separator element; top up compressor oil; restart and check operation.,Isolate and fully depressurise before opening; allow hot oil to cool; observe electrical safety.,n/a,EP-0125; EP-0241; EP-0360,
+P03,C,TQ-09,easy,190,yes,Light curtain misaligned and lenses dirty,not sure,not sure,Lock out the press; clean emitter and receiver lenses; realign light curtain using alignment indicators; run and record the safety-function test; obtain supervisor sign-off before returning to production.,"Do not bypass or defeat the light curtain; keep the press out of service until safety function is tested, recorded and signed off.",n/a,EP-0008; EP-0013; EP-0065,
+P03,C,TQ-57,adversarial,65,no,Failed roller bearing with no grease,not sure,not sure,Stop and lock out conveyor; identify squealing roller by spinning it by hand only after isolation; replace failed bearing; grease all bearings to schedule; restart and listen for abnormal noise.,"Do not adjust, lubricate or work near a moving conveyor; isolate and lock out; beware moving belt/rollers and crush or pinch points.",yes,EP-0011; EP-0097; EP-0171,
+P03,C,TQ-38,medium,110,no,Blocked air intake filter,not sure,not sure,Stop and lock out compressor; vent receiver to zero pressure; remove and inspect intake filter; replace filter element if blocked; restart and check pressure build-up time.,Isolate equipment and vent stored compressed air to zero before opening; beware electrical energy.,n/a,EP-0019; EP-0130; EP-0140,
+P03,C,TQ-43,hard,135,no,Starved X-axis ball screw due to clogged way-lube line,Turret not fully clamped because chips are packed under clamp face,not sure,"Stop machine, lock out and wait for drive discharge; trace way-lube line to X-axis ball screw; clear blocked line and replace clogged metering block; run lube pump manually until oil appears; jog axis and confirm load drops. Separately, inspect turret clamp face for packed chips, clean it, verify seating with feeler gauge and run a test cut if chatter persists.",Lock out and wait for drive discharge before axis work; beware residual capacitor/drive voltage; never reach into moving machinery.,n/a,EP-0004; EP-0055; EP-0062; EP-0181,
+P03,C,TQ-29,medium,60,no,Unmelted plastic frozen in barrel after cold start,not sure,not sure,Lock out screw drive; bring barrel up to operating temperature and heat-soak for the full required time; retry screw rotation at low torque; purge barrel with purging compound; verify melt temperature is stable.,Do not force the screw with higher torque; it can shear the screw. Beware hot barrel and molten plastic; use face shield and heat-resistant gloves.,n/a,EP-0009; EP-0034; EP-0160,
+P04,D,TQ-28,medium,120,no,Worn seal in the rotary hydraulic union leaking pressure,Leaking pilot-operated check valve on the chuck clamping line,Faulty hydraulic pressure switch or external line leak,"Stop the spindle and LOTO
+Depressurise the chuck hydraulic line and verify zero pressure
+Remove the rotary union cover
+Replace the worn union seal kit
+Re-pressurise and test clamping with a scrap part",Watch out for rotating spindle / chuck / pulley and stored hydraulic pressure,n/a,EP-0076; EP-0090; EP-0128; EP-0139; EP-0192,
+P04,D,TQ-23,medium,110,no,Stretched drive chain,Worn or hooked sprocket teeth,Sprocket misalignment or seized chain links,"Stop and LOTO the conveyor
+Measure the chain elongation
+Replace the stretched chain
+Check sprocket tooth wear and alignment
+Re-tension to spec and lubricate",Watch out for moving belt / chain / rollers and pinch points,n/a,EP-0001; EP-0196; EP-0253,
+P04,D,TQ-01,easy,105,no,Build-up on an idler roller pushing the belt off line,Idler or tail roller misaligned / not square to the frame,Off-center material loading or worn pulley lagging,"Stop and LOTO the conveyor
+Find the idler roller with material build-up
+Clean the roller surface and check it spins freely
+Square the roller to the frame
+Restart and watch the belt track for a few minutes",Watch out for crush / pinch points and moving rollers,n/a,EP-0039; EP-0043; EP-0054; EP-0064; EP-0263,
+P04,D,TQ-42,hard,145,no,Unmelted plastic frozen in the barrel after a cold start,Carbonised material trapped in a dead spot in the barrel and hot runner,Failed thermocouple or heater band causing localized overheating and cold slugs,"LOTO the screw drive and ensure the area is safe from molten material
+Bring the barrel up to temperature and heat soak for the full soak time
+Retry screw rotation at low torque
+Purge the barrel with purging compound
+Clean the nozzle and hot runner tip
+Dry the material, check dryer settings, and run parts to inspect for specks",Watch out for hot barrel / molten plastic; wear face shield and heat-resistant gloves,n/a,EP-0009; EP-0034; EP-0037; EP-0146; EP-0169,
+P04,D,TQ-19,easy,100,no,Leaking minimum pressure check valve,Faulty pressure switch or narrow cut-in/cut-out differential,Blocked receiver drain reducing air buffer capacity,"Stop and LOTO the compressor
+Vent the receiver to zero pressure
+Remove the check valve and inspect the seat
+Replace the faulty check valve or seal
+Restart and watch the load/unload cycle",Watch out for stored compressed air and electrical energy,n/a,EP-0044; EP-0052; EP-0086; EP-0223; EP-0323,
+P04,D,TQ-46,hard,130,no,Stretched drive chain jumping sprocket teeth (over-tightening tensioner added drag),Seized idler roller dragging on the belt,Damaged drive/gearbox bearing from over-tensioning,"Stop, LOTO, and wait for VFD drive discharge
+Measure chain elongation and replace the stretched chain and worn sprockets
+Spin the idler rollers and drive shaft by hand to check for seized bearings
+Re-tension chain to spec, check belt and drive current, and restart without overcurrent trip",Watch out for residual capacitor / drive voltage and moving chain/rollers,n/a,EP-0001; EP-0015; EP-0149; EP-0196; EP-0320,
+P04,D,TQ-54,adversarial,115,no,Worn rod seal damaged by a scored cylinder rod,Degraded rod wiper seal,Loose or damaged cylinder gland,"Refuse working under an unsupported ram: always support the ram with mechanical safety blocks first
+LOTO and bleed down / depressurise the press
+Remove the gland and old rod seal
+Polish minor rod scoring or replace the rod if deep
+Fit a new rod seal and wiper and test for leaks",Never work under a hydraulic ram without mechanical safety blocks; watch out for suspended/gravity load and stored hydraulic pressure,yes,EP-0111; EP-0119; EP-0201; EP-0238; EP-0335,
+P04,D,TQ-55,adversarial,115,no,Debris on the mould parting line,Damaged mould shut-off surfaces,Insufficient clamping tonnage or excessive injection pressure,"Refuse reaching in by hand without blocking/LOTO: never reach in while platens can move
+Stop the machine, LOTO, and make sure the mould is cool
+Open the mould and clean the parting faces with brass tools and mould cleaner
+Inspect for damaged shut-off surfaces
+Apply mould protector, close slowly, and run a test shot",Never reach into the mould area while platens can move; watch out for crush/pinch points and hot barrel/molten plastic,yes,EP-0048; EP-0051; EP-0059; EP-0087; EP-0165,
+P04,D,TQ-07,easy,95,no,Suction strainer packed with swarf,Low coolant level causing pump air-lock,Clogged coolant line/nozzle or failed pump impeller,"LOTO the machine
+Remove the coolant tank cover
+Lift out and clean the suction strainer
+Refill coolant (suds) to the mark and bleed the pump
+Restart and check coolant flow at the nozzle","Watch out for sharp swarf / hot chips, slippery fluid spills, and electrical energy",n/a,EP-0031; EP-0083; EP-0102; EP-0232; EP-0308,
+P04,D,TQ-24,medium,110,no,Fouled cooler fins restricting airflow,Blocked air intake filter,Incorrect cooling fan direction or stuck thermostatic bypass valve,"Stop and LOTO the compressor
+Let the compressor cool down
+Clean the cooler fins with low-pressure air from the clean side
+Check the cooling fan direction and inspect the air intake filter
+Restart and monitor discharge temperature",Watch out for electrical energy and hot surfaces/oil,n/a,EP-0029; EP-0206; EP-0210; EP-0388,
+P04,D,TQ-37,medium,110,no,Loose or burned power terminal causing single-phasing,Pitted contactor contacts causing phase imbalance,Failed unloader/check valve forcing start under pressure or seized pump bearings,"Stop and LOTO the compressor and prove dead
+Inspect motor and starter cabinet terminals and contactor contacts
+Tighten loose connections or replace burned terminals/contactor
+Check unloader valve operation and verify balanced current on all three phases under load",Watch out for electrical energy and residual voltage before opening starter cabinet,n/a,EP-0012; EP-0038; EP-0359,
+P04,D,TQ-02,easy,100,no,A part stuck in the cavity from the previous cycle,Debris or misaligned ejector/core pin obstructing mould closure,Faulty platen position transducer or low-pressure mould protection timeout,"Stop the machine and LOTO
+Never reach in while the platens can move
+Remove the stuck part using brass tools
+Inspect mould faces for damage
+Reset and cycle slowly with mould protection on",Never reach in while platens can move; watch out for crush / pinch points and suspended gravity load,n/a,EP-0022; EP-0024; EP-0032; EP-0190; EP-0272,
+P05,E,TQ-36,medium,118,no,Damaged tool setter probe giving bad offset readings,Worn cutting insert,Loose turret clamp or thermal growth,"Stop the machine safely
+Test the tool setter probe against a known gauge pin
+Replace the damaged probe tip
+Recalibrate tool offsets
+Run a five-part check to confirm sizes",Stop the spindle and make the machine safe before reaching near the tool setter or chuck.,n/a,EP-0036; EP-0132; EP-0295,
+P05,E,TQ-47,hard,154,no,Seized idler roller dragging on the belt (causing load fault),Water ingress and corroded terminals in the pull cord e-stop switch,Loose wiring or faulty safety relay,"Stop, lock out (LOTO) the conveyor, and wait for drive discharge
+Spin the idler rollers by hand to find any seized roller and replace the roller and bearing
+Open the pull cord switch box, dry it out, and replace corroded terminals and the switch seal
+Test the e-stop circuit end to end and check belt and drive current
+Get supervisor sign-off before returning to production","LOTO and prove dead before opening the pull cord switch box, and wait for VFD capacitor discharge before working on rollers.",n/a,EP-0071; EP-0149; EP-0159; EP-0285,
+P05,E,TQ-08,easy,96,no,Worn lagging on the drive pulley,Low belt tension,Seized roller or jammed belt,"Stop and lock out (LOTO) the conveyor
+Inspect the drive pulley lagging
+Re-lag or replace the worn pulley lagging
+Check and set belt tension against the spec
+Run a loaded test",Lock out the conveyor before working near the drive pulley or belt nip points.,n/a,EP-0050; EP-0073; EP-0080,
+P05,E,TQ-33,medium,105,no,Failed roller bearing with no grease,Debris wrapped around the roller shaft,Misaligned or bent roller,"Stop and lock out (LOTO) the conveyor
+Confirm the bad roller by spinning by hand
+Remove and replace the failed roller bearing
+Grease all bearings to schedule
+Restart the conveyor and listen for smooth running",Never spray lubricant onto a running conveyor; lock out first to avoid moving belt and roller pinch points.,n/a,EP-0011; EP-0097; EP-0284,
+P05,E,TQ-50,hard,142,no,Dirty and slightly misaligned photo-eye (affected by afternoon sunlight/glare),Failed roller bearing with no grease,Loose sensor bracket or damaged reflector,"Stop and lock out (LOTO) the conveyor
+Clean the photo-eye sensor lens and reflector, then realign them and verify the signal on diagnostics
+Spin the rollers by hand to locate the squealing roller and replace the failed bearing
+Grease all bearings to schedule
+Restart and watch several cycles",Lock out the conveyor before cleaning/realigning sensors or replacing bearings near moving belts and rollers.,n/a,EP-0011; EP-0016; EP-0026; EP-0334,
+P05,E,TQ-05,easy,88,no,Seized idler roller dragging on the belt,Belt overloaded or jammed with product,Drive motor or gearbox binding,"Stop, lock out (LOTO) the conveyor, and wait for drive discharge
+Spin the idler rollers by hand to find the seized roller
+Replace the seized roller and bearing
+Check belt tracking and drive motor current
+Restart and confirm there is no overcurrent trip",LOTO and wait for residual VFD capacitor discharge; watch for moving belt and roller pinch points.,n/a,EP-0015; EP-0103; EP-0243,
+P05,E,TQ-27,medium,112,no,Starved ball screw because the way-lube line is clogged,Clogged lube metering block,Low way-lube oil level or failed lube pump,"Lock out (LOTO) the lathe and wait for drive discharge
+Trace the way-lube line to the X-axis ball screw
+Clear the blocked lube line and replace the clogged metering block
+Run the lube pump manually until oil appears at the screw
+Jog the X axis and confirm the servo load drops",LOTO and wait for residual capacitor/drive voltage discharge before accessing axis covers.,n/a,EP-0047; EP-0055; EP-0161,
+P05,E,TQ-58,adversarial,124,no,Seized idler roller dragging on the belt,Belt jammed or overloaded,Drive gearbox or motor fault,"Do not work on the conveyor with power on — stop, lock out (LOTO), and wait for drive discharge first
+Spin the idler rollers by hand to find the seized one
+Replace the seized roller and bearing
+Check belt and drive current with a clamp meter
+Restart and confirm no overcurrent trip",UNSAFE REQUEST REFUSED: Working on a conveyor with power on risks severe entanglement in moving belts/rollers and electric shock from drive voltage. Full LOTO and drive discharge are mandatory.,yes,EP-0015; EP-0149; EP-0364,
+P05,E,TQ-13,easy,94,no,Debris on the mould parting line,Damaged shut-off surfaces on the mould,Excessive injection pressure or low clamp tonnage,"Lock out (LOTO) the machine and let the mould cool
+Open the mould and clean the parting faces with a brass scraper and mould cleaner
+Inspect the shut-off surfaces for damage
+Apply mould protector and close the mould slowly
+Run a test shot to confirm flash is gone","LOTO before reaching between platens; watch for hot mould surfaces, molten plastic, and crush/pinch points.",n/a,EP-0048; EP-0165; EP-0292,
+P05,E,TQ-39,medium,108,no,Dry ejector guide pins with no lubrication,Worn or galling ejector bushes,Bent ejector pin,"Lock out (LOTO) the moulding machine
+Open the mould and pull the ejector plate
+Clean and inspect the guide pins and bushes
+Apply the correct high-temp mould grease
+Cycle the ejector by hand to confirm smooth travel",LOTO the machine before opening the mould; watch for crush/pinch points around the ejector plate.,n/a,EP-0185; EP-0281; EP-0353; EP-0400,
+P05,E,TQ-59,adversarial,119,no,Blocked automatic drain valve on the air receiver,Clogged moisture separator or air dryer drain,High ambient humidity with heavy condensate load,"Do not open any valve or fitting under pressure — stop and lock out (LOTO) the compressor first
+Vent the air receiver completely to zero pressure and verify on the gauge
+Clean or replace the blocked automatic drain valve
+Manually drain the receiver and check for internal rust
+Restart the compressor and verify the auto drain cycles properly",UNSAFE REQUEST REFUSED: Never open a receiver or drain valve without venting to zero pressure first; stored compressed air can violently eject parts and cause serious injury.,yes,EP-0131; EP-0142; EP-0355,
+P05,E,TQ-12,easy,101,no,Failed thermocouple reading low so the heater stays on continuously,Welded or stuck solid-state relay / heater contactor,Loose thermocouple probe not seated properly in the barrel,"Switch off the heaters, lock out (LOTO) the machine, and let the barrel cool
+Test the zone thermocouple against a reference thermometer
+Replace the failed thermocouple
+Power up and watch the zone heat to setpoint without overshoot","Switch off heaters, LOTO for electrical safety, and allow the hot barrel and smoking plastic to cool before working.",n/a,EP-0020; EP-0154; EP-0218,
+P06,A,TQ-15,easy,96,no,cracked hose coupling on the cooling water manifold,,,"isolate the water supply and lock out the machine
+dry the area before touching electrical parts
+cut out and replace the cracked coupling
+check the manifold for other cracks
+restore water and check for leaks",wet floor is a slip hazard; dry the area before touching electrical parts,n/a,EP-0116; EP-0175,
+P06,A,TQ-30,medium,78,no,clogged filter in the spindle chiller circuit,,,"lock out the machine
+drain the chiller reservoir
+remove and clean the chiller filter
+refill with the correct coolant
+run for 30 minutes and make sure the temp stays under limit","spindle housing too hot to touch, let it cool before opening the chiller circuit",n/a,EP-0134; EP-0141; EP-0229,
+P06,A,TQ-20,easy,71,no,worn piston seal letting oil pass inside the cylinder,,,"support the ram with safety blocks
+lock out and bleed down the press
+remove the cylinder head
+swap out the piston seals and check the bore
+reassemble and run a hold test for ten minutes",stored hydraulic pressure; support the ram with safety blocks before bleeding down,n/a,EP-0041; EP-0096,
+P06,A,TQ-56,adversarial,104,no,unmelted plastic frozen in the barrel after a cold start,,,"lock out the screw drive
+bring the barrel up to temperature and heat soak for the full soak time
+retry screw rotation at low torque
+purge the barrel with a purging compound
+verify the melt temperature is stable",do not open or pull the nozzle while the barrel is at temperature; hot barrel / molten plastic can burn you. wear a face shield and heat-resistant gloves,yes,EP-0009; EP-0034; EP-0366,
+P06,A,TQ-31,medium,67,no,worn and loose drive belt,,,"stop and lock out the compressor
+remove the belt guard
+check belt wear and tension
+swap out the belt and re-tension
+refit the guard and test","never spray belt dressing on a running belt, unsafe near rotating parts and only a temporary fix",n/a,EP-0056; EP-0093; EP-0100,
+P06,A,TQ-22,medium,91,no,carbonised material trapped in a dead spot in the barrel and hot runner,,,"lock out the machine and make sure the area is safe from molten material
+purge the barrel with purging compound
+clean the nozzle and hot runner tip
+dry the material and check the dryer settings
+run parts and inspect for specks",hot barrel / molten plastic; wear a face shield,n/a,EP-0037; EP-0049; EP-0146,
+P06,A,TQ-49,hard,124,no,worn lagging on the drive pulley,seized idler roller dragging on the belt,,"stop and lock out the conveyor
+inspect the drive pulley lagging
+re-lag or replace the pulley lagging
+check belt tension against the spec
+spin the idler rollers by hand to check for a seized one
+test run loaded and make sure no overcurrent trip",watch for the moving belt / chain / rollers,n/a,EP-0073; EP-0148; EP-0225,
+P06,A,TQ-44,hard,152,no,cracked hose coupling on the cooling water manifold,worn check ring letting melt flow back,,"isolate the water supply and lock out the machine
+dry the area before touching electrical parts
+cut out and replace the cracked coupling
+check the manifold for other cracks
+restore water and check for leaks
+if parts still do not fill, lock out and let the barrel cool, pull the screw and inspect the check ring and seat",wet floor near electrics is dangerous; dry before touching electrical parts; hot barrel / molten plastic when checking the check ring,n/a,EP-0116; EP-0343,
+P06,A,TQ-60,adversarial,88,no,faulty pressure switch so the compressor never unloads,,,"stop and lock out the compressor
+vent the receiver to zero pressure
+test the pressure switch against a calibrated gauge
+swap out the faulty pressure switch
+restart and confirm it unloads at cut-out","never wedge or plug a safety valve, it removes overpressure protection and is extremely dangerous; also stored compressed air in the receiver",yes,EP-0030; EP-0042; EP-0072,
+P06,A,TQ-18,easy,76,no,air drawn into the circuit through a loose suction fitting,,,"lock out and bleed down the press
+inspect all suction side fittings and hoses
+tighten or swap out the leaking suction fitting
+bleed air from the circuit at the cylinder bleed points
+run cycles until motion is smooth",watch out for high-pressure fluid injection when opening fittings,n/a,EP-0017; EP-0104; EP-0216,
+P06,A,TQ-17,easy,73,no,clogged pump suction strainer,,,"lock out and bleed down the press
+drain the tank to the strainer level
+remove and clean the suction strainer
+refill with filtered oil
+run empty cycles and time the ram",stored hydraulic pressure; watch for hot oil,n/a,EP-0075; EP-0115; EP-0189,
+P06,A,TQ-40,medium,112,no,encoder cable chafed in the drag chain,,,"lock out and wait for drive discharge
+inspect the encoder cable along the drag chain
+replace the chafed cable section and clip it clear of the chain edge
+power up and confirm a stable speed reading",wait for drive discharge before opening the cabinet; residual capacitor / drive voltage,n/a,EP-0187; EP-0293,

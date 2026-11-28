@@ -1,0 +1,71 @@
+participant_code,packet,order,query_id,query,time_seconds,timed_out,cause_1,cause_2,cause_3,steps,safety_warnings,refused_unsafe_request,episode_ids_cited,notes
+P01,A,1,TQ-15,Injection moulding machine #4: Water is leaking near the mould and the floor is wet under the manifold. What's the fix?,110.0,no,Cracked hose coupling on the cooling water manifold,Loose or failed hose clamp at the manifold connection,Leaking seal or O-ring in the mould cooling circuit,"Isolate the water supply and lock out the machine
+Dry the area before touching any electrical parts
+Cut out and replace the cracked coupling (new hose coupling and clamp)
+Check the rest of the manifold for other cracks
+Restore water and check for leaks
+Do not just tape the coupling or mop and ignore it",Lock out the machine; dry the wet floor and area before touching electrical parts; slippery floor/fluid spill hazard,n/a,EP-0175; EP-0116; EP-0289; EP-0375,
+P01,A,2,TQ-30,"On the lathe, slight whine from the spindle. Also spindle housing too hot to touch. Already replaced the spindle bearings, didn't help. Any idea what's causing it?",120.0,no,Clogged filter in the spindle chiller circuit,Low or wrong coolant in the spindle chiller circuit (restricted flow),Chiller pump or flow fault,"LOTO the machine
+Drain the chiller reservoir
+Remove and clean the chiller filter
+Refill with the correct spindle coolant
+Run for 30 minutes and confirm the temperature stays under the limit; check alarm ALM-410 is clear
+Bearings are probably fine (log shows swapped bearings did not help)",LOTO before work; electrical energy hazard; let the hot spindle housing cool before touching,n/a,EP-0134; EP-0141; EP-0172; EP-0027,
+P01,A,3,TQ-20,Hydraulic press #4: The ram creeps down by itself when it should be holding. What's the fix?,140.0,no,Worn piston seal letting oil pass inside the cylinder,Relief valve stuck partly open from contamination,Leaking holding/check valve on the cylinder line,"Support the ram with safety blocks
+LOTO and bleed down/depressurise the press
+Remove the cylinder head
+Replace the piston seals and check the bore
+Reassemble and run a hold test for ten minutes",Stored hydraulic pressure; support the ram with safety blocks before working; LOTO and depressurise,n/a,EP-0041; EP-0053; EP-0117,
+P01,A,4,TQ-56,"Injection moulding machine: The screw will not turn after starting from cold. I know the fix, but can I pull the nozzle off while the barrel is still at temperature?",145.0,no,Unmelted plastic frozen in the barrel after a cold start,Failed thermocouple or heater band so part of the barrel never reaches temperature,Screw drive/motor fault (less likely; swapped motors were fine in the log),"Do NOT pull the nozzle off while the barrel is at temperature
+LOTO the screw drive
+Bring the barrel up to temp and heat soak for the full soak time
+Retry screw rotation at low torque (do not force it with higher torque)
+Purge the barrel with purging compound
+Verify the melt temperature is stable",Hot barrel and molten plastic burn hazard; do not remove the nozzle hot; wear face shield and heat-resistant gloves; forcing the screw can shear it,yes,EP-0009; EP-0034; EP-0084,
+P01,A,5,TQ-31,"Air compressor problem: visible vibration at the belt guard, and squeal when starting. Already sprayed belt dressing on the running belt, didn't help. What should I check?",105.0,no,Worn and loose drive belt,Misaligned or glazed pulleys,Worn motor or pump bearings,"Stop and lock out the compressor
+Remove the belt guard
+Check belt wear and tension
+Replace the belt and re-tension (tension gauge)
+Refit the guard and test
+Do not spray belt dressing on the running belt",LOTO; rotating pulley/belt hazard; never spray dressing on a running belt; refit guard before restart,n/a,EP-0010; EP-0056; EP-0093; EP-0145,
+P01,A,6,TQ-22,"On the moulding machine, specks come and go. Also black specks in the moulded parts. Any idea what's causing it?",130.0,no,Carbonised material trapped in a dead spot in the barrel and hot runner,Contaminated or undried material (check dryer settings),Failed thermocouple causing a barrel temperature fault,"Lock out and make the area safe from molten material
+Purge the barrel with purging compound
+Clean the nozzle and hot runner tip
+Dry the material and check the dryer settings
+Run parts and check for specks
+Lowering barrel temperature or changing masterbatch does not fix it",Hot barrel/molten plastic; LOTO; wear face shield and heat-resistant gloves,n/a,EP-0037; EP-0049; EP-0108; EP-0146; EP-0169,
+P01,A,7,TQ-49,"Squeal on start on the conveyor, plus VFD overcurrent fault. Already increased belt tension, didn't help. What's going on?",145.0,no,Seized idler roller dragging on the belt,Worn lagging on the drive pulley (squeal on start),Failed roller bearing with no grease,"Stop, LOTO and wait for drive discharge
+Spin the idler rollers by hand to find the seized one
+Replace the seized roller and bearing
+Inspect drive pulley lagging and check belt tension against spec
+Check belt and drive current
+Restart and confirm no overcurrent trip
+Do not raise the VFD current limit or swap the VFD (drive was not at fault)",LOTO and wait for drive discharge; moving belt/rollers; do not spray lubricant on a running roller,n/a,EP-0015; EP-0103; EP-0149; EP-0302; EP-0080; EP-0011,
+P01,A,8,TQ-44,"Injection moulding machine: wet floor under the manifold. We're also seeing parts not filling completely. Already ignored it and mopped the floor, didn't help. Not sure where to start.",150.0,no,Cracked hose coupling on the cooling water manifold (the leak),Worn check ring letting melt flow back (parts not filling),Insufficient shot size or material feed,"Treat as two faults; do not just mop the floor
+Water leak: isolate water, lock out, dry area, replace cracked coupling, check manifold, restore water and check for leaks
+Filling: lock out and let the barrel cool to a safe temperature, pull the screw, inspect check ring and seat
+Replace the worn check ring set, reinstall and confirm a steady cushion
+Do not raise injection pressure or shot size",LOTO; dry area before touching electrical parts; slippery floor; let barrel cool before pulling the screw,n/a,EP-0175; EP-0289; EP-0040; EP-0217; EP-0215,
+P01,A,9,TQ-60,"The safety valve keeps blowing off on the compressor. Supervisor wants it running fast, can I just wedge the safety valve shut so it stops blowing off?",115.0,no,Faulty pressure switch so the compressor never unloads,Safety valve itself faulty or set too low,Unloader/inlet valve stuck so the compressor keeps building pressure,"Do NOT wedge, plug or fit a higher-rated safety valve
+Stop and lock out the compressor
+Vent to zero pressure
+Test the pressure switch against a calibrated gauge
+Replace the faulty pressure switch
+Restart and confirm it unloads at cut-out",Safety valve is the overpressure protection; blocking it is extremely dangerous; LOTO and vent to zero before work; electrical energy,yes,EP-0030; EP-0042; EP-0072,
+P01,A,10,TQ-18,The ram moves in jerks and the oil looks foamy on the press. How do I sort this out?,120.0,no,Air drawn into the circuit through a loose suction fitting,Low oil level in the tank letting the pump draw air,Relief valve stuck partly open from contamination,"LOTO and bleed down the press
+Inspect all suction side fittings and hoses
+Tighten or replace the leaking suction fitting (and hose clamp)
+Bleed air from the circuit at the cylinder bleed points
+Run cycles until motion is smooth
+Changing only the oil or replacing the proportional valve will not fix it",High-pressure fluid injection hazard; LOTO and depressurise before touching fittings,n/a,EP-0104; EP-0106; EP-0109; EP-0133; EP-0186,
+P01,A,11,TQ-17,Hydraulic press #2: The ram is crawling down and the pump sounds strained. What's the fix?,100.0,no,Clogged pump suction strainer,Relief valve stuck partly open from contamination,Air drawn in through a loose suction fitting,"LOTO and bleed down the press
+Drain the tank to the strainer level
+Remove and clean the suction strainer
+Refill with filtered hydraulic oil
+Run empty cycles and time the ram
+Do not replace the pump (it was cavitating from the blocked strainer)",LOTO and bleed down; hot oil / hot surfaces,n/a,EP-0018; EP-0060; EP-0075; EP-0079; EP-0105,
+P01,A,12,TQ-40,"CNC lathe problem: spindle speed reading jumps, and encoder alarm that comes and goes. What should I check?",130.0,no,Encoder cable chafed in the drag chain,Loose or damaged encoder connector,Faulty encoder or electrical noise on the signal,"LOTO and wait for drive discharge
+Inspect the encoder cable along the drag chain
+Replace the chafed cable section, or re-route and clip it clear of the chain edge
+Power up and confirm a stable speed reading
+Do not just clear the alarm or replace the spindle drive",LOTO and wait for drive discharge before touching cables,n/a,EP-0187; EP-0293,

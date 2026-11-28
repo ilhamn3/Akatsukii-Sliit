@@ -148,3 +148,54 @@ approval or a sign-off is needed before the first session**, and record the answ
 - [ ] Consent signed before every session
 - [ ] CSVs filled; no names in any committed file
 - [ ] Results handed to Kajanan by 28 Nov
+
+## 11. Amendment, 27 Nov 2026: one group session, self-timed
+
+Decided by the study lead because there was not enough time for seven one-hour sessions.
+
+- **Participants:** 5 (P01–P05, packets A–E), so each of the 60 test queries gets one human
+  answer. P06 and P07 are not run, so no query has a second human answer.
+- **Format:** one session, all participants in the same room at the same time, each on their
+  own laptop, seated so no one can see another screen. Consent, briefing (same words as
+  section 5) and practice are done once for the group.
+- **Timing:** each participant times their own questions with a phone stopwatch, using the
+  same limits (3 minutes per question, 7 minutes per extraction note), and types the seconds
+  into their sheet. The study lead does not time individuals.
+- **Materials:** each participant gets a folder with `repair_log.html`, their own packet and
+  extraction sheet, and `participant_instructions.html` (task, timing and saving rules; no
+  answers).
+- **Effect on results:** self-reported times are less precise than lead-timed ones. Report
+  "group session, self-timed, n = 5" next to every human timing figure. Answer content and
+  blind grading are unchanged.
+
+### 11a. Remote sessions (same day)
+
+No group room could be arranged, so the sessions run **remotely and individually**:
+
+- Each participant receives their folder (zip) by message, works alone at home **in one
+  sitting**, times themselves as in section 11, and sends back both CSV files unrenamed.
+- **Consent** is given by replying "I agree" to a message containing the consent form's
+  content (study, data recorded, use, rights, withdrawal deadline, the four statements). The
+  study lead keeps a screenshot of each reply in `private/` only, never in the repository or
+  team chats.
+- Codes are given in the order consent arrives (P01 first). The code list stays in `private/`.
+- Rules are stated in writing: work alone, use only the repair log, no internet search or AI
+  tools. The study lead answers questions about the instructions only.
+- **Effect on results:** in addition to self-timing, the study lead cannot see that rules were
+  followed. Report "remote, self-timed, n = X" next to every human figure. Grading is unchanged.
+
+### 11b. Final numbers (28 Nov 2026)
+
+- **Valid participants: 5** (P01, P03, P04, P05, P06). P06 ran packet A, so packet A has
+  two human answers per query.
+- **Coverage: 48 of 60 test queries** (packets A, C, D, E). Every tier is covered
+  (each packet has 4 easy, 4 medium, 2 hard, 2 adversarial).
+- **Packet B excluded.** It was sent to P02 and P07. P02's returned files had no recorded
+  times, and later versions were script-generated with rewritten answers. P07's file had
+  no times, and the times offered afterwards matched the excluded P02 file within 3 s on
+  every question. Neither could be verified as one person's timed work, so both are left
+  out of `results/`. No replacement could be recruited before the study closed.
+- **Packet B AI arm.** An AI-written answer set for packet B is kept in `../simulated/`,
+  labelled `AI-BASELINE`, with no times. It is never counted as human data. See its README.
+- **Report as:** "remote, self-timed, n = 5, 48 of 60 queries". Human-vs-system
+  comparisons use those 48 queries only.
