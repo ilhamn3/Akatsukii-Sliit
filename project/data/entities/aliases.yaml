@@ -8,7 +8,7 @@
 # SafetyAgent rules (core/safety_rules/rules.yaml trigger_keywords) plus `hazard_phrases`.
 # ==============================================================================
 
-version: "entities_v1"
+version: "entities_v2"  # v2 (28 Nov): data asset prefixes, bare-prefix labels, number words
 
 # Token-level replacements applied after punctuation removal.
 replacements:
@@ -32,32 +32,42 @@ ignore_words: [the, a, an, our, this, that]
 # Quote words YAML would read as booleans (no/yes/on/off).
 asset_filler: ["no", number, unit, asset, id, tag]
 
+# Spoken asset numbers ("conveyor three", "compressor one") read as digits.
+number_words: {one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+               eleven: 11, twelve: 12}
+
+# asset_prefix is the plant's asset-ID convention, as used in the team's data
+# (project/data/generator.py MACHINES): CNC-04, HYD-01, INJ-03, CNV-02, CMP-01. A bare
+# prefix also names the machine ("CNC" -> cnc_lathe), and an asset ID alone can supply a
+# missing machine type (A3 shows that as a warning). Older provisional forms (LATHE-03,
+# PRESS-03, ...) still resolve through their machine words.
+
 machines:
   cnc_lathe:
-    asset_prefix: LATHE
+    asset_prefix: CNC
     aliases: [cnc lathe, lathe, cnc turning centre, turning centre, cnc turning machine, cnc lathe machine]
     head_terms: [lathe, turning centre]
     exclude: [wood lathe, wood turning lathe, pottery lathe]
   hydraulic_press:
-    asset_prefix: PRESS
+    asset_prefix: HYD
     aliases: [hydraulic press, press, hydraulic press machine, hydraulic forming press]
     head_terms: [press]
     # Presses that are not the catalogue's hydraulic press.
     exclude: [mechanical press, punch press, drill press, printing press, press brake,
               pneumatic press, heat press, arbor press, servo press, press fit, pressfit]
   injection_moulding:
-    asset_prefix: IMM
+    asset_prefix: INJ
     aliases: [injection moulding, injection moulding machine, injection moulder, imm,
               moulding machine, plastic injection machine, injection press]
     head_terms: [injection moulding, injection moulder, moulding machine, imm, injection press]
     exclude: [blow moulding, compression moulding, rotational moulding, extrusion]
   conveyor_line:
-    asset_prefix: CONV
+    asset_prefix: CNV
     aliases: [conveyor, conveyor line, belt conveyor, conveyor belt, roller conveyor, conveyor system]
     head_terms: [conveyor]
     exclude: [chip conveyor, swarf conveyor, screw conveyor]
   air_compressor:
-    asset_prefix: COMP
+    asset_prefix: CMP
     aliases: [air compressor, compressor, screw compressor, rotary screw compressor,
               piston compressor, reciprocating compressor, air compressor unit]
     head_terms: [compressor]

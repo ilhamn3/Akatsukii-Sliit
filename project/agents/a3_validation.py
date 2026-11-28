@@ -23,7 +23,7 @@ from project.core.extraction_schemas import DraftRepairRecord
 from project.core.registry import load_config
 from project.core.schemas import RepairRecord
 from project.core.state import create_initial_state
-from project.agents.a4_graph import ENTITY_CODES, default_resolver, entity_issues
+from project.agents.a4_graph import ENTITY_CODES, default_resolver, derived_machine_type, entity_issues
 from project.core.validation_schemas import (  # ReviewBlocked re-exported for K4 callers
     ConfidenceBreakdown, ReviewBlocked, ValidationIssue, ValidationReport,
 )
@@ -101,8 +101,11 @@ def _quantity_problems(value: str, quotes: str) -> list[str]:
 def static_issues(draft: DraftRepairRecord) -> list[ValidationIssue]:
     """Schema-gap, grounding and internal-consistency checks of one draft."""
     ex, spans, issues = draft.extraction, _spans(draft), []
+    # An asset ID following the plant convention ("INJ-04") supplies a missing machine type;
+    # entity_issues then adds a machine_type_from_asset_id warning for the reviewer.
+    derived = _derived_machine(ex)
     for name in REQUIRED:
-        if not getattr(ex, name):
+        if not getattr(ex, name) and not (name == "machine_type" and derived):
             issues.append(_issue("missing_required_fact", "blocking", name,
                                  f"RepairRecord requires {name}; the source draft does not state it"))
     for index, attempt in enumerate(ex.failed_attempts):
@@ -178,6 +181,11 @@ def _timestamp(seconds: float) -> str:
     return f"{total // 3600:02d}:{total % 3600 // 60:02d}:{total % 60:02d}"
 
 
+def _derived_machine(ex) -> str | None:
+    return derived_machine_type(default_resolver(), ex.machine_type and ex.machine_type.value,
+                                ex.machine_id and ex.machine_id.value)
+
+
 def draft_fields(draft: DraftRepairRecord) -> dict:
     """Index-preserving map of draft facts onto RepairRecord names; None = unknown.
 
@@ -192,7 +200,7 @@ def draft_fields(draft: DraftRepairRecord) -> dict:
                       "evidence_id": cited[0].evidence_id if cited else None})
     value = lambda fact: fact.value if fact is not None else None  # noqa: E731
     return {
-        "machine_type": value(ex.machine_type), "machine_id": value(ex.machine_id),
+        "machine_type": value(ex.machine_type) or _derived_machine(ex), "machine_id": value(ex.machine_id),
         "symptoms": [f.value for f in ex.symptoms], "steps": steps,
         "tools": [f.value for f in ex.tools], "parts": [f.value for f in ex.parts],
         "root_cause": value(ex.root_cause),
@@ -350,10 +358,14 @@ def verify(draft, *, reviewer: str, verified_at, corrections=None):
     except ValidationError as exc:
         raise ReviewBlocked(_schema_issues(exc, set())) from exc
     episode_id = episode_ids(draft)[0]
+    links = []
+    if _derived_machine(draft.extraction) and "machine_type" not in supplied:
+        # Keep the derivation visible after approval: A4 preserves an equal prior link.
+        links.append(default_resolver().machine_from_asset(draft.extraction.machine_id.value))
     provenance = Provenance(
         capture_id=draft.capture_id, source_path=draft.source_path, source_sha256=draft.source_sha256,
         source_type=draft.source_type, evidence_spans=draft.evidence, extraction_model=draft.model,
-        prompt_version=draft.prompt_version, reviewer_supplied_fields=supplied)
+        prompt_version=draft.prompt_version, reviewer_supplied_fields=supplied, entity_links=links)
     return VerifiedEpisode(episode_id=episode_id, status="verified", record=record, provenance=provenance,
                            verified_by=reviewer, verified_at=verified_at, outcome=outcome), supplied
 

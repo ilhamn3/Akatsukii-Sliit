@@ -300,6 +300,25 @@ Re-run on the eval drafts:
   symptom text: the top 3 is a tie among them. Telling one repair from a recurrence needs
   more than symptoms (time, asset, technician), which A3 does not compare.
 
+### 5. After the K5 asset-prefix change (`entities_v2`, 28 Nov)
+
+`docs/ENTITY_GRAPH.md` aligned A4 with the data's asset IDs and lets an asset ID supply a
+missing machine type. The committed `validation_eval.json` is re-run with that change:
+
+| | Section 4 | With `entities_v2` |
+|---|---:|---:|
+| `low_confidence` drafts | 13 / 50 | **6 / 50** |
+| vs any K7 error: flagged and wrong / precision / recall | 12 / 0.92 / 0.27 | 5 / 0.83 / 0.11 |
+| `missing_required_fact` flags on required fields | 7 | 2 |
+| Drafts with a `possible_duplicate` warning | 36 / 50 | 42 / 50 (0 of 123 matches a different fault) |
+| Injections, exact duplicates | as before | unchanged |
+
+The lower recall is expected, not a regression: the 7 drafts that A3 flagged only for
+their machine type are now resolved to the correct machine by A4 (5 from the asset ID,
+2 from a bare "CNC"), so there is nothing left to flag. K7 still counts them as A2
+machine-type errors because A2 did not name the category. What remains unflagged are
+grounded-but-wrong values, which need the reviewer.
+
 ### Summary
 
 A3 reliably catches what rules can see: missing or unresolvable facts, ungrounded facts,

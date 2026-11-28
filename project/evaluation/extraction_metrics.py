@@ -222,7 +222,10 @@ def score_episode(prediction: dict | None, gold: dict, threshold: float, resolve
             fields[field] = {"tp": 0, "fp": 0, "fn": n, "pairs": []}
         elif field == "machine_type":
             raw = prediction["machine_type"]
-            canon = resolver.canonical_machine(raw) if raw else None
+            # The asset-prefix rule (K5 entities_v2, "CNC" -> cnc_lathe) is off here: A2 must
+            # name the equipment category, and an asset prefix is not one. Scores stay
+            # comparable with the reports made before that rule existed.
+            canon = resolver.canonical_machine(raw, allow_prefix=False) if raw else None
             hit = canon is not None and canon == g
             fields[field] = {"tp": int(hit), "fp": int(raw is not None and not hit), "fn": int(not hit),
                              "pairs": [{"predicted": raw, "resolved": canon, "gold": g}]}

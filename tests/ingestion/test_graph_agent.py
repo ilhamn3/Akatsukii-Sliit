@@ -61,7 +61,7 @@ def test_unknown_or_ambiguous_labels_are_not_forced(raw, status, candidates):
 @pytest.mark.parametrize("raw", ["hyd. press 3", "Press-03", "PRESS 03", "press no. 3", "hydraulic press #3", "3"])
 def test_asset_aliases_resolve_to_one_entity(raw):
     link = default_resolver().resolve_asset(raw, "hydraulic_press")
-    assert (link.status, link.entity_id) == ("resolved", "PRESS-03")
+    assert (link.status, link.entity_id) == ("resolved", "HYD-03")  # The data's HYD-NN convention.
 
 
 def test_asset_conflicts_unknown_formats_and_registry():
@@ -70,13 +70,13 @@ def test_asset_conflicts_unknown_formats_and_registry():
     # "press" also names injection moulding machines ("injection press").
     assert conflict.status == "conflict"
     assert conflict.candidates == ["conveyor_line", "hydraulic_press", "injection_moulding"]
-    assert resolver.resolve_asset("Line 2", "conveyor_line").entity_id == "CONV-02"
+    assert resolver.resolve_asset("Line 2", "conveyor_line").entity_id == "CNV-02"
     assert resolver.resolve_asset("SN-88231-X", "hydraulic_press").status == "unresolved"
     vocabulary = yaml.safe_load(ALIASES.read_text(encoding="utf-8"))
     registered = EntityResolver(vocabulary, json.loads(FAULTS.read_text()), json.loads(HAZARDS.read_text()),
-                                assets=["PRESS-01"])
+                                assets=["HYD-01"])
     assert registered.resolve_asset("press 3", "hydraulic_press").method == "asset_registry"
-    assert registered.resolve_asset("press 1", "hydraulic_press").entity_id == "PRESS-01"
+    assert registered.resolve_asset("press 1", "hydraulic_press").entity_id == "HYD-01"
 
 
 def test_hazard_links_are_specific_or_stay_ambiguous():
@@ -128,8 +128,8 @@ def test_asset_number_in_label_becomes_canonical_asset(tmp_path, queue, store):
         if span["field_path"] == "machine_type":
             span["quote"] = "hyd. press 3"
     episode = queue.approve(enqueue(queue, store, draft).item_id, reviewer="r1", trace_id="T")
-    assert (episode.record.machine_type, episode.record.machine_id) == ("hydraulic_press", "PRESS-03")
-    assert [h.episode_id for h in store.related("asset", "press-03", trace_id="T")] == [episode.episode_id]
+    assert (episode.record.machine_type, episode.record.machine_id) == ("hydraulic_press", "HYD-03")
+    assert [h.episode_id for h in store.related("asset", "hyd-03", trace_id="T")] == [episode.episode_id]
     links = {l.kind: l for l in episode.provenance.entity_links}
     assert links["machine"].raw == links["asset"].raw == "hyd. press 3"
 
@@ -159,7 +159,7 @@ def test_asset_conflict_blocks_until_corrected(tmp_path, queue, store):
     with pytest.raises(ReviewBlocked):
         queue.approve(item.item_id, reviewer="r1", trace_id="T")
     episode = queue.approve(item.item_id, reviewer="r1", trace_id="T", corrections={"machine_id": "Line 2"})
-    assert episode.record.machine_id == "CONV-02"
+    assert episode.record.machine_id == "CNV-02"
 
 
 def test_direct_writes_cannot_bypass_resolution(tmp_path, store, trace):

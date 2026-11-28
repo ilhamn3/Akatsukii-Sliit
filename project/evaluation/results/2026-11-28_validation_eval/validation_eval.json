@@ -1,8 +1,8 @@
 {
   "schema_version": "validation_eval/v1",
   "synthetic_data_only": true,
-  "generated_at": "2026-11-28T06:59:26+00:00",
-  "code_commit": "eddb013",
+  "generated_at": "2026-11-28T07:37:54+00:00",
+  "code_commit": "b2a2956",
   "drafts_source": "project/evaluation/results/2026-11-27_eval_groq-gpt-oss-120b_v5",
   "embedder": "default KnowledgeStore embedder",
   "low_confidence": {
@@ -24,63 +24,38 @@
       }
     },
     "drafts": 50,
-    "low_confidence": 13,
+    "low_confidence": 6,
     "drafts_with_any_error": 44,
     "drafts_with_required_error": 40,
     "vs_any_error": {
-      "tp": 12,
+      "tp": 5,
       "fp": 1,
-      "fn": 32,
+      "fn": 39,
       "tn": 5,
-      "precision": 0.9231,
-      "recall": 0.2727
+      "precision": 0.8333,
+      "recall": 0.1136
     },
     "vs_required_field_error": {
-      "tp": 12,
+      "tp": 5,
       "fp": 1,
-      "fn": 28,
+      "fn": 35,
       "tn": 9,
-      "precision": 0.9231,
-      "recall": 0.3
+      "precision": 0.8333,
+      "recall": 0.125
     },
     "missing_required_fact_flags": {
-      "total": 7,
-      "real_miss_gold_states_it": 7,
+      "total": 2,
+      "real_miss_gold_states_it": 2,
       "not_in_narrative": 0,
       "items": [
-        {
-          "episode_id": "EP-0056",
-          "field": "machine_type",
-          "gold_has_it": true
-        },
         {
           "episode_id": "EP-0069",
           "field": "machine_type",
           "gold_has_it": true
         },
         {
-          "episode_id": "EP-0190",
-          "field": "machine_type",
-          "gold_has_it": true
-        },
-        {
-          "episode_id": "EP-0314",
-          "field": "machine_type",
-          "gold_has_it": true
-        },
-        {
-          "episode_id": "EP-0354",
-          "field": "machine_type",
-          "gold_has_it": true
-        },
-        {
           "episode_id": "EP-0390",
           "field": "root_cause",
-          "gold_has_it": true
-        },
-        {
-          "episode_id": "EP-0399",
-          "field": "machine_type",
           "gold_has_it": true
         }
       ]
@@ -148,12 +123,13 @@
       },
       {
         "episode_id": "EP-0056",
-        "low_confidence": true,
+        "low_confidence": false,
         "confidence": 0.8875,
-        "blocking": [
-          "missing_required_fact@machine_type"
+        "blocking": [],
+        "warnings": [
+          "machine_type_from_asset_id",
+          "semantic_dedup_unavailable"
         ],
-        "warnings": [],
         "error_fields": [
           "machine_type",
           "steps"
@@ -235,7 +211,6 @@
         "confidence": 1.0,
         "blocking": [],
         "warnings": [
-          "asset_id_unresolved",
           "semantic_dedup_unavailable"
         ],
         "error_fields": [
@@ -300,7 +275,6 @@
         "confidence": 1.0,
         "blocking": [],
         "warnings": [
-          "asset_id_unresolved",
           "semantic_dedup_unavailable"
         ],
         "error_fields": [
@@ -319,7 +293,6 @@
         "confidence": 1.0,
         "blocking": [],
         "warnings": [
-          "asset_id_unresolved",
           "semantic_dedup_unavailable"
         ],
         "error_fields": [
@@ -396,12 +369,13 @@
       },
       {
         "episode_id": "EP-0190",
-        "low_confidence": true,
+        "low_confidence": false,
         "confidence": 0.8875,
-        "blocking": [
-          "missing_required_fact@machine_type"
+        "blocking": [],
+        "warnings": [
+          "machine_type_from_asset_id",
+          "semantic_dedup_unavailable"
         ],
-        "warnings": [],
         "error_fields": [
           "machine_type",
           "tools"
@@ -444,7 +418,6 @@
         "confidence": 1.0,
         "blocking": [],
         "warnings": [
-          "asset_id_unresolved",
           "semantic_dedup_unavailable"
         ],
         "error_fields": [
@@ -506,11 +479,9 @@
       },
       {
         "episode_id": "EP-0260",
-        "low_confidence": true,
+        "low_confidence": false,
         "confidence": 1.0,
-        "blocking": [
-          "machine_type_unresolved@machine_type"
-        ],
+        "blocking": [],
         "warnings": [
           "semantic_dedup_unavailable"
         ],
@@ -539,11 +510,9 @@
       },
       {
         "episode_id": "EP-0274",
-        "low_confidence": true,
+        "low_confidence": false,
         "confidence": 1.0,
-        "blocking": [
-          "machine_type_unresolved@machine_type"
-        ],
+        "blocking": [],
         "warnings": [
           "semantic_dedup_unavailable"
         ],
@@ -593,7 +562,6 @@
         "confidence": 1.0,
         "blocking": [],
         "warnings": [
-          "asset_id_unresolved",
           "semantic_dedup_unavailable"
         ],
         "error_fields": [
@@ -634,12 +602,13 @@
       },
       {
         "episode_id": "EP-0314",
-        "low_confidence": true,
+        "low_confidence": false,
         "confidence": 0.8875,
-        "blocking": [
-          "missing_required_fact@machine_type"
+        "blocking": [],
+        "warnings": [
+          "machine_type_from_asset_id",
+          "semantic_dedup_unavailable"
         ],
-        "warnings": [],
         "error_fields": [
           "machine_type",
           "symptoms"
@@ -670,7 +639,6 @@
         "confidence": 1.0,
         "blocking": [],
         "warnings": [
-          "asset_id_unresolved",
           "semantic_dedup_unavailable"
         ],
         "error_fields": [
@@ -703,7 +671,6 @@
         "confidence": 1.0,
         "blocking": [],
         "warnings": [
-          "asset_id_unresolved",
           "semantic_dedup_unavailable"
         ],
         "error_fields": [
@@ -773,7 +740,6 @@
         "confidence": 1.0,
         "blocking": [],
         "warnings": [
-          "asset_id_unresolved",
           "failed_attempt_conflicts_with_step",
           "semantic_dedup_unavailable"
         ],
@@ -789,12 +755,13 @@
       },
       {
         "episode_id": "EP-0354",
-        "low_confidence": true,
+        "low_confidence": false,
         "confidence": 0.8875,
-        "blocking": [
-          "missing_required_fact@machine_type"
+        "blocking": [],
+        "warnings": [
+          "machine_type_from_asset_id",
+          "semantic_dedup_unavailable"
         ],
-        "warnings": [],
         "error_fields": [
           "machine_type"
         ],
@@ -808,7 +775,6 @@
         "confidence": 1.0,
         "blocking": [],
         "warnings": [
-          "asset_id_unresolved",
           "semantic_dedup_unavailable"
         ],
         "error_fields": [
@@ -868,12 +834,13 @@
       },
       {
         "episode_id": "EP-0399",
-        "low_confidence": true,
+        "low_confidence": false,
         "confidence": 0.8875,
-        "blocking": [
-          "missing_required_fact@machine_type"
+        "blocking": [],
+        "warnings": [
+          "machine_type_from_asset_id",
+          "semantic_dedup_unavailable"
         ],
-        "warnings": [],
         "error_fields": [
           "machine_type",
           "parts",
@@ -921,11 +888,11 @@
       "clean_drafts": 50
     },
     "natural_warnings_on_clean": {
-      "asset_id_unresolved": 9,
       "failed_attempt_conflicts_with_step": 1,
-      "machine_type_unresolved": 4,
-      "missing_required_fact": 8,
-      "semantic_dedup_unavailable": 44,
+      "machine_type_from_asset_id": 5,
+      "machine_type_unresolved": 2,
+      "missing_required_fact": 3,
+      "semantic_dedup_unavailable": 49,
       "steps_out_of_source_order": 1
     }
   },
@@ -938,12 +905,12 @@
     "semantic": {
       "without_own": {
         "store_episodes": 350,
-        "drafts_flagged": 36,
+        "drafts_flagged": 42,
         "own_episode_found": 0,
-        "low_confidence_with_store": 13,
+        "low_confidence_with_store": 6,
         "matched_ids_by_kind": {
           "same_episode": 0,
-          "same_fault": 105,
+          "same_fault": 123,
           "other_fault": 0
         },
         "per_draft": [
@@ -986,7 +953,11 @@
           {
             "episode_id": "EP-0056",
             "fault_id": "A08",
-            "matches": []
+            "matches": [
+              "EP-0010",
+              "EP-0093",
+              "EP-0145"
+            ]
           },
           {
             "episode_id": "EP-0065",
@@ -1101,7 +1072,11 @@
           {
             "episode_id": "EP-0190",
             "fault_id": "I07",
-            "matches": []
+            "matches": [
+              "EP-0022",
+              "EP-0024",
+              "EP-0032"
+            ]
           },
           {
             "episode_id": "EP-0191",
@@ -1159,7 +1134,11 @@
           {
             "episode_id": "EP-0260",
             "fault_id": "L04",
-            "matches": []
+            "matches": [
+              "EP-0035",
+              "EP-0047",
+              "EP-0055"
+            ]
           },
           {
             "episode_id": "EP-0267",
@@ -1173,7 +1152,11 @@
           {
             "episode_id": "EP-0274",
             "fault_id": "L04",
-            "matches": []
+            "matches": [
+              "EP-0035",
+              "EP-0047",
+              "EP-0055"
+            ]
           },
           {
             "episode_id": "EP-0276",
@@ -1221,7 +1204,11 @@
           {
             "episode_id": "EP-0314",
             "fault_id": "P01",
-            "matches": []
+            "matches": [
+              "EP-0018",
+              "EP-0060",
+              "EP-0074"
+            ]
           },
           {
             "episode_id": "EP-0316",
@@ -1336,18 +1323,22 @@
           {
             "episode_id": "EP-0399",
             "fault_id": "P04",
-            "matches": []
+            "matches": [
+              "EP-0005",
+              "EP-0070",
+              "EP-0098"
+            ]
           }
         ]
       },
       "with_own": {
         "store_episodes": 400,
-        "drafts_flagged": 36,
-        "own_episode_found": 8,
-        "low_confidence_with_store": 13,
+        "drafts_flagged": 42,
+        "own_episode_found": 9,
+        "low_confidence_with_store": 6,
         "matched_ids_by_kind": {
-          "same_episode": 8,
-          "same_fault": 99,
+          "same_episode": 9,
+          "same_fault": 116,
           "other_fault": 0
         },
         "per_draft": [
@@ -1390,7 +1381,11 @@
           {
             "episode_id": "EP-0056",
             "fault_id": "A08",
-            "matches": []
+            "matches": [
+              "EP-0010",
+              "EP-0056",
+              "EP-0093"
+            ]
           },
           {
             "episode_id": "EP-0065",
@@ -1505,7 +1500,11 @@
           {
             "episode_id": "EP-0190",
             "fault_id": "I07",
-            "matches": []
+            "matches": [
+              "EP-0022",
+              "EP-0024",
+              "EP-0032"
+            ]
           },
           {
             "episode_id": "EP-0191",
@@ -1564,7 +1563,11 @@
           {
             "episode_id": "EP-0260",
             "fault_id": "L04",
-            "matches": []
+            "matches": [
+              "EP-0035",
+              "EP-0047",
+              "EP-0055"
+            ]
           },
           {
             "episode_id": "EP-0267",
@@ -1578,7 +1581,11 @@
           {
             "episode_id": "EP-0274",
             "fault_id": "L04",
-            "matches": []
+            "matches": [
+              "EP-0035",
+              "EP-0047",
+              "EP-0055"
+            ]
           },
           {
             "episode_id": "EP-0276",
@@ -1627,7 +1634,11 @@
           {
             "episode_id": "EP-0314",
             "fault_id": "P01",
-            "matches": []
+            "matches": [
+              "EP-0018",
+              "EP-0060",
+              "EP-0074"
+            ]
           },
           {
             "episode_id": "EP-0316",
@@ -1742,7 +1753,11 @@
           {
             "episode_id": "EP-0399",
             "fault_id": "P04",
-            "matches": []
+            "matches": [
+              "EP-0005",
+              "EP-0070",
+              "EP-0098"
+            ]
           }
         ]
       }
@@ -1765,9 +1780,9 @@
         "at_or_above_threshold": 40
       },
       "closest_other_fault_same_machine": {
-        "n": 40,
-        "min": 0.263,
-        "median": 0.439,
+        "n": 42,
+        "min": 0.237,
+        "median": 0.427,
         "max": 0.674,
         "at_or_above_threshold": 5
       }
