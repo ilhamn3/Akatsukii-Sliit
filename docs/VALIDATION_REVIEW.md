@@ -262,7 +262,16 @@ By kind of error:
 
 ### 4. Fixes and re-run (28 Nov, same day)
 
-Three changes, each made without looking at the eval drafts for its setting:
+Three changes. **Held-out status, per change** (added after Ilham's #47 review):
+
+- Change 1 fixes a bug that the eval measurement exposed (the check could never fire on
+  text). It has no setting to tune, but it was found on eval data.
+- Change 2's threshold was chosen on the **dev** split only, before the eval re-run.
+- Change 3 was decided **after seeing the eval-split result** (47 of 50 drafts pushed to
+  low priority). The eval numbers after the fixes are therefore **not held-out** for
+  this change: they show what the change does, not an unbiased estimate.
+
+The changes:
 
 1. **Step order on text captures.** The check now breaks start-time ties by the A1
    segment index in the evidence ID (`…-S0003`). Reversed steps are now caught in
@@ -282,7 +291,7 @@ Three changes, each made without looking at the eval drafts for its setting:
    reason alone, which would make the priority meaningless. It now stays a warning listing
    the matching records; exact duplicate recordings still block.
 
-Re-run on the eval drafts:
+Re-run on the eval drafts (not held-out for change 3; see above):
 
 | | First measurement (0.90) | Re-run (0.55, fixes) |
 |---|---:|---:|
