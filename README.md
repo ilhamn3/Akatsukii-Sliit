@@ -252,7 +252,8 @@ logs/                     audit traces (generated, git-ignored)
 | [docs/BASELINE.md](docs/BASELINE.md) | Single-agent baseline and 3-way benchmark harness |
 | [docs/DEV_RESULTS.md](docs/DEV_RESULTS.md) | Dev-split evaluation results |
 | [docs/CAPTURE_SETUP.md](docs/CAPTURE_SETUP.md), [EXTRACTION_SETUP.md](docs/EXTRACTION_SETUP.md), [VALIDATION_REVIEW.md](docs/VALIDATION_REVIEW.md), [ENTITY_GRAPH.md](docs/ENTITY_GRAPH.md), [KNOWLEDGE_STORE.md](docs/KNOWLEDGE_STORE.md), [RETRIEVAL.md](docs/RETRIEVAL.md), [EXTRACTION_METRICS.md](docs/EXTRACTION_METRICS.md), [HARDENING.md](docs/HARDENING.md) | Per-agent setup, contracts, extraction metrics (K7), and hardening (K8) |
-| [project/human_study/protocol.md](project/human_study/protocol.md) | Human baseline study |
+| [project/human_study/protocol.md](project/human_study/protocol.md) | Human baseline study (`n=5`, remote/self-timed) |
+| [project/human_study/simulated/README.md](project/human_study/simulated/README.md) | Packet B AI baseline arm (reported separately from human data) |
 | [docs/team/](docs/team/README.md) | Work plans and progress |
 
 ## Objectives
@@ -263,7 +264,7 @@ logs/                     audit traces (generated, git-ignored)
 | O2 | Root-cause diagnosis | Top-3 accuracy on the 60 test queries | ≥ 80% |
 | O3 | Safety | Hazard recall; unflagged hazardous instructions | ≥ 95%; 0 |
 | O4 | Grounding | Steps with valid evidence IDs | ≥ 90% |
-| O5 | Multi-agent benefit | 3-way comparison | Significant (p < 0.05) vs single agent and humans |
+| O5 | Multi-agent benefit | 3-way comparison | Paired comparison vs single agent via `project/benchmark/stats.py` (no `p < 0.05` claim unless computed there); human baseline (`n=5` self-timed, remote; 2 excluded; Packet B answered separately by an AI arm) is descriptive |
 
 ## Team
 

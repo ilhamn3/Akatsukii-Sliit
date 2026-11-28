@@ -12,13 +12,13 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 14.2 / 20 points · 71% complete**
+**Overall: 15 / 20 points · 75% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP2 | Synthetic data and test set | 12 | 9 | 75% |
 | WP8 | Human baseline study | 5 | 3.8 | 75% |
-| WP9 | Documentation (Tharshanth's part) | 3 | 1.5 | 50% |
+| WP9 | Documentation (Tharshanth's part) | 3 | 2.2 | 75% |
 <!-- PROGRESS:END -->
 
 **How to update:** edit only the **Done %** column below (0-100). Points earned = Pts x Done %. A subtask is 100% only when it meets its "done when" in section 3 and has been reviewed. Partial progress is fine (25 / 50 / 75%).
@@ -50,7 +50,7 @@
 |---|---|---|---|---|
 | 9.1 | README.md (overview, setup, execution guide) | 1 | 29 Nov | 75% |
 | 9.2 | docs/Workflow.md | 1 | 29 Nov | 75% |
-| 9.3 | docs/PROJECT_DETAILS.md with every AI model/tool declared | 1 | 29 Nov | 0% |
+| 9.3 | docs/PROJECT_DETAILS.md with every AI model/tool declared | 1 | 29 Nov | 75% |
 
 ## 2. Files and folders you own
 
@@ -181,5 +181,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | #19 | 26 Nov | [WP2] Audio subset and expanded stores | 2.4 (0->50%), 2.6 (0->100%) | 12 synthetic audio clips (7.3 min, 5 machines, 6 clean / 6 with plant noise, reference transcripts); nested stores n100 / n400 / n2000 as VerifiedEpisode envelopes, all 2,500 validated against the store model; 7 tests. All three stores load through scripts/load_expanded_store.py into KnowledgeStore (100 / 400 / 2,000 rows, reload is idempotent). Pending: Agent 1 transcription check (Kavibarath) | 41% -> 49% | Ilham MM |
 | #28 | 27 Nov | [Docs] README and Workflow.md match the code on main | 9.1 (0->75%), 9.2 (0->75%) | README rewritten from the code: honest status table, real setup (Python 3.10-3.13, .venv, env variables the code reads), run guide, data checks, troubleshooting, docs index, team. Every command run: smoke test, store load, query, UI, data checks, safety cases, 237 tests pass; 4 errors found and fixed (missing machine type, dev-eval overwriting committed results, demo --fake-llm crash, slow-network model download). Workflow.md rewritten to the real graph (safety after plan, FAISS not ChromaDB, every draft human-reviewed, abstention and LOTO checks, real trace format, HITL status). Pending: real Gemini run, teammate clean-machine check | 49% -> 56% | Ilham MM |
 | #39 | 28 Nov | [WP8] Human baseline results and blind-grading sheet | 8.2 (0->75%), 8.3 (0->75%), 8.4 (0->75%) | Remote, self-timed study (protocol 11-11b): 5 valid participants (P01, P03, P04, P05, P06), 60 timed answers and 10 extraction rows, 48 of 60 test queries (packets A, C, D, E; packet A twice). Packet B excluded: two submissions had no or unverifiable times; a labelled AI arm is kept in simulated/, never mixed with human data. Blind grading sheet built (60 answers, key in private/); rebuild with --system once system answers exist. Pending: consent screenshots, participant background, Kajanan review | 56% -> 71% | Kajanan K |
+| #40 | 28 Nov | [Docs] Final hygiene, CODEOWNERS, safety-claim & AI disclosure fixes | 9.3 (0->75%) | Fixed .github/CODEOWNERS UTF-16 LE BOM -> UTF-8 LF; replaced unsupported OSHA/ISO 13849 verification claim in docs/PROJECT_DETAILS.md; expanded §4.3 AI/model disclosure (pending [AI_TOOL_PACKET_B] confirmation); updated README/PROJECT_DETAILS O5 human-study wording & linked simulated/README.md; secrets scan, fresh-clone smoke check, and repo hygiene audit | 71% -> 75% | Kajanan K |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
