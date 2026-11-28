@@ -43,6 +43,7 @@ streamlit run project/ui/app.py
 
 ### 4. Technician Review Queue (`project/ui/pages/1_Review_Queue.py`)
 - Lists pending `ReviewItem` drafts from `list_pending_reviews()` (shown here with a labelled test draft `RQ-AC56E50B2DFC` / `EP-AAAAAAAAAAAAAAAA` in temporary `ReviewQueue` storage), displaying extracted fields with verbatim `Quotes:`, `Warning` validation issues (`LOW_CONFIDENCE`), and **Approve & Publish** / **Reject** controls.
+- Since the #32 review fixes, the page shows **every** field approval publishes (including failed attempts, tools, parts and machine ID, and "none extracted" for empty ones), the draft's review reasons and missing fields, and confidence labelled as an uncalibrated score. Blocking issues get correction inputs, and Approve stays disabled until they are filled; drafts with an uncorrectable issue (e.g. `duplicate_source`) can only be rejected. There is no default reviewer name: Approve and Reject need one. Rules: `project/store/review_view.py`; details in `docs/VALIDATION_REVIEW.md`. The screenshot above predates these fixes.
 
 ![Review Queue Page](screenshots/review_queue.png)
 

@@ -119,6 +119,32 @@ marked approved. `approve()` returns the stored, canonical episode. If the store
 APPROVE_FAILED event records the error type. The queue lives in
 `<storage root>/review/review_queue.sqlite3`, separate from the verified store.
 
+### What the review page must show (`project/store/review_view.py`)
+
+The Streamlit page (`project/ui/pages/1_Review_Queue.py`) uses these helpers, so the
+rules are unit-tested without a UI:
+
+- **Every fact approval publishes.** `fact_sections` lists all `ExtractedRepair`
+  fields in order, including empty ones ("none extracted") and unknown failed-attempt
+  children. A test fails if the schema gains a field the page would not show.
+- **What the reviewer must know about the draft:** `review_reasons` and
+  `missing_fields`, with banners for `offline_fixture_output` (fixture, not a model
+  run) and `extraction_retried_after_invalid_output` (K8 retry). Confidence is always
+  shown with its method and as "not a probability".
+- **Corrections for blocking issues.** `correction_targets` maps each blocking issue
+  to the key A3 accepts: scalars and `failed_attempts.<i>.<child>` by name, list
+  fields as a whole list (an issue at `steps.2` is fixed through `steps`, prefilled
+  with the current values). `build_corrections` leaves blank inputs out, so their
+  issue stays blocking; nothing is filled in for the reviewer. Issues with no field
+  (e.g. `duplicate_source`) can only be rejected (`uncorrectable`).
+- **A named reviewer.** The page has no default reviewer; Approve and Reject stay
+  disabled until a name is entered, because it is written to `verified_by` and the
+  audit events.
+
+`tests/ui/test_review_page.py` runs the page against a real `ReviewQueue` and
+`KnowledgeStore` (only storage is redirected to `tmp_path`): approve with a named
+reviewer, approve a blocked draft only after both corrections, and reject a duplicate.
+
 ## Commands
 
 ```powershell
@@ -149,10 +175,95 @@ python -m project.store.review_queue --queue-db "$demo\queue.sqlite3" --store-db
 
 These are smoke checks on a synthetic fixture, not an accuracy evaluation.
 
+## Agent 3 on the 50 eval drafts (28 Nov 2026)
+
+How many real problems A3 flags in real Agent 2 output. The input is the 50 committed v5
+eval-split drafts (Groq `openai/gpt-oss-120b`, 27 Nov), so **no model was called** (no
+Gemini, no Groq). A3 ran with its default thresholds (confidence 0.75, duplicate cosine
+0.90); nothing was tuned. All data is synthetic.
+
+| | |
+|---|---|
+| Command | `python -m project.evaluation.validation_eval --output-dir project/evaluation/results/2026-11-28_validation_eval` |
+| Results | `project/evaluation/results/2026-11-28_validation_eval/validation_eval.json` (code commit `11c0b41`) |
+| Truth | Low confidence: K7 per-episode errors (fp/fn per field) against the narrative gold. Contradictions: injected. Duplicates: generator `fault_id` labels |
+| Embedder | Cached MiniLM (`HF_HUB_OFFLINE=1`) for the semantic checks |
+
+### 1. Low confidence vs real extraction errors
+
+A3 put **13 of 50** drafts in `low_confidence`. 44 drafts have at least one K7 error
+(a missed or unmatched item in any field). Since the gold is strict, most drafts have one.
+
+| Truth | Flagged and wrong | Flagged, no K7 error | Missed | Not flagged, correct | Precision | Recall |
+|---|---:|---:|---:|---:|---:|---:|
+| Any field error | 12 | 1 | 32 | 5 | 0.92 | 0.27 |
+| Error in a required field (machine type, symptoms, steps, root cause) | 12 | 1 | 28 | 9 | 0.92 | 0.30 |
+
+By kind of error:
+- **Missing or unresolvable facts: all caught.** Machine type wrong or missing: 10 of 10
+  drafts flagged (`missing_required_fact` or `machine_type_unresolved`; mostly shift logs
+  naming only an asset code). Root cause missing: 1 of 1 flagged. Every
+  `missing_required_fact` flag on a required field was a fact the narrative does state.
+- **Wrong or extra values: not caught.** Errors only in steps, symptoms, parts, tools or
+  warnings (e.g. an extra "grab X from stores" step, a merged symptom) were never the
+  reason for a flag; the 5 flagged drafts with such errors were flagged for their machine
+  type. A3 checks completeness and grounding, not whether a grounded value is right, so
+  these need the human reviewer.
+- The one flag without a K7 error (EP-0293) is a failed attempt with no stated reason
+  (`why_failed`), which K7 does not score. It is a real gap the reviewer must fill.
+
+### 2. Contradictions (injected, one per draft copy)
+
+| Injected problem | Expected A3 code | Detected | False alarms on the 50 clean drafts |
+|---|---|---:|---:|
+| A failed attempt's action also listed as a completed step | `failed_attempt_conflicts_with_step` | 14 / 14 | 1 (a real one, below) |
+| A step value gains a quantity ("to 87 psi") its quote lacks | `quantity_not_in_quote` | 50 / 50 | 0 |
+| A tool with no evidence span | `ungrounded_fact` | 50 / 50 | 0 |
+| Steps reversed against narration order | `steps_out_of_source_order` | **0 / 50** | 0 |
+
+- The one natural `failed_attempt_conflicts_with_step` on the clean drafts is a **true
+  error**: in EP-0351 the model listed "added more coolant to the tank" both as a failed
+  attempt and as the first completed step, although the narrative says it didn't help.
+- **The step-order check cannot work on text captures.** It compares the start times of
+  the steps' evidence spans, and text narratives (the K7 adapter) give every span
+  `start_seconds = 0`. It only works on timestamped audio and video. A fix would order by
+  segment index when times are equal.
+
+### 3. Duplicates
+
+- **Exact re-submission** (same recording, through a real `ReviewQueue`): 0 of 50 flagged
+  on first submission, **50 of 50** flagged `duplicate_source` (blocking) on re-submission.
+- **Semantic** (`possible_duplicate`, warning): a store of the 400 gold episodes, with and
+  without each draft's own episode. A3 flagged 3 of 50 drafts either way. All 9 matched
+  IDs were **other episodes of the same fault**; none was a different fault. The draft's
+  own episode was found 0 times.
+- Why: in the gold store, every episode of one fault has identical symptom text (the
+  catalogue's), so symptoms alone cannot tell "the same repair recorded twice" from
+  "the same fault on another day". That is why A3 makes this a warning, not a block.
+- Cosine diagnostic (draft symptoms vs gold, same machine), not used to set anything:
+
+  | Pair | n | Min | Median | Max | At or above 0.90 |
+  |---|---:|---:|---:|---:|---:|
+  | Draft vs same-fault episodes (own or other) | 44 | 0.37 | 0.74 | 0.95 | 3 |
+  | Draft vs closest other-fault episode | 40 | 0.26 | 0.44 | 0.67 | 0 |
+
+  At 0.90 the check is precise (no other-fault match) but finds few same-fault records.
+  A lower threshold would find more; it should be chosen on the dev split, not here.
+
+### Summary
+
+A3 reliably catches what rules can see: missing or unresolvable facts, ungrounded facts,
+unquoted quantities, failed attempts repeated as steps, and exact duplicate recordings.
+It does not judge whether a grounded value is correct, its step-order check is blind on
+text input, and its semantic duplicate warning is conservative at 0.90. That is why every
+draft still goes to a human.
+
 ## Pending
 
-- Ilham's review. Kajanan's UI integration against this API.
-- Representative recordings and drafts from the team, plus evaluation of the score
-  and duplicate threshold on labelled data.
+- Review of the page fixes. The UI is connected to this API (#32); the fixes above
+  address the #32 review.
+- Representative recordings from the team. The 28 Nov evaluation above covers the 50
+  synthetic eval drafts; the duplicate threshold should be calibrated on the dev split,
+  and the step-order check needs a segment-index fallback for text captures.
 - Automatic promotion is a team decision. (K5 entity resolution before persistence is
   now in `wp3/graph-agent`.)

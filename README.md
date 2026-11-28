@@ -251,7 +251,7 @@ logs/                     audit traces (generated, git-ignored)
 | [docs/UI.md](docs/UI.md) | Streamlit UI setup, pages, and verified screenshots |
 | [docs/BASELINE.md](docs/BASELINE.md) | Single-agent baseline and 3-way benchmark harness |
 | [docs/DEV_RESULTS.md](docs/DEV_RESULTS.md) | Dev-split evaluation results |
-| [docs/CAPTURE_SETUP.md](docs/CAPTURE_SETUP.md), [EXTRACTION_SETUP.md](docs/EXTRACTION_SETUP.md), [VALIDATION_REVIEW.md](docs/VALIDATION_REVIEW.md), [ENTITY_GRAPH.md](docs/ENTITY_GRAPH.md), [KNOWLEDGE_STORE.md](docs/KNOWLEDGE_STORE.md), [RETRIEVAL.md](docs/RETRIEVAL.md), [EXTRACTION_METRICS.md](docs/EXTRACTION_METRICS.md), [HARDENING.md](docs/HARDENING.md) | Per-agent setup, contracts, extraction metrics (K7), and hardening (K8) |
+| [docs/CAPTURE_SETUP.md](docs/CAPTURE_SETUP.md), [AUDIO_CAPTURE_EVAL.md](docs/AUDIO_CAPTURE_EVAL.md), [EXTRACTION_SETUP.md](docs/EXTRACTION_SETUP.md), [VALIDATION_REVIEW.md](docs/VALIDATION_REVIEW.md), [ENTITY_GRAPH.md](docs/ENTITY_GRAPH.md), [KNOWLEDGE_STORE.md](docs/KNOWLEDGE_STORE.md), [RETRIEVAL.md](docs/RETRIEVAL.md), [EXTRACTION_METRICS.md](docs/EXTRACTION_METRICS.md), [HARDENING.md](docs/HARDENING.md) | Per-agent setup, contracts, Agent 1 audio WER, extraction metrics (K7), and hardening (K8) |
 | [project/human_study/protocol.md](project/human_study/protocol.md) | Human baseline study (`n=5`, remote/self-timed) |
 | [project/human_study/simulated/README.md](project/human_study/simulated/README.md) | Packet B AI baseline arm (reported separately from human data) |
 | [docs/team/](docs/team/README.md) | Work plans and progress |

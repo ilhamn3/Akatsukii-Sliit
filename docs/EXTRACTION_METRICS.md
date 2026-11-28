@@ -2,6 +2,9 @@
 
 Owner: Kavibarath S. Reviewer: Ilham MM. Branch: `wp3/extraction-metrics`. Subtask 3.7.
 Consumer: Kajanan's harness (WP7), which reads the JSON and per-episode JSONL below.
+Without `--extraction-json`, `project/benchmark/harness.py` loads the newest committed
+report, `project/evaluation/results/<YYYY-MM-DD_...>/extraction_metrics_eval*.json`
+(currently the v5 run, micro F1 0.897); a test in `tests/benchmark` checks this.
 Code: `project/evaluation/extraction_metrics.py`. Every number comes from this code,
 not from hand-typed values.
 

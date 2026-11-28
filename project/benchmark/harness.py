@@ -208,7 +208,9 @@ def _load_optional_extraction(extraction_json: Optional[Path] = None) -> Dict[st
         candidates = [extraction_json] if extraction_json.exists() else []
     else:
         eval_dir = ROOT / "project" / "evaluation" / "results"
-        candidates = sorted(eval_dir.glob("*/extraction_metrics_eval.json")) if eval_dir.exists() else []
+        # Result folders are named YYYY-MM-DD_eval_<provider-model>_<prompt>, so path order is
+        # date order and the last one is the newest run (v5: extraction_metrics_eval_extraction_v5.json).
+        candidates = sorted(eval_dir.glob("*/extraction_metrics_eval*.json")) if eval_dir.exists() else []
     if not candidates:
         return {"status": "missing"}
     latest = candidates[-1]

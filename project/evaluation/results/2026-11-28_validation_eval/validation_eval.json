@@ -1,0 +1,1495 @@
+{
+  "schema_version": "validation_eval/v1",
+  "synthetic_data_only": true,
+  "generated_at": "2026-11-28T06:04:53+00:00",
+  "code_commit": "11c0b41",
+  "drafts_source": "project/evaluation/results/2026-11-27_eval_groq-gpt-oss-120b_v5",
+  "embedder": "default KnowledgeStore embedder",
+  "low_confidence": {
+    "drafts": 50,
+    "low_confidence": 13,
+    "drafts_with_any_error": 44,
+    "drafts_with_required_error": 40,
+    "vs_any_error": {
+      "tp": 12,
+      "fp": 1,
+      "fn": 32,
+      "tn": 5,
+      "precision": 0.9231,
+      "recall": 0.2727
+    },
+    "vs_required_field_error": {
+      "tp": 12,
+      "fp": 1,
+      "fn": 28,
+      "tn": 9,
+      "precision": 0.9231,
+      "recall": 0.3
+    },
+    "missing_required_fact_flags": {
+      "total": 7,
+      "real_miss_gold_states_it": 7,
+      "not_in_narrative": 0,
+      "items": [
+        {
+          "episode_id": "EP-0056",
+          "field": "machine_type",
+          "gold_has_it": true
+        },
+        {
+          "episode_id": "EP-0069",
+          "field": "machine_type",
+          "gold_has_it": true
+        },
+        {
+          "episode_id": "EP-0190",
+          "field": "machine_type",
+          "gold_has_it": true
+        },
+        {
+          "episode_id": "EP-0314",
+          "field": "machine_type",
+          "gold_has_it": true
+        },
+        {
+          "episode_id": "EP-0354",
+          "field": "machine_type",
+          "gold_has_it": true
+        },
+        {
+          "episode_id": "EP-0390",
+          "field": "root_cause",
+          "gold_has_it": true
+        },
+        {
+          "episode_id": "EP-0399",
+          "field": "machine_type",
+          "gold_has_it": true
+        }
+      ]
+    },
+    "per_draft": [
+      {
+        "episode_id": "EP-0014",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "safety_warnings",
+          "symptoms",
+          "tools"
+        ],
+        "required_error_fields": [
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0016",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0028",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts"
+        ],
+        "required_error_fields": []
+      },
+      {
+        "episode_id": "EP-0053",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0056",
+        "low_confidence": true,
+        "confidence": 0.8875,
+        "blocking": [
+          "missing_required_fact@machine_type"
+        ],
+        "warnings": [],
+        "error_fields": [
+          "machine_type",
+          "steps"
+        ],
+        "required_error_fields": [
+          "machine_type",
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0065",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0067",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "steps"
+        ],
+        "required_error_fields": [
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0069",
+        "low_confidence": true,
+        "confidence": 0.8875,
+        "blocking": [
+          "missing_required_fact@machine_type"
+        ],
+        "warnings": [],
+        "error_fields": [
+          "machine_type",
+          "parts",
+          "steps"
+        ],
+        "required_error_fields": [
+          "machine_type",
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0080",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "steps",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "steps",
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0088",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "asset_id_unresolved",
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "steps",
+          "symptoms",
+          "tools"
+        ],
+        "required_error_fields": [
+          "steps",
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0103",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "steps"
+        ],
+        "required_error_fields": [
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0131",
+        "low_confidence": true,
+        "confidence": 1.0,
+        "blocking": [
+          "machine_type_unresolved@machine_type"
+        ],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "machine_type",
+          "steps"
+        ],
+        "required_error_fields": [
+          "machine_type",
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0150",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [],
+        "required_error_fields": []
+      },
+      {
+        "episode_id": "EP-0161",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "asset_id_unresolved",
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "steps",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "steps",
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0170",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "asset_id_unresolved",
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts"
+        ],
+        "required_error_fields": []
+      },
+      {
+        "episode_id": "EP-0178",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "safety_warnings",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0185",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "steps",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "steps",
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0186",
+        "low_confidence": true,
+        "confidence": 1.0,
+        "blocking": [
+          "machine_type_unresolved@machine_type"
+        ],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "machine_type",
+          "parts",
+          "steps",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "machine_type",
+          "steps",
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0189",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [],
+        "required_error_fields": []
+      },
+      {
+        "episode_id": "EP-0190",
+        "low_confidence": true,
+        "confidence": 0.8875,
+        "blocking": [
+          "missing_required_fact@machine_type"
+        ],
+        "warnings": [],
+        "error_fields": [
+          "machine_type",
+          "tools"
+        ],
+        "required_error_fields": [
+          "machine_type"
+        ]
+      },
+      {
+        "episode_id": "EP-0191",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "steps",
+          "tools"
+        ],
+        "required_error_fields": [
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0196",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [],
+        "required_error_fields": []
+      },
+      {
+        "episode_id": "EP-0199",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "asset_id_unresolved",
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0205",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "steps",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "steps",
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0221",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "steps",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "steps",
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0243",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0260",
+        "low_confidence": true,
+        "confidence": 1.0,
+        "blocking": [
+          "machine_type_unresolved@machine_type"
+        ],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "machine_type"
+        ],
+        "required_error_fields": [
+          "machine_type"
+        ]
+      },
+      {
+        "episode_id": "EP-0267",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "steps"
+        ],
+        "required_error_fields": [
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0274",
+        "low_confidence": true,
+        "confidence": 1.0,
+        "blocking": [
+          "machine_type_unresolved@machine_type"
+        ],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "machine_type",
+          "parts"
+        ],
+        "required_error_fields": [
+          "machine_type"
+        ]
+      },
+      {
+        "episode_id": "EP-0276",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "steps"
+        ],
+        "required_error_fields": [
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0278",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "steps"
+        ],
+        "required_error_fields": [
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0284",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "asset_id_unresolved",
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "steps"
+        ],
+        "required_error_fields": [
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0293",
+        "low_confidence": true,
+        "confidence": 0.925,
+        "blocking": [
+          "missing_required_fact@failed_attempts.1.why_failed"
+        ],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [],
+        "required_error_fields": []
+      },
+      {
+        "episode_id": "EP-0311",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "steps"
+        ],
+        "required_error_fields": [
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0314",
+        "low_confidence": true,
+        "confidence": 0.8875,
+        "blocking": [
+          "missing_required_fact@machine_type"
+        ],
+        "warnings": [],
+        "error_fields": [
+          "machine_type",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "machine_type",
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0316",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0320",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "asset_id_unresolved",
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0321",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "steps"
+        ],
+        "required_error_fields": [
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0323",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "asset_id_unresolved",
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "steps"
+        ],
+        "required_error_fields": [
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0328",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "tools"
+        ],
+        "required_error_fields": []
+      },
+      {
+        "episode_id": "EP-0336",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [],
+        "required_error_fields": []
+      },
+      {
+        "episode_id": "EP-0337",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [],
+        "required_error_fields": []
+      },
+      {
+        "episode_id": "EP-0342",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "steps",
+          "symptoms",
+          "tools"
+        ],
+        "required_error_fields": [
+          "steps",
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0351",
+        "low_confidence": true,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "asset_id_unresolved",
+          "failed_attempt_conflicts_with_step",
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts",
+          "steps",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "steps",
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0354",
+        "low_confidence": true,
+        "confidence": 0.8875,
+        "blocking": [
+          "missing_required_fact@machine_type"
+        ],
+        "warnings": [],
+        "error_fields": [
+          "machine_type"
+        ],
+        "required_error_fields": [
+          "machine_type"
+        ]
+      },
+      {
+        "episode_id": "EP-0355",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "asset_id_unresolved",
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "parts"
+        ],
+        "required_error_fields": []
+      },
+      {
+        "episode_id": "EP-0356",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "steps"
+        ],
+        "required_error_fields": [
+          "steps"
+        ]
+      },
+      {
+        "episode_id": "EP-0378",
+        "low_confidence": false,
+        "confidence": 1.0,
+        "blocking": [],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0390",
+        "low_confidence": true,
+        "confidence": 0.8875,
+        "blocking": [
+          "missing_required_fact@root_cause"
+        ],
+        "warnings": [
+          "semantic_dedup_unavailable"
+        ],
+        "error_fields": [
+          "root_cause",
+          "safety_warnings",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "root_cause",
+          "symptoms"
+        ]
+      },
+      {
+        "episode_id": "EP-0399",
+        "low_confidence": true,
+        "confidence": 0.8875,
+        "blocking": [
+          "missing_required_fact@machine_type"
+        ],
+        "warnings": [],
+        "error_fields": [
+          "machine_type",
+          "parts",
+          "safety_warnings",
+          "symptoms"
+        ],
+        "required_error_fields": [
+          "machine_type",
+          "symptoms"
+        ]
+      }
+    ]
+  },
+  "contradictions": {
+    "failed_attempt_listed_as_step": {
+      "expected_code": "failed_attempt_conflicts_with_step",
+      "applicable_drafts": 14,
+      "detected": 14,
+      "detection_rate": 1.0,
+      "false_alarms_on_clean": 1,
+      "clean_drafts": 50
+    },
+    "quantity_not_in_quote": {
+      "expected_code": "quantity_not_in_quote",
+      "applicable_drafts": 50,
+      "detected": 50,
+      "detection_rate": 1.0,
+      "false_alarms_on_clean": 0,
+      "clean_drafts": 50
+    },
+    "ungrounded_fact": {
+      "expected_code": "ungrounded_fact",
+      "applicable_drafts": 50,
+      "detected": 50,
+      "detection_rate": 1.0,
+      "false_alarms_on_clean": 0,
+      "clean_drafts": 50
+    },
+    "steps_out_of_order": {
+      "expected_code": "steps_out_of_source_order",
+      "applicable_drafts": 50,
+      "detected": 0,
+      "detection_rate": 0.0,
+      "false_alarms_on_clean": 0,
+      "clean_drafts": 50
+    },
+    "natural_warnings_on_clean": {
+      "asset_id_unresolved": 9,
+      "failed_attempt_conflicts_with_step": 1,
+      "machine_type_unresolved": 4,
+      "missing_required_fact": 8,
+      "semantic_dedup_unavailable": 44
+    }
+  },
+  "duplicates": {
+    "exact": {
+      "drafts": 50,
+      "flagged_on_first_submission": 0,
+      "flagged_on_resubmission": 50
+    },
+    "semantic": {
+      "without_own": {
+        "store_episodes": 350,
+        "drafts_flagged": 3,
+        "own_episode_found": 0,
+        "matched_ids_by_kind": {
+          "same_episode": 0,
+          "same_fault": 9,
+          "other_fault": 0
+        },
+        "per_draft": [
+          {
+            "episode_id": "EP-0014",
+            "fault_id": "L02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0016",
+            "fault_id": "C05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0028",
+            "fault_id": "I03",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0053",
+            "fault_id": "P03",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0056",
+            "fault_id": "A08",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0065",
+            "fault_id": "P06",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0067",
+            "fault_id": "L04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0069",
+            "fault_id": "A05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0080",
+            "fault_id": "C02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0088",
+            "fault_id": "I07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0103",
+            "fault_id": "C04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0131",
+            "fault_id": "A05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0150",
+            "fault_id": "C01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0161",
+            "fault_id": "L04",
+            "matches": [
+              "EP-0035",
+              "EP-0047",
+              "EP-0055"
+            ]
+          },
+          {
+            "episode_id": "EP-0170",
+            "fault_id": "A01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0178",
+            "fault_id": "C08",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0185",
+            "fault_id": "I05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0186",
+            "fault_id": "P05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0189",
+            "fault_id": "P01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0190",
+            "fault_id": "I07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0191",
+            "fault_id": "P05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0196",
+            "fault_id": "C06",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0199",
+            "fault_id": "I02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0205",
+            "fault_id": "P01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0221",
+            "fault_id": "I07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0243",
+            "fault_id": "C04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0260",
+            "fault_id": "L04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0267",
+            "fault_id": "P03",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0274",
+            "fault_id": "L04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0276",
+            "fault_id": "I06",
+            "matches": [
+              "EP-0037",
+              "EP-0049",
+              "EP-0108"
+            ]
+          },
+          {
+            "episode_id": "EP-0278",
+            "fault_id": "A01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0284",
+            "fault_id": "C08",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0293",
+            "fault_id": "L08",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0311",
+            "fault_id": "A08",
+            "matches": [
+              "EP-0010",
+              "EP-0093",
+              "EP-0145"
+            ]
+          },
+          {
+            "episode_id": "EP-0314",
+            "fault_id": "P01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0316",
+            "fault_id": "L03",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0320",
+            "fault_id": "C04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0321",
+            "fault_id": "I02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0323",
+            "fault_id": "A04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0328",
+            "fault_id": "L02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0336",
+            "fault_id": "C07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0337",
+            "fault_id": "A05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0342",
+            "fault_id": "L07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0351",
+            "fault_id": "L05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0354",
+            "fault_id": "I01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0355",
+            "fault_id": "A05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0356",
+            "fault_id": "P06",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0378",
+            "fault_id": "A07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0390",
+            "fault_id": "I02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0399",
+            "fault_id": "P04",
+            "matches": []
+          }
+        ]
+      },
+      "with_own": {
+        "store_episodes": 400,
+        "drafts_flagged": 3,
+        "own_episode_found": 0,
+        "matched_ids_by_kind": {
+          "same_episode": 0,
+          "same_fault": 9,
+          "other_fault": 0
+        },
+        "per_draft": [
+          {
+            "episode_id": "EP-0014",
+            "fault_id": "L02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0016",
+            "fault_id": "C05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0028",
+            "fault_id": "I03",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0053",
+            "fault_id": "P03",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0056",
+            "fault_id": "A08",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0065",
+            "fault_id": "P06",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0067",
+            "fault_id": "L04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0069",
+            "fault_id": "A05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0080",
+            "fault_id": "C02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0088",
+            "fault_id": "I07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0103",
+            "fault_id": "C04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0131",
+            "fault_id": "A05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0150",
+            "fault_id": "C01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0161",
+            "fault_id": "L04",
+            "matches": [
+              "EP-0035",
+              "EP-0047",
+              "EP-0055"
+            ]
+          },
+          {
+            "episode_id": "EP-0170",
+            "fault_id": "A01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0178",
+            "fault_id": "C08",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0185",
+            "fault_id": "I05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0186",
+            "fault_id": "P05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0189",
+            "fault_id": "P01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0190",
+            "fault_id": "I07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0191",
+            "fault_id": "P05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0196",
+            "fault_id": "C06",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0199",
+            "fault_id": "I02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0205",
+            "fault_id": "P01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0221",
+            "fault_id": "I07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0243",
+            "fault_id": "C04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0260",
+            "fault_id": "L04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0267",
+            "fault_id": "P03",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0274",
+            "fault_id": "L04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0276",
+            "fault_id": "I06",
+            "matches": [
+              "EP-0037",
+              "EP-0049",
+              "EP-0108"
+            ]
+          },
+          {
+            "episode_id": "EP-0278",
+            "fault_id": "A01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0284",
+            "fault_id": "C08",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0293",
+            "fault_id": "L08",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0311",
+            "fault_id": "A08",
+            "matches": [
+              "EP-0010",
+              "EP-0056",
+              "EP-0093"
+            ]
+          },
+          {
+            "episode_id": "EP-0314",
+            "fault_id": "P01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0316",
+            "fault_id": "L03",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0320",
+            "fault_id": "C04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0321",
+            "fault_id": "I02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0323",
+            "fault_id": "A04",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0328",
+            "fault_id": "L02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0336",
+            "fault_id": "C07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0337",
+            "fault_id": "A05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0342",
+            "fault_id": "L07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0351",
+            "fault_id": "L05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0354",
+            "fault_id": "I01",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0355",
+            "fault_id": "A05",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0356",
+            "fault_id": "P06",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0378",
+            "fault_id": "A07",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0390",
+            "fault_id": "I02",
+            "matches": []
+          },
+          {
+            "episode_id": "EP-0399",
+            "fault_id": "P04",
+            "matches": []
+          }
+        ]
+      }
+    },
+    "threshold": 0.9,
+    "k": 3,
+    "cosine_diagnostic": {
+      "own_episode": {
+        "n": 44,
+        "min": 0.367,
+        "median": 0.738,
+        "max": 0.954,
+        "at_or_above_0.90": 3
+      },
+      "closest_same_fault_other_episode": {
+        "n": 44,
+        "min": 0.367,
+        "median": 0.738,
+        "max": 0.954,
+        "at_or_above_0.90": 3
+      },
+      "closest_other_fault_same_machine": {
+        "n": 40,
+        "min": 0.263,
+        "median": 0.439,
+        "max": 0.674,
+        "at_or_above_0.90": 0
+      }
+    }
+  }
+}
