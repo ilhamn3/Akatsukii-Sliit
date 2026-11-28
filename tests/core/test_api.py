@@ -71,3 +71,22 @@ def test_dev_eval_resume_cache_skips_degraded_and_keeps_good(tmp_path):
     assert "DQ-01" in loaded
     assert loaded["DQ-01"]["behaviour_match"] is True
     assert "DQ-02" not in loaded
+
+
+def test_dev_eval_resume_cache_respects_version_hash(tmp_path):
+    """Cached entries from an older code/prompt version_hash must never be reused."""
+    from scripts.run_dev_eval import compute_code_version_hash
+
+    v_now = compute_code_version_hash()
+    assert len(v_now) == 12
+
+    cache_file = tmp_path / "versioned_cache.jsonl"
+    stale = {"query_id": "DQ-01", "version_hash": "oldhash00000", "degraded": False}
+    fresh = {"query_id": "DQ-02", "version_hash": v_now, "degraded": False}
+
+    append_resume_cache(cache_file, stale)
+    append_resume_cache(cache_file, fresh)
+
+    loaded = load_resume_cache(cache_file, version_hash=v_now)
+    assert "DQ-01" not in loaded
+    assert "DQ-02" in loaded

@@ -103,15 +103,18 @@ def run_query(
             },
         }
 
-    evidence_summary = [
-        {
+    evidence_summary = []
+    for ev in (final_state.get("evidence") or []):
+        ev_meta = ev.get("metadata") or {}
+        rec = ev_meta.get("record") or {}
+        evidence_summary.append({
             "evidence_id": ev.get("evidence_id"),
             "episode_id": ev.get("episode_id"),
             "snippet": (ev.get("content") or "")[:240],
             "similarity_score": ev.get("similarity_score", 0.0),
-        }
-        for ev in (final_state.get("evidence") or [])
-    ]
+            "verified_by": ev_meta.get("verified_by") or rec.get("verified_by") or "unknown",
+            "outcome": ev_meta.get("outcome") or rec.get("outcome") or "unknown",
+        })
 
     final_ans = final_state.get("final_answer")
     llm_check = final_state.get("llm_check") or (final_state.get("metadata") or {}).get("llm_check") or "not_run"

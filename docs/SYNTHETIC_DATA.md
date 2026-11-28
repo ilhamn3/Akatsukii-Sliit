@@ -55,8 +55,9 @@ the speech engine output can differ slightly between Windows versions.
   over machine noise, so transcription accuracy here is likely optimistic.
 - **Fixed vocabulary.** Machine names, symptoms and hazards use a small, consistent
   vocabulary. Real plants use many local names for the same thing.
-- **Small human study.** The baseline uses at least 5 volunteers, so differences between
-  people and the system are indicative, not statistically strong.
+- **Small human study.** The baseline uses only a few volunteers (see
+  `project/human_study/protocol.md`), so differences between people and the system
+  are indicative, not statistically strong.
 
 ## How to rebuild and check
 

@@ -28,7 +28,7 @@ DEFAULT_FAULTS_JSON = (
 )
 
 SAFETY_SYSTEM_PROMPT = """You are a Senior Industrial Plant Safety Engineer verifying candidate maintenance procedures.
-Your mandate is zero-incident plant safety. Verify that proposed mechanical/electrical repair steps do not introduce hazards such as:
+Your mandate is zero-incident plant safety. Judge ONLY industrial plant safety:
 1. Stored hydraulic/pneumatic energy or failure to depressurise/bleed to 0 bar.
 2. Electrical arc-flash or electrocution; failure to lock out / tag out (LOTO) and prove dead.
 3. Mechanical crush or pinch points; failure to place safety blocks under rams or platens.
@@ -36,9 +36,46 @@ Your mandate is zero-incident plant safety. Verify that proposed mechanical/elec
 5. Rotating components; reaching into spindles/chucks before full stop and zero-speed verification.
 6. Guard, interlock, or safety switch bypasses or jumpers.
 7. Checking high-pressure hydraulic lines with bare hands instead of cardboard.
+8. Ordering of isolation/LOTO/depressurisation BEFORE any physical disassembly, and required PPE.
 
-Be rigorous. Never approve dangerous shortcuts. You may suggest procedural amendments or recommend a veto.
+CRITICAL SCOPE RULE:
+- Do NOT judge diagnosis accuracy or maintenance-effectiveness (e.g. whether the procedure fixes a bearing vs. a chiller filter). Those are NOT safety concerns.
+- Classify each concern in `categorized_concerns` with category "safety" or "other".
+- ONLY "safety" concerns may cause `amend` or `veto`. If your only notes are category "other", set verdict="approve".
 """
+
+
+class CategorizedConcern(BaseModel):
+    """A single concern classified as safety vs non-safety informational note."""
+
+    text: str = Field(description="Concise description of the concern or note")
+    category: Literal["safety", "other"] = Field(
+        default="safety",
+        description="'safety' for physical/procedural safety risks; 'other' for diagnosis or effectiveness notes",
+    )
+
+
+class UnsafeIntentOutput(BaseModel):
+    """Structured LLM intent check for unsafe shortcut/bypass requests in the user query."""
+
+    is_shortcut_request: bool = Field(
+        description="True if the user is asking to skip, bypass, or work without a safety control"
+    )
+    confidence: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Confidence 0.0-1.0 that the user is explicitly requesting an unsafe shortcut",
+    )
+    skipped_control_description: str = Field(
+        default="", description="Plain description of the safety control the user wants to skip"
+    )
+    matching_hazard_id: Optional[str] = Field(
+        default=None, description="Matching hazard ID from hazards.json (e.g. 'H05', 'H12'), or null"
+    )
+    risky_phrase_quote: str = Field(
+        default="", description="Short verbatim quote of the risky phrase from the query"
+    )
 
 
 class SafetyReviewOutput(BaseModel):
@@ -46,6 +83,10 @@ class SafetyReviewOutput(BaseModel):
 
     is_safe: bool = Field(description="True if procedure complies with safety standards, False otherwise")
     verdict: Literal["approve", "amend", "veto"] = Field(description="LLM safety verdict")
+    categorized_concerns: List[CategorizedConcern] = Field(
+        default_factory=list,
+        description="Concerns classified as 'safety' (blocks/amends) or 'other' (informational only)",
+    )
     concerns: List[str] = Field(default_factory=list, description="Specific safety risks or missing prerequisites")
     suggested_amendments: List[str] = Field(
         default_factory=list, description="Specific procedural fixes to make the steps safe"
@@ -124,7 +165,19 @@ class SafetyAgent(BaseAgent):
         raw_query = state.get("raw_query") or ""
         machine_type = state.get("machine_type") or "unspecified"
         hypothesis = state.get("selected_hypothesis") or {}
-        fault_desc = hypothesis.get("fault", "Unspecified fault")
+        meta = dict(state.get("metadata") or {})
+        # Use the evidence-first final diagnosed_cause, NOT the DiagnosticAgent hypothesis when evidence root_cause exists
+        cited_root_causes: List[str] = []
+        for ev in (state.get("evidence") or []):
+            rec = (ev.get("metadata") or {}).get("record") or {}
+            rc = rec.get("root_cause")
+            if rc and str(rc).strip() and str(rc).strip() not in cited_root_causes:
+                cited_root_causes.append(str(rc).strip())
+        fault_desc = (
+            meta.get("evidence_root_cause")
+            or (cited_root_causes[0] if cited_root_causes else None)
+            or hypothesis.get("fault", "Unspecified fault")
+        )
 
         # 1. Candidate steps must come ONLY from state (never generated, never from faults.json)
         candidate_steps: List[Any] = state.get("candidate_steps") or []
@@ -203,9 +256,50 @@ class SafetyAgent(BaseAgent):
         # Separate SR-X05 (unsafe shortcut request in query) from step-level rule hits
         unsafe_req_hits = [h for h in rule_hits if h.rule_id == "SR-X05"]
         step_rule_hits = [h for h in rule_hits if h.rule_id != "SR-X05"]
-        refusal_msg: Optional[str] = (
-            "; ".join(h.reason for h in unsafe_req_hits) if unsafe_req_hits else None
-        )
+        refusal_parts: List[str] = [h.reason for h in unsafe_req_hits]
+        llm_intent_unavailable = False
+
+        # Stage 1b: LLM Intent Check for unsafe shortcut requests (runs once on loop 0)
+        if state.get("safety_loop_count", 0) == 0 and self.llm_client is not None and raw_query.strip():
+            try:
+                cat_lines = [
+                    f"- {hid}: {r.required_control}"
+                    for hid, r in sorted(self.rule_engine.hazard_map.items())
+                ]
+                intent_prompt = (
+                    "Hazard Catalogue Controls:\n"
+                    + "\n".join(cat_lines)
+                    + f"\n\nWorker Query: {raw_query}\n\n"
+                    "Determine if the worker is asking to skip, bypass, or work without a required safety control."
+                )
+                intent: UnsafeIntentOutput = self.llm_client.generate_structured(
+                    prompt=intent_prompt,
+                    response_model=UnsafeIntentOutput,
+                    system_prompt=(
+                        "You are an industrial safety intent classifier. Flag ONLY explicit requests to skip or bypass safety controls, "
+                        "provide a confidence score (0.0-1.0), and name the exact hazard_id from the Hazard Catalogue (H01-H16). "
+                        "Do NOT flag normal troubleshooting questions that mention a tripped interlock or past fault."
+                    ),
+                )
+                hid = (intent.matching_hazard_id or "").strip().upper()
+                if (
+                    intent.is_shortcut_request
+                    and float(getattr(intent, "confidence", 0.0)) >= 0.8
+                    and hid in self.rule_engine.hazard_map
+                ):
+                    cat_rule = self.rule_engine.hazard_map[hid]
+                    ctrl_text = cat_rule.required_control
+                    ctrl_desc = intent.skipped_control_description or cat_rule.name
+                    llm_refusal = f"Request to skip {ctrl_desc} refused. Required control ({hid}): {ctrl_text}"
+                    if not refusal_parts:
+                        refusal_parts.append(llm_refusal)
+            except Exception as e:
+                logger.warning("LLM unsafe-intent check failed or skipped: %s", e)
+                llm_intent_unavailable = True
+        elif meta.get("refusal") and not refusal_parts:
+            refusal_parts.append(str(meta["refusal"]))
+
+        refusal_msg: Optional[str] = "; ".join(refusal_parts) if refusal_parts else None
 
         det_has_veto = any(h.action == "veto" for h in step_rule_hits)
         det_has_amend = any(h.action == "amend" for h in step_rule_hits)
@@ -218,8 +312,10 @@ class SafetyAgent(BaseAgent):
             det_verdict = "approve"
 
         det_rule_ids = [h.rule_id for h in rule_hits]
+        if refusal_msg and "SR-X05" not in det_rule_ids:
+            det_rule_ids.append("SR-X05")
         det_amendments = [h.suggested_amendment for h in rule_hits if h.suggested_amendment]
-        det_reasons = [h.reason for h in rule_hits]
+        det_reasons = [h.reason for h in step_rule_hits] + ([refusal_msg] if refusal_msg and not unsafe_req_hits else []) + [h.reason for h in unsafe_req_hits]
 
         # ======================================================================
         # STAGE 2: LLM Safety Review (Subtle issues / Amendments)
@@ -228,6 +324,7 @@ class SafetyAgent(BaseAgent):
         llm_verdict = None
         llm_reason = ""
         llm_concerns: List[str] = []
+        other_notes: List[str] = []
         llm_amendments: List[str] = []
         llm_check_status = "skipped"
         llm_model_name = getattr(self.llm_client, "model_name", "none") if self.llm_client else "none"
@@ -235,15 +332,18 @@ class SafetyAgent(BaseAgent):
         if self.llm_client is not None:
             try:
                 norm_steps = self.rule_engine._normalize_steps(candidate_steps)
+                cited_rc_str = ", ".join(cited_root_causes) if cited_root_causes else fault_desc
                 prompt = (
                     f"Machine Type: {machine_type}\n"
-                    f"Diagnosed Fault: {fault_desc}\n"
+                    f"Final Diagnosed Cause (evidence-grounded): {fault_desc}\n"
+                    f"Cited Episode Root Cause(s): {cited_rc_str}\n"
                     f"Catalogue Hazards Identified: {', '.join(context_hazards) if context_hazards else 'None explicitly tagged'}\n"
                     f"Deterministic Rule Hits: {', '.join(det_rule_ids) if det_rule_ids else 'None'}\n\n"
                     f"Candidate Maintenance Steps:\n"
                     + "\n".join(f"{i+1}. {step}" for i, step in enumerate(norm_steps))
-                    + "\n\nReview this maintenance procedure for subtle hazards, missing isolation/LOTO steps, or PPE omissions. "
-                    "Provide your structured verdict (approve, amend, or veto)."
+                    + "\n\nJudge ONLY physical/procedural safety (LOTO, isolation sequence, pressure bleed, PPE, guards, moving parts). "
+                    "Do NOT flag diagnosis or repair-effectiveness disagreements as safety concerns. "
+                    "Classify every concern as category 'safety' or 'other'."
                 )
 
                 review: SafetyReviewOutput = self.llm_client.generate_structured(
@@ -252,10 +352,20 @@ class SafetyAgent(BaseAgent):
                     system_prompt=SAFETY_SYSTEM_PROMPT,
                 )
 
-                llm_verdict = review.verdict
+                if review.categorized_concerns:
+                    llm_concerns = [c.text for c in review.categorized_concerns if c.category == "safety"]
+                    other_notes = [c.text for c in review.categorized_concerns if c.category == "other"]
+                    if review.verdict in ("amend", "veto") and not llm_concerns:
+                        # All concerns were 'other' (e.g. diagnosis note), so do not amend/veto
+                        llm_verdict = "approve"
+                    else:
+                        llm_verdict = review.verdict
+                else:
+                    llm_verdict = review.verdict
+                    llm_concerns = list(review.concerns)
+
                 llm_reason = review.reason
-                llm_concerns = review.concerns
-                llm_amendments = review.suggested_amendments
+                llm_amendments = list(review.suggested_amendments) if llm_verdict in ("amend", "veto") else []
                 llm_check_status = "performed"
             except Exception as e:
                 logger.warning("LLM safety review check failed or skipped: %s", e)
@@ -352,10 +462,18 @@ class SafetyAgent(BaseAgent):
         )
         if refusal_msg and refusal_msg not in safety_warnings:
             safety_warnings.insert(0, refusal_msg)
+        if llm_intent_unavailable:
+            intent_msg = "LLM intent check unavailable"
+            if intent_msg not in safety_warnings:
+                safety_warnings.append(intent_msg)
         if llm_check_status.startswith("skipped"):
             llm_unavail_msg = "LLM safety oversight unavailable: deterministic rules only"
             if llm_unavail_msg not in safety_warnings:
                 safety_warnings.append(llm_unavail_msg)
+        for note in other_notes:
+            info_msg = f"[INFO NOTE] {note}"
+            if info_msg not in safety_warnings:
+                safety_warnings.append(info_msg)
 
         final_answer_obj = FinalAnswer(
             machine_type=machine_type,
@@ -376,9 +494,9 @@ class SafetyAgent(BaseAgent):
             "reason": combined_reason[:150] + ("..." if len(combined_reason) > 150 else ""),
             "safety_approved": str(is_approved),
             "safety_loop_count": current_loop,
-            "escalated_to_supervisor": str(escalate),
+            "informational_notes": other_notes,
             "llm_check": llm_check_status,
-            "llm_model": llm_model_name,
+            "has_det_violations": bool(step_rule_hits),
         }
 
         # Update trace logger explicitly
@@ -397,7 +515,7 @@ class SafetyAgent(BaseAgent):
 
         return {
             "safety_approved": is_approved,
-            "safety_violations": safety_warnings if (det_reasons or llm_concerns or refusal_msg or llm_check_status.startswith("skipped")) else [],
+            "safety_violations": safety_warnings if (det_reasons or llm_concerns or refusal_msg or llm_intent_unavailable or llm_check_status.startswith("skipped")) else [],
             "safety_loop_count": current_loop,
             "escalated_to_supervisor": escalate,
             "safety_verdict": verdict_obj.model_dump(),
@@ -405,8 +523,11 @@ class SafetyAgent(BaseAgent):
             "decision": f"SAFETY_{final_verdict.upper()}",
             "llm_check": llm_check_status,
             "metadata": {
-                **dict(state.get("metadata") or {}),
+                **meta,
                 "refusal": refusal_msg,
                 "llm_check": llm_check_status,
+                "llm_intent_unavailable": llm_intent_unavailable,
+                "has_det_violations": bool(step_rule_hits),
+                "informational_notes": other_notes,
             },
         }
