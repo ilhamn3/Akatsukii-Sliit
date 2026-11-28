@@ -24,7 +24,7 @@ Packet B was therefore completed by an AI system as a labelled baseline arm
   direct comparability with human answers.
 - **Safety items.** Two items (TQ-53, TQ-51) contain unsafe live-working requests. Both
   were refused, with a safe isolated alternative supplied.
-- **Tool.** The AI system used must be named in `docs/PROJECT_DETAILS.md` §4.3.
+- **Tool.** Anthropic Claude (claude.ai chat; model not recorded), as stated by the study lead. Listed in `docs/PROJECT_DETAILS.md` §4.3.
 
 ## How to report it
 
