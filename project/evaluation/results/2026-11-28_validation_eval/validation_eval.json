@@ -1,11 +1,28 @@
 {
   "schema_version": "validation_eval/v1",
   "synthetic_data_only": true,
-  "generated_at": "2026-11-28T06:04:53+00:00",
-  "code_commit": "11c0b41",
+  "generated_at": "2026-11-28T06:59:26+00:00",
+  "code_commit": "eddb013",
   "drafts_source": "project/evaluation/results/2026-11-27_eval_groq-gpt-oss-120b_v5",
   "embedder": "default KnowledgeStore embedder",
   "low_confidence": {
+    "calibration": {
+      "score_1.0": {
+        "drafts": 42,
+        "with_any_error": 37,
+        "mean_episode_f1": 0.8981
+      },
+      "0.75_to_1.0": {
+        "drafts": 8,
+        "with_any_error": 7,
+        "mean_episode_f1": 0.8529
+      },
+      "below_0.75": {
+        "drafts": 0,
+        "with_any_error": 0,
+        "mean_episode_f1": null
+      }
+    },
     "drafts": 50,
     "low_confidence": 13,
     "drafts_with_any_error": 44,
@@ -560,7 +577,8 @@
         "confidence": 1.0,
         "blocking": [],
         "warnings": [
-          "semantic_dedup_unavailable"
+          "semantic_dedup_unavailable",
+          "steps_out_of_source_order"
         ],
         "error_fields": [
           "steps"
@@ -897,9 +915,9 @@
     "steps_out_of_order": {
       "expected_code": "steps_out_of_source_order",
       "applicable_drafts": 50,
-      "detected": 0,
-      "detection_rate": 0.0,
-      "false_alarms_on_clean": 0,
+      "detected": 40,
+      "detection_rate": 0.8,
+      "false_alarms_on_clean": 1,
       "clean_drafts": 50
     },
     "natural_warnings_on_clean": {
@@ -907,7 +925,8 @@
       "failed_attempt_conflicts_with_step": 1,
       "machine_type_unresolved": 4,
       "missing_required_fact": 8,
-      "semantic_dedup_unavailable": 44
+      "semantic_dedup_unavailable": 44,
+      "steps_out_of_source_order": 1
     }
   },
   "duplicates": {
@@ -919,33 +938,50 @@
     "semantic": {
       "without_own": {
         "store_episodes": 350,
-        "drafts_flagged": 3,
+        "drafts_flagged": 36,
         "own_episode_found": 0,
+        "low_confidence_with_store": 13,
         "matched_ids_by_kind": {
           "same_episode": 0,
-          "same_fault": 9,
+          "same_fault": 105,
           "other_fault": 0
         },
         "per_draft": [
           {
             "episode_id": "EP-0014",
             "fault_id": "L02",
-            "matches": []
+            "matches": [
+              "EP-0002",
+              "EP-0004",
+              "EP-0006"
+            ]
           },
           {
             "episode_id": "EP-0016",
             "fault_id": "C05",
-            "matches": []
+            "matches": [
+              "EP-0026",
+              "EP-0127",
+              "EP-0129"
+            ]
           },
           {
             "episode_id": "EP-0028",
             "fault_id": "I03",
-            "matches": []
+            "matches": [
+              "EP-0020",
+              "EP-0025",
+              "EP-0154"
+            ]
           },
           {
             "episode_id": "EP-0053",
             "fault_id": "P03",
-            "matches": []
+            "matches": [
+              "EP-0041",
+              "EP-0096",
+              "EP-0117"
+            ]
           },
           {
             "episode_id": "EP-0056",
@@ -960,7 +996,11 @@
           {
             "episode_id": "EP-0067",
             "fault_id": "L04",
-            "matches": []
+            "matches": [
+              "EP-0035",
+              "EP-0047",
+              "EP-0055"
+            ]
           },
           {
             "episode_id": "EP-0069",
@@ -970,17 +1010,29 @@
           {
             "episode_id": "EP-0080",
             "fault_id": "C02",
-            "matches": []
+            "matches": [
+              "EP-0050",
+              "EP-0073",
+              "EP-0110"
+            ]
           },
           {
             "episode_id": "EP-0088",
             "fault_id": "I07",
-            "matches": []
+            "matches": [
+              "EP-0022",
+              "EP-0024",
+              "EP-0032"
+            ]
           },
           {
             "episode_id": "EP-0103",
             "fault_id": "C04",
-            "matches": []
+            "matches": [
+              "EP-0015",
+              "EP-0071",
+              "EP-0148"
+            ]
           },
           {
             "episode_id": "EP-0131",
@@ -990,7 +1042,11 @@
           {
             "episode_id": "EP-0150",
             "fault_id": "C01",
-            "matches": []
+            "matches": [
+              "EP-0039",
+              "EP-0043",
+              "EP-0054"
+            ]
           },
           {
             "episode_id": "EP-0161",
@@ -1004,17 +1060,29 @@
           {
             "episode_id": "EP-0170",
             "fault_id": "A01",
-            "matches": []
+            "matches": [
+              "EP-0019",
+              "EP-0130",
+              "EP-0140"
+            ]
           },
           {
             "episode_id": "EP-0178",
             "fault_id": "C08",
-            "matches": []
+            "matches": [
+              "EP-0011",
+              "EP-0097",
+              "EP-0171"
+            ]
           },
           {
             "episode_id": "EP-0185",
             "fault_id": "I05",
-            "matches": []
+            "matches": [
+              "EP-0058",
+              "EP-0137",
+              "EP-0239"
+            ]
           },
           {
             "episode_id": "EP-0186",
@@ -1024,7 +1092,11 @@
           {
             "episode_id": "EP-0189",
             "fault_id": "P01",
-            "matches": []
+            "matches": [
+              "EP-0018",
+              "EP-0060",
+              "EP-0074"
+            ]
           },
           {
             "episode_id": "EP-0190",
@@ -1034,32 +1106,55 @@
           {
             "episode_id": "EP-0191",
             "fault_id": "P05",
-            "matches": []
+            "matches": [
+              "EP-0017",
+              "EP-0104",
+              "EP-0106"
+            ]
           },
           {
             "episode_id": "EP-0196",
             "fault_id": "C06",
-            "matches": []
+            "matches": [
+              "EP-0001",
+              "EP-0253"
+            ]
           },
           {
             "episode_id": "EP-0199",
             "fault_id": "I02",
-            "matches": []
+            "matches": [
+              "EP-0048",
+              "EP-0051",
+              "EP-0059"
+            ]
           },
           {
             "episode_id": "EP-0205",
             "fault_id": "P01",
-            "matches": []
+            "matches": [
+              "EP-0018",
+              "EP-0060",
+              "EP-0074"
+            ]
           },
           {
             "episode_id": "EP-0221",
             "fault_id": "I07",
-            "matches": []
+            "matches": [
+              "EP-0022",
+              "EP-0024",
+              "EP-0032"
+            ]
           },
           {
             "episode_id": "EP-0243",
             "fault_id": "C04",
-            "matches": []
+            "matches": [
+              "EP-0015",
+              "EP-0071",
+              "EP-0148"
+            ]
           },
           {
             "episode_id": "EP-0260",
@@ -1069,7 +1164,11 @@
           {
             "episode_id": "EP-0267",
             "fault_id": "P03",
-            "matches": []
+            "matches": [
+              "EP-0041",
+              "EP-0096",
+              "EP-0117"
+            ]
           },
           {
             "episode_id": "EP-0274",
@@ -1088,17 +1187,27 @@
           {
             "episode_id": "EP-0278",
             "fault_id": "A01",
-            "matches": []
+            "matches": [
+              "EP-0019",
+              "EP-0130",
+              "EP-0140"
+            ]
           },
           {
             "episode_id": "EP-0284",
             "fault_id": "C08",
-            "matches": []
+            "matches": [
+              "EP-0011",
+              "EP-0097",
+              "EP-0171"
+            ]
           },
           {
             "episode_id": "EP-0293",
             "fault_id": "L08",
-            "matches": []
+            "matches": [
+              "EP-0187"
+            ]
           },
           {
             "episode_id": "EP-0311",
@@ -1117,17 +1226,29 @@
           {
             "episode_id": "EP-0316",
             "fault_id": "L03",
-            "matches": []
+            "matches": [
+              "EP-0076",
+              "EP-0090",
+              "EP-0101"
+            ]
           },
           {
             "episode_id": "EP-0320",
             "fault_id": "C04",
-            "matches": []
+            "matches": [
+              "EP-0015",
+              "EP-0071",
+              "EP-0148"
+            ]
           },
           {
             "episode_id": "EP-0321",
             "fault_id": "I02",
-            "matches": []
+            "matches": [
+              "EP-0048",
+              "EP-0051",
+              "EP-0059"
+            ]
           },
           {
             "episode_id": "EP-0323",
@@ -1137,17 +1258,29 @@
           {
             "episode_id": "EP-0328",
             "fault_id": "L02",
-            "matches": []
+            "matches": [
+              "EP-0002",
+              "EP-0004",
+              "EP-0006"
+            ]
           },
           {
             "episode_id": "EP-0336",
             "fault_id": "C07",
-            "matches": []
+            "matches": [
+              "EP-0136",
+              "EP-0159",
+              "EP-0162"
+            ]
           },
           {
             "episode_id": "EP-0337",
             "fault_id": "A05",
-            "matches": []
+            "matches": [
+              "EP-0077",
+              "EP-0142",
+              "EP-0224"
+            ]
           },
           {
             "episode_id": "EP-0342",
@@ -1167,22 +1300,38 @@
           {
             "episode_id": "EP-0355",
             "fault_id": "A05",
-            "matches": []
+            "matches": [
+              "EP-0077",
+              "EP-0142",
+              "EP-0224"
+            ]
           },
           {
             "episode_id": "EP-0356",
             "fault_id": "P06",
-            "matches": []
+            "matches": [
+              "EP-0007",
+              "EP-0008",
+              "EP-0013"
+            ]
           },
           {
             "episode_id": "EP-0378",
             "fault_id": "A07",
-            "matches": []
+            "matches": [
+              "EP-0030",
+              "EP-0042",
+              "EP-0072"
+            ]
           },
           {
             "episode_id": "EP-0390",
             "fault_id": "I02",
-            "matches": []
+            "matches": [
+              "EP-0048",
+              "EP-0051",
+              "EP-0059"
+            ]
           },
           {
             "episode_id": "EP-0399",
@@ -1193,33 +1342,50 @@
       },
       "with_own": {
         "store_episodes": 400,
-        "drafts_flagged": 3,
-        "own_episode_found": 0,
+        "drafts_flagged": 36,
+        "own_episode_found": 8,
+        "low_confidence_with_store": 13,
         "matched_ids_by_kind": {
-          "same_episode": 0,
-          "same_fault": 9,
+          "same_episode": 8,
+          "same_fault": 99,
           "other_fault": 0
         },
         "per_draft": [
           {
             "episode_id": "EP-0014",
             "fault_id": "L02",
-            "matches": []
+            "matches": [
+              "EP-0002",
+              "EP-0004",
+              "EP-0006"
+            ]
           },
           {
             "episode_id": "EP-0016",
             "fault_id": "C05",
-            "matches": []
+            "matches": [
+              "EP-0016",
+              "EP-0026",
+              "EP-0127"
+            ]
           },
           {
             "episode_id": "EP-0028",
             "fault_id": "I03",
-            "matches": []
+            "matches": [
+              "EP-0020",
+              "EP-0025",
+              "EP-0028"
+            ]
           },
           {
             "episode_id": "EP-0053",
             "fault_id": "P03",
-            "matches": []
+            "matches": [
+              "EP-0041",
+              "EP-0053",
+              "EP-0096"
+            ]
           },
           {
             "episode_id": "EP-0056",
@@ -1234,7 +1400,11 @@
           {
             "episode_id": "EP-0067",
             "fault_id": "L04",
-            "matches": []
+            "matches": [
+              "EP-0035",
+              "EP-0047",
+              "EP-0055"
+            ]
           },
           {
             "episode_id": "EP-0069",
@@ -1244,17 +1414,29 @@
           {
             "episode_id": "EP-0080",
             "fault_id": "C02",
-            "matches": []
+            "matches": [
+              "EP-0050",
+              "EP-0073",
+              "EP-0080"
+            ]
           },
           {
             "episode_id": "EP-0088",
             "fault_id": "I07",
-            "matches": []
+            "matches": [
+              "EP-0022",
+              "EP-0024",
+              "EP-0032"
+            ]
           },
           {
             "episode_id": "EP-0103",
             "fault_id": "C04",
-            "matches": []
+            "matches": [
+              "EP-0015",
+              "EP-0071",
+              "EP-0103"
+            ]
           },
           {
             "episode_id": "EP-0131",
@@ -1264,7 +1446,11 @@
           {
             "episode_id": "EP-0150",
             "fault_id": "C01",
-            "matches": []
+            "matches": [
+              "EP-0039",
+              "EP-0043",
+              "EP-0054"
+            ]
           },
           {
             "episode_id": "EP-0161",
@@ -1278,17 +1464,29 @@
           {
             "episode_id": "EP-0170",
             "fault_id": "A01",
-            "matches": []
+            "matches": [
+              "EP-0019",
+              "EP-0130",
+              "EP-0140"
+            ]
           },
           {
             "episode_id": "EP-0178",
             "fault_id": "C08",
-            "matches": []
+            "matches": [
+              "EP-0011",
+              "EP-0097",
+              "EP-0171"
+            ]
           },
           {
             "episode_id": "EP-0185",
             "fault_id": "I05",
-            "matches": []
+            "matches": [
+              "EP-0058",
+              "EP-0137",
+              "EP-0185"
+            ]
           },
           {
             "episode_id": "EP-0186",
@@ -1298,7 +1496,11 @@
           {
             "episode_id": "EP-0189",
             "fault_id": "P01",
-            "matches": []
+            "matches": [
+              "EP-0018",
+              "EP-0060",
+              "EP-0074"
+            ]
           },
           {
             "episode_id": "EP-0190",
@@ -1308,32 +1510,56 @@
           {
             "episode_id": "EP-0191",
             "fault_id": "P05",
-            "matches": []
+            "matches": [
+              "EP-0017",
+              "EP-0104",
+              "EP-0106"
+            ]
           },
           {
             "episode_id": "EP-0196",
             "fault_id": "C06",
-            "matches": []
+            "matches": [
+              "EP-0001",
+              "EP-0196",
+              "EP-0253"
+            ]
           },
           {
             "episode_id": "EP-0199",
             "fault_id": "I02",
-            "matches": []
+            "matches": [
+              "EP-0048",
+              "EP-0051",
+              "EP-0059"
+            ]
           },
           {
             "episode_id": "EP-0205",
             "fault_id": "P01",
-            "matches": []
+            "matches": [
+              "EP-0018",
+              "EP-0060",
+              "EP-0074"
+            ]
           },
           {
             "episode_id": "EP-0221",
             "fault_id": "I07",
-            "matches": []
+            "matches": [
+              "EP-0022",
+              "EP-0024",
+              "EP-0032"
+            ]
           },
           {
             "episode_id": "EP-0243",
             "fault_id": "C04",
-            "matches": []
+            "matches": [
+              "EP-0015",
+              "EP-0071",
+              "EP-0103"
+            ]
           },
           {
             "episode_id": "EP-0260",
@@ -1343,7 +1569,11 @@
           {
             "episode_id": "EP-0267",
             "fault_id": "P03",
-            "matches": []
+            "matches": [
+              "EP-0041",
+              "EP-0053",
+              "EP-0096"
+            ]
           },
           {
             "episode_id": "EP-0274",
@@ -1362,17 +1592,28 @@
           {
             "episode_id": "EP-0278",
             "fault_id": "A01",
-            "matches": []
+            "matches": [
+              "EP-0019",
+              "EP-0130",
+              "EP-0140"
+            ]
           },
           {
             "episode_id": "EP-0284",
             "fault_id": "C08",
-            "matches": []
+            "matches": [
+              "EP-0011",
+              "EP-0097",
+              "EP-0171"
+            ]
           },
           {
             "episode_id": "EP-0293",
             "fault_id": "L08",
-            "matches": []
+            "matches": [
+              "EP-0187",
+              "EP-0293"
+            ]
           },
           {
             "episode_id": "EP-0311",
@@ -1391,17 +1632,29 @@
           {
             "episode_id": "EP-0316",
             "fault_id": "L03",
-            "matches": []
+            "matches": [
+              "EP-0076",
+              "EP-0090",
+              "EP-0101"
+            ]
           },
           {
             "episode_id": "EP-0320",
             "fault_id": "C04",
-            "matches": []
+            "matches": [
+              "EP-0015",
+              "EP-0071",
+              "EP-0103"
+            ]
           },
           {
             "episode_id": "EP-0321",
             "fault_id": "I02",
-            "matches": []
+            "matches": [
+              "EP-0048",
+              "EP-0051",
+              "EP-0059"
+            ]
           },
           {
             "episode_id": "EP-0323",
@@ -1411,17 +1664,29 @@
           {
             "episode_id": "EP-0328",
             "fault_id": "L02",
-            "matches": []
+            "matches": [
+              "EP-0002",
+              "EP-0004",
+              "EP-0006"
+            ]
           },
           {
             "episode_id": "EP-0336",
             "fault_id": "C07",
-            "matches": []
+            "matches": [
+              "EP-0136",
+              "EP-0159",
+              "EP-0162"
+            ]
           },
           {
             "episode_id": "EP-0337",
             "fault_id": "A05",
-            "matches": []
+            "matches": [
+              "EP-0069",
+              "EP-0077",
+              "EP-0131"
+            ]
           },
           {
             "episode_id": "EP-0342",
@@ -1441,22 +1706,38 @@
           {
             "episode_id": "EP-0355",
             "fault_id": "A05",
-            "matches": []
+            "matches": [
+              "EP-0069",
+              "EP-0077",
+              "EP-0131"
+            ]
           },
           {
             "episode_id": "EP-0356",
             "fault_id": "P06",
-            "matches": []
+            "matches": [
+              "EP-0007",
+              "EP-0008",
+              "EP-0013"
+            ]
           },
           {
             "episode_id": "EP-0378",
             "fault_id": "A07",
-            "matches": []
+            "matches": [
+              "EP-0030",
+              "EP-0042",
+              "EP-0072"
+            ]
           },
           {
             "episode_id": "EP-0390",
             "fault_id": "I02",
-            "matches": []
+            "matches": [
+              "EP-0048",
+              "EP-0051",
+              "EP-0059"
+            ]
           },
           {
             "episode_id": "EP-0399",
@@ -1466,7 +1747,7 @@
         ]
       }
     },
-    "threshold": 0.9,
+    "threshold": 0.55,
     "k": 3,
     "cosine_diagnostic": {
       "own_episode": {
@@ -1474,21 +1755,21 @@
         "min": 0.367,
         "median": 0.738,
         "max": 0.954,
-        "at_or_above_0.90": 3
+        "at_or_above_threshold": 40
       },
       "closest_same_fault_other_episode": {
         "n": 44,
         "min": 0.367,
         "median": 0.738,
         "max": 0.954,
-        "at_or_above_0.90": 3
+        "at_or_above_threshold": 40
       },
       "closest_other_fault_same_machine": {
         "n": 40,
         "min": 0.263,
         "median": 0.439,
         "max": 0.674,
-        "at_or_above_0.90": 0
+        "at_or_above_threshold": 5
       }
     }
   }
