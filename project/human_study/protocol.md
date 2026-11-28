@@ -183,3 +183,19 @@ No group room could be arranged, so the sessions run **remotely and individually
   tools. The study lead answers questions about the instructions only.
 - **Effect on results:** in addition to self-timing, the study lead cannot see that rules were
   followed. Report "remote, self-timed, n = X" next to every human figure. Grading is unchanged.
+
+### 11b. Final numbers (28 Nov 2026)
+
+- **Valid participants: 5** (P01, P03, P04, P05, P06). P06 ran packet A, so packet A has
+  two human answers per query.
+- **Coverage: 48 of 60 test queries** (packets A, C, D, E). Every tier is covered
+  (each packet has 4 easy, 4 medium, 2 hard, 2 adversarial).
+- **Packet B excluded.** It was sent to P02 and P07. P02's returned files had no recorded
+  times, and later versions were script-generated with rewritten answers. P07's file had
+  no times, and the times offered afterwards matched the excluded P02 file within 3 s on
+  every question. Neither could be verified as one person's timed work, so both are left
+  out of `results/`. No replacement could be recruited before the study closed.
+- **Packet B AI arm.** An AI-written answer set for packet B is kept in `../simulated/`,
+  labelled `AI-BASELINE`, with no times. It is never counted as human data. See its README.
+- **Report as:** "remote, self-timed, n = 5, 48 of 60 queries". Human-vs-system
+  comparisons use those 48 queries only.

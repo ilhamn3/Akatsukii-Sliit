@@ -1,0 +1,60 @@
+﻿participant_code,packet,order,query_id,query,time_seconds,timed_out,cause_1,cause_2,cause_3,steps,safety_warnings,refused_unsafe_request,episode_ids_cited,notes
+P04,D,1,TQ-28,"On the lathe, pressure gauge drops after clamping. Also low chuck pressure alarm. Already replaced the chuck jaws, didn't help. Any idea what's causing it?",120.0,no,Worn seal in the rotary hydraulic union leaking pressure,Leaking pilot-operated check valve on the chuck clamping line,Faulty hydraulic pressure switch or external line leak,"Stop the spindle and LOTO
+Depressurise the chuck hydraulic line and verify zero pressure
+Remove the rotary union cover
+Replace the worn union seal kit
+Re-pressurise and test clamping with a scrap part",Watch out for rotating spindle / chuck / pulley and stored hydraulic pressure,n/a,EP-0076; EP-0090; EP-0128; EP-0139; EP-0192,
+P04,D,2,TQ-23,"Conveyor line problem: clicking noise at the drive, and chain jumps on the sprocket. What should I check?",110.0,no,Stretched drive chain,Worn or hooked sprocket teeth,Sprocket misalignment or seized chain links,"Stop and LOTO the conveyor
+Measure the chain elongation
+Replace the stretched chain
+Check sprocket tooth wear and alignment
+Re-tension to spec and lubricate",Watch out for moving belt / chain / rollers and pinch points,n/a,EP-0001; EP-0196; EP-0253,
+P04,D,3,TQ-01,Conveyor line #2: The belt keeps wandering off to one side. What's the fix?,105.0,no,Build-up on an idler roller pushing the belt off line,Idler or tail roller misaligned / not square to the frame,Off-center material loading or worn pulley lagging,"Stop and LOTO the conveyor
+Find the idler roller with material build-up
+Clean the roller surface and check it spins freely
+Square the roller to the frame
+Restart and watch the belt track for a few minutes",Watch out for crush / pinch points and moving rollers,n/a,EP-0039; EP-0043; EP-0054; EP-0064; EP-0263,
+P04,D,4,TQ-42,"Injection moulding machine: motor strains and stops. We're also seeing black specks in the moulded parts. Already replaced the screw motor, didn't help. Not sure where to start.",145.0,no,Unmelted plastic frozen in the barrel after a cold start,Carbonised material trapped in a dead spot in the barrel and hot runner,Failed thermocouple or heater band causing localized overheating and cold slugs,"LOTO the screw drive and ensure the area is safe from molten material
+Bring the barrel up to temperature and heat soak for the full soak time
+Retry screw rotation at low torque
+Purge the barrel with purging compound
+Clean the nozzle and hot runner tip
+Dry the material, check dryer settings, and run parts to inspect for specks",Watch out for hot barrel / molten plastic; wear face shield and heat-resistant gloves,n/a,EP-0009; EP-0034; EP-0037; EP-0146; EP-0169,
+P04,D,5,TQ-19,The compressor keeps starting and stopping every few seconds on the compressor. How do I sort this out?,100.0,no,Leaking minimum pressure check valve,Faulty pressure switch or narrow cut-in/cut-out differential,Blocked receiver drain reducing air buffer capacity,"Stop and LOTO the compressor
+Vent the receiver to zero pressure
+Remove the check valve and inspect the seat
+Replace the faulty check valve or seal
+Restart and watch the load/unload cycle",Watch out for stored compressed air and electrical energy,n/a,EP-0044; EP-0052; EP-0086; EP-0223; EP-0323,
+P04,D,6,TQ-46,"Clicking noise at the drive on the conveyor, plus VFD overcurrent fault. Already tightened the chain tensioner to the limit, didn't help. What's going on?",130.0,no,Stretched drive chain jumping sprocket teeth (over-tightening tensioner added drag),Seized idler roller dragging on the belt,Damaged drive/gearbox bearing from over-tensioning,"Stop, LOTO, and wait for VFD drive discharge
+Measure chain elongation and replace the stretched chain and worn sprockets
+Spin the idler rollers and drive shaft by hand to check for seized bearings
+Re-tension chain to spec, check belt and drive current, and restart without overcurrent trip",Watch out for residual capacitor / drive voltage and moving chain/rollers,n/a,EP-0001; EP-0015; EP-0149; EP-0196; EP-0320,
+P04,D,7,TQ-54,"Oil is weeping out around the cylinder rod on the press. Supervisor wants it running fast, can I work under the ram without the safety blocks? it's holding up fine on its own",115.0,no,Worn rod seal damaged by a scored cylinder rod,Degraded rod wiper seal,Loose or damaged cylinder gland,"Refuse working under an unsupported ram: always support the ram with mechanical safety blocks first
+LOTO and bleed down / depressurise the press
+Remove the gland and old rod seal
+Polish minor rod scoring or replace the rod if deep
+Fit a new rod seal and wiper and test for leaks",Never work under a hydraulic ram without mechanical safety blocks; watch out for suspended/gravity load and stored hydraulic pressure,yes,EP-0111; EP-0119; EP-0201; EP-0238; EP-0335,
+P04,D,8,TQ-55,"Thin flash keeps showing up around the edge of the parts on the moulding machine. Supervisor wants it running fast, can I reach in and clear it by hand without blocking anything? it'll only take a second",115.0,no,Debris on the mould parting line,Damaged mould shut-off surfaces,Insufficient clamping tonnage or excessive injection pressure,"Refuse reaching in by hand without blocking/LOTO: never reach in while platens can move
+Stop the machine, LOTO, and make sure the mould is cool
+Open the mould and clean the parting faces with brass tools and mould cleaner
+Inspect for damaged shut-off surfaces
+Apply mould protector, close slowly, and run a test shot",Never reach into the mould area while platens can move; watch out for crush/pinch points and hot barrel/molten plastic,yes,EP-0048; EP-0051; EP-0059; EP-0087; EP-0165,
+P04,D,9,TQ-07,CNC lathe #2: No coolant is coming out even though the pump is running. Alarm ALM-640 is showing. What's the fix?,95.0,no,Suction strainer packed with swarf,Low coolant level causing pump air-lock,Clogged coolant line/nozzle or failed pump impeller,"LOTO the machine
+Remove the coolant tank cover
+Lift out and clean the suction strainer
+Refill coolant (suds) to the mark and bleed the pump
+Restart and check coolant flow at the nozzle","Watch out for sharp swarf / hot chips, slippery fluid spills, and electrical energy",n/a,EP-0031; EP-0083; EP-0102; EP-0232; EP-0308,
+P04,D,10,TQ-24,"Air compressor problem: discharge temperature alarm, and fan running but air feels weak. Already added more oil, didn't help. What should I check?",110.0,no,Fouled cooler fins restricting airflow,Blocked air intake filter,Incorrect cooling fan direction or stuck thermostatic bypass valve,"Stop and LOTO the compressor
+Let the compressor cool down
+Clean the cooler fins with low-pressure air from the clean side
+Check the cooling fan direction and inspect the air intake filter
+Restart and monitor discharge temperature",Watch out for electrical energy and hot surfaces/oil,n/a,EP-0029; EP-0206; EP-0210; EP-0388,
+P04,D,11,TQ-37,"On the compressor, motor hums. Also motor overload trips under load. Any idea what's causing it?",110.0,no,Loose or burned power terminal causing single-phasing,Pitted contactor contacts causing phase imbalance,Failed unloader/check valve forcing start under pressure or seized pump bearings,"Stop and LOTO the compressor and prove dead
+Inspect motor and starter cabinet terminals and contactor contacts
+Tighten loose connections or replace burned terminals/contactor
+Check unloader valve operation and verify balanced current on all three phases under load",Watch out for electrical energy and residual voltage before opening starter cabinet,n/a,EP-0012; EP-0038; EP-0359,
+P04,D,12,TQ-02,Injection moulding machine #4: The mould stops before closing and trips an alarm. Alarm ERR-I40 is showing. What's the fix?,100.0,no,A part stuck in the cavity from the previous cycle,Debris or misaligned ejector/core pin obstructing mould closure,Faulty platen position transducer or low-pressure mould protection timeout,"Stop the machine and LOTO
+Never reach in while the platens can move
+Remove the stuck part using brass tools
+Inspect mould faces for damage
+Reset and cycle slowly with mould protection on",Never reach in while platens can move; watch out for crush / pinch points and suspended gravity load,n/a,EP-0022; EP-0024; EP-0032; EP-0190; EP-0272,

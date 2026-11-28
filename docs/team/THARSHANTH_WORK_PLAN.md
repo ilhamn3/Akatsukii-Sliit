@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 9.8 / 20 points · 49% complete**
+**Overall: 12.8 / 20 points · 64% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
 | WP2 | Synthetic data and test set | 12 | 9 | 75% |
-| WP8 | Human baseline study | 5 | 0.8 | 15% |
+| WP8 | Human baseline study | 5 | 3.8 | 75% |
 | WP9 | Documentation (Tharshanth's part) | 3 | 0 | 0% |
 <!-- PROGRESS:END -->
 
@@ -40,9 +40,9 @@
 | ID | Subtask | Pts | Due | Done % |
 |---|---|---|---|---|
 | 8.1 | Consent form and study protocol | 1 | 26 Nov | 75% |
-| 8.2 | Recruit at least 5 volunteers | 1 | 27 Nov | 0% |
-| 8.3 | Timed answers and manual extraction runs | 2 | 28 Nov | 0% |
-| 8.4 | Anonymised, shuffled answers prepared for blind grading | 1 | 28 Nov | 0% |
+| 8.2 | Recruit at least 5 volunteers | 1 | 27 Nov | 75% |
+| 8.3 | Timed answers and manual extraction runs | 2 | 28 Nov | 75% |
+| 8.4 | Anonymised, shuffled answers prepared for blind grading | 1 | 28 Nov | 75% |
 
 #### WP9 – Documentation (Tharshanth's part) (3 pts)
 
@@ -179,5 +179,6 @@ One PR per row, small and focused. Branch from `main`, title format `[WP<N>] wha
 | #17 | 25 Nov | [WP2] Frozen 60-query test set and dev split | 2.5 (0->75%) | 60 test queries (20 easy / 20 medium / 10 hard / 10 adversarial) with gold answers, separate 20-query dev split, FROZEN.sha256 with --verify and an overwrite guard, no-tuning rule in README, 9 tests | 26% -> 34% | Ilham MM |
 | #18 | 25 Nov | [WP8] Consent form and human-study protocol | 8.1 (0->75%), 2.1 (75->100%) | Consent form template, full protocol (packets, session script, timing, CSV formats, anonymisation and blind-grading steps), private/ folder git-ignored. 2.1 to 100%: #6 merged and the Safety agent loads hazards.json | 34% -> 41% | Ilham MM |
 | #19 | 26 Nov | [WP2] Audio subset and expanded stores | 2.4 (0->50%), 2.6 (0->100%) | 12 synthetic audio clips (7.3 min, 5 machines, 6 clean / 6 with plant noise, reference transcripts); nested stores n100 / n400 / n2000 as VerifiedEpisode envelopes, all 2,500 validated against the store model; 7 tests. All three stores load through scripts/load_expanded_store.py into KnowledgeStore (100 / 400 / 2,000 rows, reload is idempotent). Pending: Agent 1 transcription check (Kavibarath) | 41% -> 49% | Ilham MM |
+| #TBD | 28 Nov | [WP8] Human baseline results and blind-grading sheet | 8.2 (0->75%), 8.3 (0->75%), 8.4 (0->75%) | Remote, self-timed study (protocol 11-11b): 5 valid participants (P01, P03, P04, P05, P06), 60 timed answers and 10 extraction rows, 48 of 60 test queries (packets A, C, D, E; packet A twice). Packet B excluded: two submissions had no or unverifiable times; a labelled AI arm is kept in simulated/, never mixed with human data. Blind grading sheet built (60 answers, key in private/); rebuild with --system once system answers exist. Pending: consent screenshots, participant background, Kajanan review | 49% -> 64% | Kajanan K |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
