@@ -197,5 +197,6 @@ No group room could be arranged, so the sessions run **remotely and individually
   out of `results/`. No replacement could be recruited before the study closed.
 - **Packet B AI arm.** An AI-written answer set for packet B is kept in `../simulated/`,
   labelled `AI-BASELINE`, with no times. It is never counted as human data. See its README.
+- **Background** (self-reported, by code in `results/participants.csv`): 3 engineering, 2 IT; hands-on machine experience: 4 some, 1 none, 0 a lot. No participant is a trained maintenance technician, so the baseline is informed non-experts searching the log, not expert technicians.
 - **Report as:** "remote, self-timed, n = 5, 48 of 60 queries". Human-vs-system
   comparisons use those 48 queries only.
