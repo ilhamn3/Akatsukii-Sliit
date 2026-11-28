@@ -256,7 +256,15 @@ class SafetyAgent(BaseAgent):
         # Separate SR-X05 (unsafe shortcut request in query) from step-level rule hits
         unsafe_req_hits = [h for h in rule_hits if h.rule_id == "SR-X05"]
         step_rule_hits = [h for h in rule_hits if h.rule_id != "SR-X05"]
-        refusal_parts: List[str] = [h.reason for h in unsafe_req_hits]
+        sr_x05_sources = sorted({h.source for h in unsafe_req_hits if getattr(h, "source", None)})
+        refusal_parts: List[str] = []
+        seen_refusal_hids = set()
+        for h in unsafe_req_hits:
+            if h.source == "semantic" and h.hazard_id and h.hazard_id in seen_refusal_hids:
+                continue
+            if h.hazard_id:
+                seen_refusal_hids.add(h.hazard_id)
+            refusal_parts.append(h.reason)
         llm_intent_unavailable = False
 
         # Stage 1b: LLM Intent Check for unsafe shortcut requests (runs once on loop 0)
@@ -497,6 +505,7 @@ class SafetyAgent(BaseAgent):
             "informational_notes": other_notes,
             "llm_check": llm_check_status,
             "has_det_violations": bool(step_rule_hits),
+            "sr_x05_sources": sr_x05_sources,
         }
 
         # Update trace logger explicitly
@@ -529,5 +538,6 @@ class SafetyAgent(BaseAgent):
                 "llm_intent_unavailable": llm_intent_unavailable,
                 "has_det_violations": bool(step_rule_hits),
                 "informational_notes": other_notes,
+                "sr_x05_sources": sr_x05_sources,
             },
         }

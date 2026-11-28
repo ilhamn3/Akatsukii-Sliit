@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
+import numpy as np
 import yaml
 
 from project.core.schemas import ActionStep
@@ -21,9 +23,14 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_RULES_YAML = Path(__file__).resolve().parent / "rules.yaml"
 DEFAULT_UNSAFE_PATTERNS_YAML = Path(__file__).resolve().parent / "unsafe_request_patterns.yaml"
+DEFAULT_UNSAFE_EXEMPLARS_YAML = Path(__file__).resolve().parent / "unsafe_exemplars.yaml"
 DEFAULT_HAZARDS_JSON = (
     Path(__file__).resolve().parent.parent.parent / "data" / "fault_catalogue" / "hazards.json"
 )
+DEFAULT_SEMANTIC_TAU = 0.58
+DEFAULT_SEMANTIC_MARGIN = 0.03
+
+_EXEMPLAR_CACHE: Dict[Tuple[str, str], Tuple[List[str], np.ndarray, Optional[np.ndarray]]] = {}
 
 
 @dataclass
@@ -54,6 +61,8 @@ class RuleHit:
     reason: str
     suggested_amendment: Optional[str] = None
     violating_step: Optional[str] = None
+    source: Optional[str] = None  # e.g. "regex" | "semantic"
+    score: Optional[float] = None
 
 
 def load_safety_rules(
@@ -137,9 +146,19 @@ class RuleEngine:
         rules: Optional[List[SafetyRule]] = None,
         rules_yaml_path: Optional[Path] = None,
         hazards_json_path: Optional[Path] = None,
+        unsafe_exemplars_path: Optional[Path] = None,
+        embedder: Any = None,
+        semantic_tau: float = DEFAULT_SEMANTIC_TAU,
+        semantic_margin: float = DEFAULT_SEMANTIC_MARGIN,
+        enable_semantic: bool = True,
     ):
         self.rules_yaml_path = rules_yaml_path
         self.hazards_json_path = hazards_json_path
+        self.unsafe_exemplars_path = Path(unsafe_exemplars_path or DEFAULT_UNSAFE_EXEMPLARS_YAML)
+        self._embedder = embedder
+        self.semantic_tau = float(semantic_tau)
+        self.semantic_margin = float(semantic_margin)
+        self.enable_semantic = bool(enable_semantic)
         if rules is not None:
             self.rules = rules
             self.hazard_map = {r.hazard_id: r for r in rules if r.hazard_id}
@@ -147,6 +166,73 @@ class RuleEngine:
             self.rules = load_safety_rules(rules_yaml_path, hazards_json_path)
             self.hazard_map = {r.hazard_id: r for r in self.rules if r.hazard_id}
         self.unsafe_patterns = self._load_unsafe_patterns()
+        self.unsafe_exemplars, self.benign_exemplars = self._load_unsafe_exemplars()
+        self._instance_exemplar_cache: Optional[Tuple[List[str], np.ndarray, Optional[np.ndarray]]] = None
+
+    def _load_unsafe_exemplars(self) -> Tuple[Dict[str, List[str]], List[str]]:
+        if not self.unsafe_exemplars_path.exists():
+            return {}, []
+        try:
+            with open(self.unsafe_exemplars_path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+            raw_hazards = data.get("hazards") or {}
+            hazards = {
+                str(hid).strip().upper(): [str(t).strip() for t in (texts or []) if str(t).strip()]
+                for hid, texts in raw_hazards.items()
+            }
+            benign = [str(t).strip() for t in (data.get("benign_hard_negatives") or []) if str(t).strip()]
+            return hazards, benign
+        except Exception as e:
+            logger.warning("Failed to load unsafe_exemplars.yaml: %s", e)
+            return {}, []
+
+    def _get_embedder(self) -> Any:
+        if self._embedder is not None:
+            return self._embedder
+        from project.store.embeddings import get_cached_embedder
+        offline = os.getenv("HF_HUB_OFFLINE") == "1" or os.getenv("TRANSFORMERS_OFFLINE") == "1"
+        return get_cached_embedder(local_files_only=offline)
+
+    def _get_exemplar_matrix(self) -> Optional[Tuple[List[str], np.ndarray, Optional[np.ndarray]]]:
+        if not self.unsafe_exemplars:
+            return None
+        if self._embedder is not None and self._instance_exemplar_cache is not None:
+            return self._instance_exemplar_cache
+
+        embedder = self._get_embedder()
+        model_id = str(getattr(embedder, "model_id", type(embedder).__name__))
+        cache_key = (str(self.unsafe_exemplars_path.resolve()), model_id)
+
+        if self._embedder is None and cache_key in _EXEMPLAR_CACHE:
+            return _EXEMPLAR_CACHE[cache_key]
+
+        hids: List[str] = []
+        texts: List[str] = []
+        for hid in sorted(self.unsafe_exemplars):
+            for ex in self.unsafe_exemplars[hid]:
+                hids.append(hid)
+                texts.append(ex)
+        if not texts:
+            return None
+
+        vecs = np.asarray(embedder.encode(texts), dtype=np.float32)
+        norms = np.linalg.norm(vecs, axis=1, keepdims=True)
+        norms[norms == 0] = 1.0
+        vecs = vecs / norms
+
+        ben_vecs: Optional[np.ndarray] = None
+        if self.benign_exemplars:
+            bvecs = np.asarray(embedder.encode(self.benign_exemplars), dtype=np.float32)
+            bnorms = np.linalg.norm(bvecs, axis=1, keepdims=True)
+            bnorms[bnorms == 0] = 1.0
+            ben_vecs = bvecs / bnorms
+
+        bundle = (hids, vecs, ben_vecs)
+        if self._embedder is not None:
+            self._instance_exemplar_cache = bundle
+        else:
+            _EXEMPLAR_CACHE[cache_key] = bundle
+        return bundle
 
     def _load_unsafe_patterns(self) -> List[Dict[str, Any]]:
         if not DEFAULT_UNSAFE_PATTERNS_YAML.exists():
@@ -159,8 +245,8 @@ class RuleEngine:
             logger.warning("Failed to load unsafe_request_patterns.yaml: %s", e)
             return []
 
-    def evaluate_unsafe_request(self, query: str) -> List[RuleHit]:
-        """Scan raw user query for requests to skip or bypass required safety controls (SR-X05)."""
+    def evaluate_unsafe_request_regex(self, query: str) -> List[RuleHit]:
+        """Scan raw user query using regex fast-path patterns (SR-X05)."""
         if not query or not self.unsafe_patterns:
             return []
         q_lower = query.lower()
@@ -196,9 +282,90 @@ class RuleEngine:
                     ),
                     suggested_amendment=req_control,
                     violating_step=query.strip(),
+                    source="regex",
                 )
             )
         return hits
+
+    def evaluate_unsafe_request_semantic(
+        self,
+        query: str,
+        *,
+        tau: Optional[float] = None,
+        margin: Optional[float] = None,
+        top_k_hazards: int = 2,
+    ) -> List[RuleHit]:
+        """Score query against precomputed unsafe-shortcut exemplar embeddings (SR-X05)."""
+        if not self.enable_semantic or not query or not query.strip():
+            return []
+        threshold = self.semantic_tau if tau is None else float(tau)
+        req_margin = self.semantic_margin if margin is None else float(margin)
+        try:
+            bundle = self._get_exemplar_matrix()
+            if bundle is None:
+                return []
+            hids, mat, ben_mat = bundle
+            embedder = self._get_embedder()
+            q_vec = np.asarray(embedder.encode([query.strip()]), dtype=np.float32)[0]
+            q_norm = float(np.linalg.norm(q_vec))
+            if q_norm == 0.0:
+                return []
+            q_vec = q_vec / q_norm
+            sims = mat @ q_vec
+            max_benign = float((ben_mat @ q_vec).max()) if ben_mat is not None and len(ben_mat) > 0 else -1.0
+        except Exception as e:
+            logger.warning("Semantic SR-X05 check unavailable; falling back to regex only: %s", e)
+            return []
+
+        best_by_hazard: Dict[str, float] = {}
+        for hid, sim in zip(hids, sims.tolist()):
+            if sim > best_by_hazard.get(hid, -1.0):
+                best_by_hazard[hid] = float(sim)
+
+        matched = sorted(
+            (
+                (hid, score)
+                for hid, score in best_by_hazard.items()
+                if score >= threshold and (ben_mat is None or (score - max_benign) >= req_margin)
+            ),
+            key=lambda item: (-item[1], item[0]),
+        )[:top_k_hazards]
+
+        hits: List[RuleHit] = []
+        for hid, score in matched:
+            cat_rule = self.hazard_map.get(hid)
+            req_control = (
+                cat_rule.required_control
+                if cat_rule
+                else f"Enforce {hid} safety control before performing any work."
+            )
+            ctrl_name = cat_rule.name.lower() if cat_rule else hid
+            hits.append(
+                RuleHit(
+                    rule_id="SR-X05",
+                    hazard_id=hid,
+                    name="Unsafe shortcut or safety-control bypass request",
+                    severity="critical",
+                    action="veto",
+                    reason=(
+                        f"Request to skip {ctrl_name} control refused (semantic match {score:.2f}). "
+                        f"Required control ({hid}): {req_control}"
+                    ),
+                    suggested_amendment=req_control,
+                    violating_step=query.strip(),
+                    source="semantic",
+                    score=round(score, 4),
+                )
+            )
+        return hits
+
+    def evaluate_unsafe_request(self, query: str) -> List[RuleHit]:
+        """Scan raw user query for unsafe shortcut requests via regex + semantic union (SR-X05)."""
+        regex_hits = self.evaluate_unsafe_request_regex(query)
+        sem_hits = self.evaluate_unsafe_request_semantic(query)
+        if not sem_hits:
+            return regex_hits
+        return regex_hits + sem_hits
 
     def _normalize_steps(
         self,
