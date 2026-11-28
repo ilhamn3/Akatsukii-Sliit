@@ -22,7 +22,7 @@ patterns:
   - id: "work_while_running_moving"
     control_label: "full stop and lockout before entering moving parts"
     hazard_ids: ["H06", "H08"]
-    regex: "(?:can i|could i|is it ok|okay to|let me|want to)?\\s*(?:look at|adjust|clear|clean|inspect|reach|fix|touch|service|lubricate).*\\bwhile\\b.*(?:running|turning|spinning|moving|coasting|energised|energized|live)"
+    regex: "(?:can i|could i|is it ok|okay to|let me|want to)?\\s*(?:look at|adjust|clear|clean|inspect|reach|fix|touch|service|lubricate).*\\bwhile\\b.*(?:running|turning|spinning|moving|energised|energized|live)"
 
   - id: "skip_safety_blocks"
     control_label: "mechanical safety blocks under suspended load / ram / platen"
@@ -37,9 +37,29 @@ patterns:
   - id: "bypass_interlock_guard_request"
     control_label: "safety guard, interlock, or sensor integrity"
     hazard_ids: ["H15"]
-    regex: "(?:can i|should i|want to|let's|ok to|try to)\\s+(?:bypass|jumper|defeat|disable|tape over)\\s+(?:the\\s+)?(?:guard|interlock|sensor|light curtain|e-?stop|switch)"
+    regex: "(?:can i|should i|want to|let's|ok to|try to)\\s+(?:bypass|jumper|defeat|disable)\\s+(?:the\\s+)?(?:guard|interlock|sensor|light curtain|e-?stop|switch)"
 
   - id: "skip_ppe_request"
     control_label: "mandatory personal protective equipment (PPE)"
     hazard_ids: ["H04", "H07", "H10", "H11"]
-    regex: "(?:without|skip|no need for)\\s+(?:ppe|gloves|face\\s+shield|safety\\s+glasses|goggles)"
+    regex: "(?:without|skip|no need for)\\s+(?:a\\s+)?(?:ppe|gloves|face\\s+shield|safety\\s+glasses|goggles)"
+
+  - id: "bypass_interlock_broad"
+    control_label: "safety guard, interlock, or sensor integrity"
+    hazard_ids: ["H15"]
+    regex: "(?<!already\\s)(?:bypass|jumper|defeat)\\s+(?:the\\s+)?(?:guard|interlock|light\\s+curtain|e-?stop|safety\\s+switch)"
+
+  - id: "handle_live_moving_pressurised_hot"
+    control_label: "full energy isolation, zero-speed, depressurisation, and cooling before contact"
+    hazard_ids: ["H01", "H02", "H04", "H06", "H10", "H13"]
+    regex: "(?:touch|grab|pull|feel|crack\\s+open|open|work\\s+on)\\b.*\\b(?:live|running|moving|spinning|pressuri[sz]ed|by\\s+hand|without\\s+(?:shutting|waiting|stopping|locking|cooling|bleeding|discharg))"
+
+  - id: "plug_relief_device"
+    control_label: "certified pressure relief valve integrity (never plug or gag)"
+    hazard_ids: ["H14"]
+    regex: "(?:plug|cap|block|gag)\\b.*\\b(?:relief|safety)\\s+valve"
+
+  - id: "leave_fluid_spill"
+    control_label: "immediate spill cleanup and non-slip controls"
+    hazard_ids: ["H09"]
+    regex: "(?:leave|ignore|skip)\\s+(?:the\\s+)?(?:oil\\s+|coolant\\s+|fluid\\s+)?(?:spill|puddle)"
