@@ -306,7 +306,7 @@ def test_cli_score_and_human_forms(tmp_path, data):
 
 
 @pytest.mark.parametrize("folder", sorted(p.name for p in (km.ROOT / "project/evaluation/results").iterdir()
-                                          if p.is_dir()))
+                                          if p.is_dir() and any(p.glob("extraction_metrics_*.json"))))
 def test_committed_results_rescore_to_their_reported_numbers(folder, data):
     """Committed numbers must come from code: re-scoring the committed predictions reproduces them."""
     base = km.ROOT / "project/evaluation/results" / folder
