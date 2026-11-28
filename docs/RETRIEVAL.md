@@ -115,6 +115,65 @@ An earlier check in this document (catalogue `lay_description` queries) has been
 **withdrawn**. The frozen test set's easy tier is built from those descriptions, so
 results on them are too close to the test set to report. No weights were tuned on it.
 
+## Retrieval on episodes ingested by the real pipeline (28 Nov 2026)
+
+Ilham's #21 review kept 4.4 at 90% until retrieval was checked on episodes that went
+through the real pipeline instead of the oracle store. Path:
+
+```
+real A2 drafts (Groq gpt-oss-120b, prompt v5; 12 dev + 50 eval episodes)
+  -> A3 validate_draft -> ReviewQueue.enqueue -> approve (as extracted, no reviewer edits)
+  -> A4 GraphAgent -> KnowledgeStore (SQLite + MiniLM/FAISS + NetworkX)
+  -> A6 HybridRetriever on the 20 dev queries (query text only)
+```
+
+- **Command:** `python -m project.evaluation.retrieval_pipeline_eval`. Results:
+  `project/evaluation/results/2026-11-28_retrieval_pipeline_eval/` (code `fd75460`).
+- **Ingestion:** 56 of 62 drafts approved as extracted. 6 stayed pending, because A3
+  blocked them (missing root cause or `why_failed`, or a machine named only by a part)
+  and no reviewer filled the gap. The store holds 56 episodes of 30 faults.
+- **Scoring:** a hit is a retrieved episode whose *source* episode has the query's gold
+  fault (pipeline episodes have their own IDs). 15 dev queries have their fault in the
+  store; for the other 5 the right outcome is a low top score, since A8 abstains below
+  `abstention_similarity_threshold` (0.55).
+- **Comparison:** the same retriever on an oracle store of the **same 56 episodes'**
+  gold records. The difference is the effect of ingesting real narrations.
+- Not run: Pipeline B's LLM agents (diagnosis, orchestration, safety LLM), because the
+  Gemini quota is reserved for the final benchmark. `RetrievalNode` calls this retriever.
+  No weights or thresholds were tuned; the test split is refused.
+
+| Store | Machine | Mode | hit@1 | hit@3 | MRR@10 | Miss at 3 |
+|---|---|---|---:|---:|---:|---|
+| Pipeline | none | vector only | 0.73 | 0.80 | 0.793 | DQ-06, DQ-13, DQ-20 |
+| Pipeline | none | graph only | 0.87 | 0.93 | 0.889 | DQ-13 |
+| Pipeline | none | **hybrid** | **0.80** | **0.93** | **0.856** | DQ-13 |
+| Pipeline | detected | **hybrid** | 0.80 | 0.93 | 0.874 | DQ-13 |
+| Oracle, same episodes | none | hybrid | 1.00 | 1.00 | 1.000 | none |
+
+Abstention at 0.55 (hybrid):
+
+| Store | Answerable queries scoring below 0.55 | Unanswerable queries scoring below 0.55 |
+|---|---:|---:|
+| Pipeline | 2 of 15 | 4 of 5 |
+| Oracle, same episodes | 0 of 15 | 2 of 5 |
+
+What the gap is:
+- **All three slips are one fault (A04), with one stored episode (EP-0323).** Its
+  technician only said the compressor "keeps starting and stopping every few seconds"
+  (written "comp" in the draft). DQ-13 asks about "hissing at the unloader", which the
+  narration never mentions, so no ingested record can match it; the oracle record has
+  it because it holds the catalogue's full symptom list. DQ-03 and DQ-20 still find the
+  episode at ranks 2 and 3.
+- So the drop from the oracle is about what technicians actually say, not a retrieval
+  or extraction error: A2 extracted EP-0323's narrated symptom and root cause correctly.
+- Narrated records also make scores lower overall: unanswerable queries are abstained
+  on more often (4 of 5 instead of 2 of 5), but 2 answerable queries also fall below
+  0.55. The threshold was set on the oracle store and is not retuned here.
+- Hybrid ranks better than vector-only on ingested records (hit@3 0.93 vs 0.80).
+  Graph-only is slightly better at hit@1 here (0.87 vs 0.80) with the same hit@3, but
+  its scores are not on the cosine scale, so it cannot drive abstention; n = 15 is too
+  small to separate the two. The weights were not changed.
+
 ## Latency at 2,000 records
 
 Ilham's #12 review asked for cached projections before the 2,000-record scalability run.
@@ -143,6 +202,8 @@ Every read still appends an audit event.
 ## Limits
 
 - Real verified team episodes don't exist yet, so real retrieval quality is unmeasured.
+  The 28 Nov pipeline check uses real Agent 2 output on synthetic narrations (n = 15
+  answerable dev queries), which is closer, but still synthetic.
 - Lexical graph matching is English-only with crude stemming. Synonyms rely on the
   vector signal.
 - The first query after a write rebuilds the projections (~2.6 s at 2,000 records).
