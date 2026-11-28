@@ -119,6 +119,32 @@ marked approved. `approve()` returns the stored, canonical episode. If the store
 APPROVE_FAILED event records the error type. The queue lives in
 `<storage root>/review/review_queue.sqlite3`, separate from the verified store.
 
+### What the review page must show (`project/store/review_view.py`)
+
+The Streamlit page (`project/ui/pages/1_Review_Queue.py`) uses these helpers, so the
+rules are unit-tested without a UI:
+
+- **Every fact approval publishes.** `fact_sections` lists all `ExtractedRepair`
+  fields in order, including empty ones ("none extracted") and unknown failed-attempt
+  children. A test fails if the schema gains a field the page would not show.
+- **What the reviewer must know about the draft:** `review_reasons` and
+  `missing_fields`, with banners for `offline_fixture_output` (fixture, not a model
+  run) and `extraction_retried_after_invalid_output` (K8 retry). Confidence is always
+  shown with its method and as "not a probability".
+- **Corrections for blocking issues.** `correction_targets` maps each blocking issue
+  to the key A3 accepts: scalars and `failed_attempts.<i>.<child>` by name, list
+  fields as a whole list (an issue at `steps.2` is fixed through `steps`, prefilled
+  with the current values). `build_corrections` leaves blank inputs out, so their
+  issue stays blocking; nothing is filled in for the reviewer. Issues with no field
+  (e.g. `duplicate_source`) can only be rejected (`uncorrectable`).
+- **A named reviewer.** The page has no default reviewer; Approve and Reject stay
+  disabled until a name is entered, because it is written to `verified_by` and the
+  audit events.
+
+`tests/ui/test_review_page.py` runs the page against a real `ReviewQueue` and
+`KnowledgeStore` (only storage is redirected to `tmp_path`): approve with a named
+reviewer, approve a blocked draft only after both corrections, and reject a duplicate.
+
 ## Commands
 
 ```powershell
@@ -151,7 +177,8 @@ These are smoke checks on a synthetic fixture, not an accuracy evaluation.
 
 ## Pending
 
-- Ilham's review. Kajanan's UI integration against this API.
+- Review of the page fixes. The UI is connected to this API (#32); the fixes above
+  address the #32 review.
 - Representative recordings and drafts from the team, plus evaluation of the score
   and duplicate threshold on labelled data.
 - Automatic promotion is a team decision. (K5 entity resolution before persistence is
