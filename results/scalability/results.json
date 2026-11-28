@@ -1,0 +1,507 @@
+{
+  "generated_at": "2026-11-27T23:56:01.772495+00:00",
+  "split": "dev",
+  "num_queries": 20,
+  "repeats": 3,
+  "k": 3,
+  "sizes": [
+    {
+      "size": "n100",
+      "episodes": 100,
+      "graph_nodes": 1468,
+      "graph_edges": 4330,
+      "build_time_s": 14.665,
+      "cold_projection_s": 0.035,
+      "repeats": 3,
+      "queries_per_repeat": 20,
+      "total_queries_timed": 60,
+      "latency_ms": {
+        "p50": 30.97,
+        "p95": 47.83,
+        "max": 109.75,
+        "mean": 34.79
+      },
+      "top3_supporting_ep_hit_rate": 1.0,
+      "top3_root_cause_hit_rate": 1.0,
+      "top3_cause_family_hit_rate": 1.0,
+      "disk_bytes": 1376256,
+      "sqlite_bytes": 1376256,
+      "persisted_index_bytes": 0,
+      "vector_ram_bytes_est": 153600,
+      "per_query": [
+        {
+          "query_id": "DQ-09",
+          "top_similarity": 0.8365,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-02",
+          "top_similarity": 0.8586,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-01",
+          "top_similarity": 0.7717,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-18",
+          "top_similarity": 0.6274,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-08",
+          "top_similarity": 0.8232,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-06",
+          "top_similarity": 0.7983,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-04",
+          "top_similarity": 0.7157,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-12",
+          "top_similarity": 0.6198,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-03",
+          "top_similarity": 0.7593,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-19",
+          "top_similarity": 0.5933,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-13",
+          "top_similarity": 0.8294,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-14",
+          "top_similarity": 0.6917,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-07",
+          "top_similarity": 0.6278,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-20",
+          "top_similarity": 0.6484,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-15",
+          "top_similarity": 0.6634,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-05",
+          "top_similarity": 0.8371,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-16",
+          "top_similarity": 0.5553,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-11",
+          "top_similarity": 0.6592,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-10",
+          "top_similarity": 0.8975,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-17",
+          "top_similarity": 0.5559,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        }
+      ]
+    },
+    {
+      "size": "n400",
+      "episodes": 400,
+      "graph_nodes": 5791,
+      "graph_edges": 17376,
+      "build_time_s": 12.393,
+      "cold_projection_s": 0.407,
+      "repeats": 3,
+      "queries_per_repeat": 20,
+      "total_queries_timed": 60,
+      "latency_ms": {
+        "p50": 34.37,
+        "p95": 56.9,
+        "max": 118.49,
+        "mean": 38.47
+      },
+      "top3_supporting_ep_hit_rate": 1.0,
+      "top3_root_cause_hit_rate": 1.0,
+      "top3_cause_family_hit_rate": 1.0,
+      "disk_bytes": 5439488,
+      "sqlite_bytes": 5439488,
+      "persisted_index_bytes": 0,
+      "vector_ram_bytes_est": 614400,
+      "per_query": [
+        {
+          "query_id": "DQ-09",
+          "top_similarity": 0.8365,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-02",
+          "top_similarity": 0.8586,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-01",
+          "top_similarity": 0.7717,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-18",
+          "top_similarity": 0.6274,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-08",
+          "top_similarity": 0.8232,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-06",
+          "top_similarity": 0.8102,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-04",
+          "top_similarity": 0.7157,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-12",
+          "top_similarity": 0.6454,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-03",
+          "top_similarity": 0.7593,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-19",
+          "top_similarity": 0.5933,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-13",
+          "top_similarity": 0.8294,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-14",
+          "top_similarity": 0.6917,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-07",
+          "top_similarity": 0.6278,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-20",
+          "top_similarity": 0.6484,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-15",
+          "top_similarity": 0.6774,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-05",
+          "top_similarity": 0.8371,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-16",
+          "top_similarity": 0.5553,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-11",
+          "top_similarity": 0.6592,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-10",
+          "top_similarity": 0.9002,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-17",
+          "top_similarity": 0.5559,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        }
+      ]
+    },
+    {
+      "size": "n2000",
+      "episodes": 2000,
+      "graph_nodes": 28625,
+      "graph_edges": 85990,
+      "build_time_s": 63.067,
+      "cold_projection_s": 0.475,
+      "repeats": 3,
+      "queries_per_repeat": 20,
+      "total_queries_timed": 60,
+      "latency_ms": {
+        "p50": 67.55,
+        "p95": 85.53,
+        "max": 742.7,
+        "mean": 85.19
+      },
+      "top3_supporting_ep_hit_rate": 0.85,
+      "top3_root_cause_hit_rate": 1.0,
+      "top3_cause_family_hit_rate": 1.0,
+      "disk_bytes": 26812416,
+      "sqlite_bytes": 26812416,
+      "persisted_index_bytes": 0,
+      "vector_ram_bytes_est": 3072000,
+      "per_query": [
+        {
+          "query_id": "DQ-09",
+          "top_similarity": 0.8365,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-02",
+          "top_similarity": 0.8586,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-01",
+          "top_similarity": 0.7717,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-18",
+          "top_similarity": 0.6274,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-08",
+          "top_similarity": 0.8232,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-06",
+          "top_similarity": 0.8102,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-04",
+          "top_similarity": 0.7157,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-12",
+          "top_similarity": 0.6454,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-03",
+          "top_similarity": 0.7593,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-19",
+          "top_similarity": 0.5933,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-13",
+          "top_similarity": 0.8413,
+          "supporting_ep_hit": false,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-14",
+          "top_similarity": 0.6917,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-07",
+          "top_similarity": 0.6504,
+          "supporting_ep_hit": false,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-20",
+          "top_similarity": 0.6548,
+          "supporting_ep_hit": false,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-15",
+          "top_similarity": 0.6774,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-05",
+          "top_similarity": 0.8371,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-16",
+          "top_similarity": 0.5553,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-11",
+          "top_similarity": 0.6592,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-10",
+          "top_similarity": 0.9002,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        },
+        {
+          "query_id": "DQ-17",
+          "top_similarity": 0.5559,
+          "supporting_ep_hit": true,
+          "root_cause_hit": true,
+          "cause_family_hit": true
+        }
+      ]
+    }
+  ]
+}
