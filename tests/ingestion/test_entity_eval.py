@@ -73,11 +73,11 @@ def test_derived_machine_type_is_kept_in_provenance_after_approval(tmp_path):
     store = KnowledgeStore(tmp_path / "s.sqlite3", embedder=KeywordEmbedder())
     queue = ReviewQueue(tmp_path / "q.sqlite3", store=store)
     draft = make_draft(tmp_path, complete=True)
-    draft["extraction"]["machine_id"] = {"value": "CNV-02", "sources": draft["extraction"]["machine_type"]["sources"]}
+    draft["extraction"]["machine_id"] = {"value": "CNV-02", "sources": [{"segment_id": "S0", "quote": "CNV-02"}]}
     draft["extraction"]["machine_type"] = None
     for span in draft["evidence"]:
-        if span["field_path"] == "machine_type":
-            span["field_path"] = "machine_id"
+        if span["field_path"] == "machine_type":  # The cited quote must contain the asset number.
+            span.update(field_path="machine_id", quote="CNV-02")
     item = queue.enqueue(draft, validate_draft(draft, trace_id="T", queue=queue, store=store), trace_id="T")
     episode = queue.approve(item.item_id, reviewer="r1", trace_id="T")
     assert (episode.record.machine_type, episode.record.machine_id) == ("conveyor_line", "CNV-02")

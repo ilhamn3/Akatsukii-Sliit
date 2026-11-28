@@ -1,0 +1,869 @@
+{
+  "schema_version": "entity_eval/v1",
+  "synthetic_data_only": true,
+  "generated_at": "2026-11-28T07:36:58+00:00",
+  "code_commit": "b2a2956",
+  "vocabulary_version": "entities_v2",
+  "gold_ids": {
+    "v2": {
+      "records": 400,
+      "asset_id_kept": 400,
+      "machine_from_asset_id": 400
+    },
+    "v1": {
+      "records": 400,
+      "asset_id_kept": 0,
+      "machine_from_asset_id": null
+    }
+  },
+  "dev": {
+    "v2": {
+      "drafts": 12,
+      "machine_correct": 12,
+      "machine_wrong": 0,
+      "blocked": 0,
+      "asset_correct": 6,
+      "derived_from_asset": 2,
+      "derived_correct": 2
+    },
+    "v1": {
+      "drafts": 12,
+      "machine_correct": 9,
+      "machine_wrong": 0,
+      "blocked": 3,
+      "asset_correct": 0,
+      "derived_from_asset": 0,
+      "derived_correct": 0
+    },
+    "per_draft": [
+      {
+        "episode_id": "EP-0001",
+        "machine_type": "conveyor",
+        "machine_id": "three",
+        "gold": [
+          "conveyor_line",
+          "CNV-03"
+        ],
+        "machine": "conveyor_line",
+        "asset": "CNV-03",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0002",
+        "machine_type": "CNC",
+        "machine_id": "CNC-04",
+        "gold": [
+          "cnc_lathe",
+          "CNC-04"
+        ],
+        "machine": "cnc_lathe",
+        "asset": "CNC-04",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0003",
+        "machine_type": "moulding machine",
+        "machine_id": null,
+        "gold": [
+          "injection_moulding",
+          "INJ-03"
+        ],
+        "machine": "injection_moulding",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0004",
+        "machine_type": "lathe",
+        "machine_id": null,
+        "gold": [
+          "cnc_lathe",
+          "CNC-04"
+        ],
+        "machine": "cnc_lathe",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0005",
+        "machine_type": "press",
+        "machine_id": null,
+        "gold": [
+          "hydraulic_press",
+          "HYD-01"
+        ],
+        "machine": "hydraulic_press",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0006",
+        "machine_type": "lathe",
+        "machine_id": "three",
+        "gold": [
+          "cnc_lathe",
+          "CNC-03"
+        ],
+        "machine": "cnc_lathe",
+        "asset": "CNC-03",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0009",
+        "machine_type": null,
+        "machine_id": "INJ-04",
+        "gold": [
+          "injection_moulding",
+          "INJ-04"
+        ],
+        "machine": "injection_moulding",
+        "asset": "INJ-04",
+        "derived_from_asset": true,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0011",
+        "machine_type": "conveyor",
+        "machine_id": null,
+        "gold": [
+          "conveyor_line",
+          "CNV-02"
+        ],
+        "machine": "conveyor_line",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0012",
+        "machine_type": "compressor",
+        "machine_id": "compressor one",
+        "gold": [
+          "air_compressor",
+          "CMP-01"
+        ],
+        "machine": "air_compressor",
+        "asset": "CMP-01",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0025",
+        "machine_type": "moulding machine",
+        "machine_id": null,
+        "gold": [
+          "injection_moulding",
+          "INJ-03"
+        ],
+        "machine": "injection_moulding",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0030",
+        "machine_type": "compressor",
+        "machine_id": null,
+        "gold": [
+          "air_compressor",
+          "CMP-02"
+        ],
+        "machine": "air_compressor",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0040",
+        "machine_type": null,
+        "machine_id": "INJ-04",
+        "gold": [
+          "injection_moulding",
+          "INJ-04"
+        ],
+        "machine": "injection_moulding",
+        "asset": "INJ-04",
+        "derived_from_asset": true,
+        "blocked": false
+      }
+    ]
+  },
+  "eval": {
+    "v2": {
+      "drafts": 50,
+      "machine_correct": 47,
+      "machine_wrong": 0,
+      "blocked": 3,
+      "asset_correct": 19,
+      "derived_from_asset": 5,
+      "derived_correct": 5
+    },
+    "v1": {
+      "drafts": 50,
+      "machine_correct": 40,
+      "machine_wrong": 0,
+      "blocked": 10,
+      "asset_correct": 0,
+      "derived_from_asset": 0,
+      "derived_correct": 0
+    },
+    "per_draft": [
+      {
+        "episode_id": "EP-0014",
+        "machine_type": "lathe",
+        "machine_id": null,
+        "gold": [
+          "cnc_lathe",
+          "CNC-04"
+        ],
+        "machine": "cnc_lathe",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0016",
+        "machine_type": "conveyor",
+        "machine_id": null,
+        "gold": [
+          "conveyor_line",
+          "CNV-02"
+        ],
+        "machine": "conveyor_line",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0028",
+        "machine_type": "moulding machine",
+        "machine_id": null,
+        "gold": [
+          "injection_moulding",
+          "INJ-02"
+        ],
+        "machine": "injection_moulding",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0053",
+        "machine_type": "press",
+        "machine_id": null,
+        "gold": [
+          "hydraulic_press",
+          "HYD-03"
+        ],
+        "machine": "hydraulic_press",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0056",
+        "machine_type": null,
+        "machine_id": "CMP-02",
+        "gold": [
+          "air_compressor",
+          "CMP-02"
+        ],
+        "machine": "air_compressor",
+        "asset": "CMP-02",
+        "derived_from_asset": true,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0065",
+        "machine_type": "press",
+        "machine_id": "HYD-03",
+        "gold": [
+          "hydraulic_press",
+          "HYD-03"
+        ],
+        "machine": "hydraulic_press",
+        "asset": "HYD-03",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0067",
+        "machine_type": "lathe",
+        "machine_id": null,
+        "gold": [
+          "cnc_lathe",
+          "CNC-04"
+        ],
+        "machine": "cnc_lathe",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0069",
+        "machine_type": null,
+        "machine_id": null,
+        "gold": [
+          "air_compressor",
+          "CMP-02"
+        ],
+        "machine": null,
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": true
+      },
+      {
+        "episode_id": "EP-0080",
+        "machine_type": "conveyor",
+        "machine_id": null,
+        "gold": [
+          "conveyor_line",
+          "CNV-01"
+        ],
+        "machine": "conveyor_line",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0088",
+        "machine_type": "moulding machine",
+        "machine_id": "four",
+        "gold": [
+          "injection_moulding",
+          "INJ-04"
+        ],
+        "machine": "injection_moulding",
+        "asset": "INJ-04",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0103",
+        "machine_type": "conveyor",
+        "machine_id": null,
+        "gold": [
+          "conveyor_line",
+          "CNV-01"
+        ],
+        "machine": "conveyor_line",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0131",
+        "machine_type": "receiver",
+        "machine_id": null,
+        "gold": [
+          "air_compressor",
+          "CMP-01"
+        ],
+        "machine": null,
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": true
+      },
+      {
+        "episode_id": "EP-0150",
+        "machine_type": "conveyor",
+        "machine_id": null,
+        "gold": [
+          "conveyor_line",
+          "CNV-01"
+        ],
+        "machine": "conveyor_line",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0161",
+        "machine_type": "lathe",
+        "machine_id": "lathe three",
+        "gold": [
+          "cnc_lathe",
+          "CNC-03"
+        ],
+        "machine": "cnc_lathe",
+        "asset": "CNC-03",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0170",
+        "machine_type": "compressor",
+        "machine_id": "comp two",
+        "gold": [
+          "air_compressor",
+          "CMP-02"
+        ],
+        "machine": "air_compressor",
+        "asset": "CMP-02",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0178",
+        "machine_type": "conveyor",
+        "machine_id": null,
+        "gold": [
+          "conveyor_line",
+          "CNV-03"
+        ],
+        "machine": "conveyor_line",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0185",
+        "machine_type": "moulding machine",
+        "machine_id": null,
+        "gold": [
+          "injection_moulding",
+          "INJ-04"
+        ],
+        "machine": "injection_moulding",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0186",
+        "machine_type": "ram",
+        "machine_id": null,
+        "gold": [
+          "hydraulic_press",
+          "HYD-03"
+        ],
+        "machine": null,
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": true
+      },
+      {
+        "episode_id": "EP-0189",
+        "machine_type": "press",
+        "machine_id": "HYD-02",
+        "gold": [
+          "hydraulic_press",
+          "HYD-02"
+        ],
+        "machine": "hydraulic_press",
+        "asset": "HYD-02",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0190",
+        "machine_type": null,
+        "machine_id": "INJ-04",
+        "gold": [
+          "injection_moulding",
+          "INJ-04"
+        ],
+        "machine": "injection_moulding",
+        "asset": "INJ-04",
+        "derived_from_asset": true,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0191",
+        "machine_type": "press",
+        "machine_id": null,
+        "gold": [
+          "hydraulic_press",
+          "HYD-02"
+        ],
+        "machine": "hydraulic_press",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0196",
+        "machine_type": "conveyor",
+        "machine_id": null,
+        "gold": [
+          "conveyor_line",
+          "CNV-03"
+        ],
+        "machine": "conveyor_line",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0199",
+        "machine_type": "moulding machine",
+        "machine_id": "four",
+        "gold": [
+          "injection_moulding",
+          "INJ-04"
+        ],
+        "machine": "injection_moulding",
+        "asset": "INJ-04",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0205",
+        "machine_type": "press",
+        "machine_id": null,
+        "gold": [
+          "hydraulic_press",
+          "HYD-01"
+        ],
+        "machine": "hydraulic_press",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0221",
+        "machine_type": "moulding machine",
+        "machine_id": null,
+        "gold": [
+          "injection_moulding",
+          "INJ-01"
+        ],
+        "machine": "injection_moulding",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0243",
+        "machine_type": "conveyor",
+        "machine_id": null,
+        "gold": [
+          "conveyor_line",
+          "CNV-03"
+        ],
+        "machine": "conveyor_line",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0260",
+        "machine_type": "CNC",
+        "machine_id": "CNC-03",
+        "gold": [
+          "cnc_lathe",
+          "CNC-03"
+        ],
+        "machine": "cnc_lathe",
+        "asset": "CNC-03",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0267",
+        "machine_type": "press",
+        "machine_id": null,
+        "gold": [
+          "hydraulic_press",
+          "HYD-02"
+        ],
+        "machine": "hydraulic_press",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0274",
+        "machine_type": "CNC",
+        "machine_id": "CNC-02",
+        "gold": [
+          "cnc_lathe",
+          "CNC-02"
+        ],
+        "machine": "cnc_lathe",
+        "asset": "CNC-02",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0276",
+        "machine_type": "moulding machine",
+        "machine_id": null,
+        "gold": [
+          "injection_moulding",
+          "INJ-02"
+        ],
+        "machine": "injection_moulding",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0278",
+        "machine_type": "compressor",
+        "machine_id": null,
+        "gold": [
+          "air_compressor",
+          "CMP-01"
+        ],
+        "machine": "air_compressor",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0284",
+        "machine_type": "conveyor",
+        "machine_id": "conveyor three",
+        "gold": [
+          "conveyor_line",
+          "CNV-03"
+        ],
+        "machine": "conveyor_line",
+        "asset": "CNV-03",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0293",
+        "machine_type": "lathe",
+        "machine_id": null,
+        "gold": [
+          "cnc_lathe",
+          "CNC-04"
+        ],
+        "machine": "cnc_lathe",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0311",
+        "machine_type": "compressor",
+        "machine_id": null,
+        "gold": [
+          "air_compressor",
+          "CMP-02"
+        ],
+        "machine": "air_compressor",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0314",
+        "machine_type": null,
+        "machine_id": "HYD-01",
+        "gold": [
+          "hydraulic_press",
+          "HYD-01"
+        ],
+        "machine": "hydraulic_press",
+        "asset": "HYD-01",
+        "derived_from_asset": true,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0316",
+        "machine_type": "lathe",
+        "machine_id": null,
+        "gold": [
+          "cnc_lathe",
+          "CNC-01"
+        ],
+        "machine": "cnc_lathe",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0320",
+        "machine_type": "conveyor",
+        "machine_id": "conveyor three",
+        "gold": [
+          "conveyor_line",
+          "CNV-03"
+        ],
+        "machine": "conveyor_line",
+        "asset": "CNV-03",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0321",
+        "machine_type": "moulding machine",
+        "machine_id": null,
+        "gold": [
+          "injection_moulding",
+          "INJ-03"
+        ],
+        "machine": "injection_moulding",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0323",
+        "machine_type": "compressor",
+        "machine_id": "compressor two",
+        "gold": [
+          "air_compressor",
+          "CMP-02"
+        ],
+        "machine": "air_compressor",
+        "asset": "CMP-02",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0328",
+        "machine_type": "lathe",
+        "machine_id": null,
+        "gold": [
+          "cnc_lathe",
+          "CNC-01"
+        ],
+        "machine": "cnc_lathe",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0336",
+        "machine_type": "conveyor",
+        "machine_id": null,
+        "gold": [
+          "conveyor_line",
+          "CNV-02"
+        ],
+        "machine": "conveyor_line",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0337",
+        "machine_type": "compressor",
+        "machine_id": null,
+        "gold": [
+          "air_compressor",
+          "CMP-02"
+        ],
+        "machine": "air_compressor",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0342",
+        "machine_type": "lathe",
+        "machine_id": null,
+        "gold": [
+          "cnc_lathe",
+          "CNC-02"
+        ],
+        "machine": "cnc_lathe",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0351",
+        "machine_type": "lathe",
+        "machine_id": "one",
+        "gold": [
+          "cnc_lathe",
+          "CNC-01"
+        ],
+        "machine": "cnc_lathe",
+        "asset": "CNC-01",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0354",
+        "machine_type": null,
+        "machine_id": "INJ-03",
+        "gold": [
+          "injection_moulding",
+          "INJ-03"
+        ],
+        "machine": "injection_moulding",
+        "asset": "INJ-03",
+        "derived_from_asset": true,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0355",
+        "machine_type": "compressor",
+        "machine_id": "compressor two",
+        "gold": [
+          "air_compressor",
+          "CMP-02"
+        ],
+        "machine": "air_compressor",
+        "asset": "CMP-02",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0356",
+        "machine_type": "press",
+        "machine_id": "HYD-01",
+        "gold": [
+          "hydraulic_press",
+          "HYD-01"
+        ],
+        "machine": "hydraulic_press",
+        "asset": "HYD-01",
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0378",
+        "machine_type": "comp",
+        "machine_id": null,
+        "gold": [
+          "air_compressor",
+          "CMP-02"
+        ],
+        "machine": "air_compressor",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0390",
+        "machine_type": "moulding machine",
+        "machine_id": null,
+        "gold": [
+          "injection_moulding",
+          "INJ-01"
+        ],
+        "machine": "injection_moulding",
+        "asset": null,
+        "derived_from_asset": false,
+        "blocked": false
+      },
+      {
+        "episode_id": "EP-0399",
+        "machine_type": null,
+        "machine_id": "HYD-03",
+        "gold": [
+          "hydraulic_press",
+          "HYD-03"
+        ],
+        "machine": "hydraulic_press",
+        "asset": "HYD-03",
+        "derived_from_asset": true,
+        "blocked": false
+      }
+    ]
+  }
+}
