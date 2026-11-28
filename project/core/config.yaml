@@ -7,8 +7,10 @@ system:
   safety_max_revision_loops: 2
   llm_only_concerns_block: false
   confidence_threshold_review: 0.75
-  # A3 semantic near-duplicate warning (symptom cosine, same machine label). Uncalibrated.
-  duplicate_similarity_threshold: 0.90
+  # A3 semantic near-duplicate warning (symptom cosine, same machine label). Chosen on the
+  # dev split (28 Nov): midpoint between the highest other-fault cosine (0.43) and the
+  # lowest same-fault cosine (0.68), rounded; see docs/VALIDATION_REVIEW.md.
+  duplicate_similarity_threshold: 0.55
   abstention_similarity_threshold: 0.55
   log_path: "logs/audit_trace.jsonl"
 

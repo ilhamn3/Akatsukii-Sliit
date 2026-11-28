@@ -39,8 +39,15 @@ ATTEMPT_PATH = re.compile(r"failed_attempts\.(\d+)\.(action|outcome|why_failed)"
 # Heuristic weights (sum 1.0). Development defaults, not fitted to labelled data.
 WEIGHTS = {"required_completeness": 0.45, "failed_attempt_completeness": 0.15,
            "grounding": 0.25, "capture_quality": 0.15}
-# Warnings that indicate conflicting/duplicate knowledge get review priority.
-CONFLICT_CODES = {"possible_duplicate", "failed_attempt_conflicts_with_step"}
+# Symptom-cosine threshold for the possible_duplicate warning (same machine). Chosen on the
+# dev split on 28 Nov 2026 (docs/VALIDATION_REVIEW.md); config.yaml carries the same value.
+DUPLICATE_THRESHOLD = 0.55
+# Warnings that indicate conflicting knowledge get review priority. possible_duplicate is
+# not one of them: at the dev-chosen threshold it mostly means "this fault is already
+# known" (a recurrence), and on the eval drafts it raised 34 of 50 drafts to low priority
+# against a store of past repairs. It stays a warning listing the matching records; exact
+# duplicates of a recording still block (duplicate_source).
+CONFLICT_CODES = {"failed_attempt_conflicts_with_step"}
 UNITS = (r"psi|bar|kpa|mpa|nm|n·m|n-m|ft-lbs?|lbf|mm|cm|rpm|kw|hz|°c|°f|degc|degf|"
          r"vac|vdc|amps?|volts?|litres?|liters?|ml")
 QUANTITY = re.compile(rf"(\d+(?:[.,]\d+)?)\s*({UNITS})?(?!\w)", re.IGNORECASE)
@@ -60,6 +67,15 @@ def _issue(code, severity, path, message, related=()):
 
 def _norm(text: str) -> str:
     return label_key(text).rstrip(".")
+
+
+SEGMENT_SUFFIX = re.compile(r"-S(\d+)$")
+
+
+def _segment_index(evidence_id: str) -> int:
+    """Transcript segment number from an A1 evidence ID (`<capture>-S0003` -> 3); -1 if absent."""
+    match = SEGMENT_SUFFIX.search(evidence_id)
+    return int(match[1]) if match else -1
 
 
 def _spans(draft):
@@ -122,7 +138,10 @@ def static_issues(draft: DraftRepairRecord) -> list[ValidationIssue]:
         if (step := steps.get(_norm(attempt.action.value))) is not None:
             issues.append(_issue("failed_attempt_conflicts_with_step", "warning", f"failed_attempts.{index}.action",
                                  f"The same action is also a completed step (steps.{step}); confirm which is correct"))
-    starts = [min(s.start_seconds for s in spans[f"steps.{i}"])
+    # Narration position of each step: its earliest cited span by time, then by segment
+    # index. Text captures carry no timing (every span starts at 0 s), so without the
+    # segment index the order check could never fire on them.
+    starts = [min((s.start_seconds, _segment_index(s.evidence_id)) for s in spans[f"steps.{i}"])
               for i in range(len(ex.steps)) if spans.get(f"steps.{i}")]
     if any(later < earlier for earlier, later in zip(starts, starts[1:])):
         issues.append(_issue("steps_out_of_source_order", "warning", "steps",
@@ -290,7 +309,7 @@ def _semantic_duplicates(draft, fields, episode_id, *, queue, store, trace_id, t
 
 
 def validate_draft(draft, *, trace_id, queue=None, store=None, threshold=0.75,
-                   duplicate_threshold=0.90, exclude_item=None) -> ValidationReport:
+                   duplicate_threshold=DUPLICATE_THRESHOLD, exclude_item=None) -> ValidationReport:
     draft = DraftRepairRecord.model_validate(
         draft.model_dump(mode="json") if isinstance(draft, DraftRepairRecord) else draft)
     issues = static_issues(draft)
@@ -348,7 +367,7 @@ class ValidationAgent(BaseAgent):
         self.queue, self.store = queue, store
         self.threshold = float(threshold if threshold is not None else system.get("confidence_threshold_review", 0.75))
         self.duplicate_threshold = float(duplicate_threshold if duplicate_threshold is not None
-                                         else system.get("duplicate_similarity_threshold", 0.90))
+                                         else system.get("duplicate_similarity_threshold", DUPLICATE_THRESHOLD))
 
     def run(self, state):
         state["validation_report"], state["review_item_id"] = None, None

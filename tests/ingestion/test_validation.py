@@ -4,7 +4,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from project.agents.a3_validation import ValidationAgent, _quantity_problems, validate_draft
+from project.agents.a3_validation import CONFLICT_CODES, ValidationAgent, _quantity_problems, validate_draft
 from project.core.extraction_schemas import DraftRepairRecord
 from project.core.schemas import RepairRecord
 from project.core.state import create_initial_state
@@ -104,7 +104,9 @@ def test_exact_and_semantic_duplicates(tmp_path, store, queue):
     semantic = validate_draft(other, trace_id="TR-3", queue=queue, store=store)
     duplicate = next(i for i in semantic.issues if i.code == "possible_duplicate")
     assert duplicate.severity == "warning" and duplicate.related_ids == [item.item_id]
-    assert semantic.priority == "low_confidence" and not semantic.blocking
+    # A known-fault match informs the reviewer but no longer raises priority on its own.
+    assert not semantic.blocking and "possible_duplicate" not in CONFLICT_CODES
+    assert semantic.priority == ("low_confidence" if semantic.confidence.score < 0.75 else "standard")
     queue.approve(item.item_id, reviewer="reviewer-1", trace_id="TR-4")
     against_store = validate_draft(other, trace_id="TR-5", queue=queue, store=store)
     assert next(i for i in against_store.issues if i.code == "possible_duplicate").related_ids == [item.episode_id]
@@ -142,4 +144,7 @@ def test_agent_without_draft_fails_visibly(tmp_path, store, queue):
 
 def test_threshold_comes_from_shared_config(tmp_path, store, queue):
     assert ValidationAgent(queue=queue, store=store).threshold == 0.75
-    assert ValidationAgent(queue=queue, store=store).duplicate_threshold == 0.90
+    from project.agents.a3_validation import DUPLICATE_THRESHOLD
+    from project.core.registry import load_config
+    configured = load_config()["system"]["duplicate_similarity_threshold"]
+    assert ValidationAgent(queue=queue, store=store).duplicate_threshold == configured == DUPLICATE_THRESHOLD == 0.55

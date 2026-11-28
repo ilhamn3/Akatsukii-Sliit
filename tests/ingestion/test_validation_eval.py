@@ -53,3 +53,19 @@ def test_exact_duplicates_are_flagged_only_on_resubmission(inputs, tmp_path):
     result = ve.duplicate_eval(few, workdir=tmp_path, embedder=HashEmbedder())
     assert result["exact"] == {"drafts": 3, "flagged_on_first_submission": 0, "flagged_on_resubmission": 3}
     assert set(result["semantic"]) == {"without_own", "with_own"}
+
+
+def test_step_order_uses_segment_index_when_text_captures_have_no_timing(inputs):
+    from project.agents.a3_validation import _segment_index
+
+    rows, _ = inputs
+    by_id = {r["episode_id"]: r["draft"] for r in rows}
+    order = lambda d: any(i.code == "steps_out_of_source_order"  # noqa: E731
+                          for i in validate_draft(d, trace_id="TR-T").issues)
+    assert _segment_index("CAP-abc-S0012") == 12 and _segment_index("EV-1") == -1
+    assert all(s["start_seconds"] == 0 for s in by_id["EP-0014"]["evidence"])  # Text: no timing at all.
+    assert not order(by_id["EP-0014"]) and order(ve.inject_reversed_steps(by_id["EP-0014"]))
+    # A shift log narrates all steps in one segment: order inside it is not checkable, so no flag.
+    assert not order(ve.inject_reversed_steps(by_id["EP-0016"]))
+    # Real model output: "grab ... from stores" listed before the restart it followed.
+    assert order(by_id["EP-0278"])

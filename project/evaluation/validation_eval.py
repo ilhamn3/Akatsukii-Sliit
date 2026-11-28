@@ -12,8 +12,8 @@ model is called. Three questions, each with ground truth that does not come from
    against a KnowledgeStore of the 400 gold episodes (MiniLM), with and without each
    draft's own episode; matches are scored by fault_id from the generator labels.
 
-All data is synthetic. Thresholds are A3's defaults (0.75 confidence, 0.90 cosine); none
-were tuned here.
+All data is synthetic. Thresholds are A3's defaults (0.75 confidence; duplicate cosine
+`DUPLICATE_THRESHOLD`, chosen on the dev split on 28 Nov); nothing is tuned on these drafts.
 
     python -m project.evaluation.validation_eval --output-dir logs/validation_eval
 """
@@ -68,6 +68,27 @@ def error_fields(score: dict) -> list[str]:
     return sorted(f for f, c in (score.get("primary") or {}).items() if c.get("fp") or c.get("fn"))
 
 
+def episode_f1(score: dict) -> float | None:
+    """Micro F1 of one draft over all fields (2TP / (2TP + FP + FN))."""
+    counts = (score.get("primary") or {}).values()
+    tp, fp, fn = (sum(c.get(k, 0) for c in counts) for k in ("tp", "fp", "fn"))
+    return round(2 * tp / (2 * tp + fp + fn), 4) if (tp or fp or fn) else None
+
+
+def calibration(per_draft: list[dict], scores: dict) -> dict:
+    """Does A3's confidence score track real extraction quality? Buckets by score."""
+    buckets = {"score_1.0": lambda c: c >= 1.0, "0.75_to_1.0": lambda c: 0.75 <= c < 1.0,
+               "below_0.75": lambda c: c < 0.75}
+    out = {}
+    for name, test in buckets.items():
+        group = [d for d in per_draft if test(d["confidence"])]
+        f1s = [f for f in (episode_f1(scores[d["episode_id"]]) for d in group) if f is not None]
+        out[name] = {"drafts": len(group),
+                     "with_any_error": sum(bool(d["error_fields"]) for d in group),
+                     "mean_episode_f1": round(sum(f1s) / len(f1s), 4) if f1s else None}
+    return out
+
+
 def low_confidence_eval(rows, scores) -> dict:
     from project.agents.a3_validation import validate_draft
 
@@ -94,6 +115,7 @@ def low_confidence_eval(rows, scores) -> dict:
                 missing.append({"episode_id": d["episode_id"], "field": path,
                                 "gold_has_it": bool(fn)})
     return {
+        "calibration": calibration(per_draft, scores),
         "drafts": len(per_draft),
         "low_confidence": sum(d["low_confidence"] for d in per_draft),
         "drafts_with_any_error": sum(bool(d["error_fields"]) for d in per_draft),
@@ -209,7 +231,7 @@ def _fault_ids() -> dict[str, str]:
 
 
 def duplicate_eval(rows, *, workdir: Path, embedder=None) -> dict:
-    from project.agents.a3_validation import validate_draft
+    from project.agents.a3_validation import DUPLICATE_THRESHOLD, validate_draft
     from project.store.knowledge_store import KnowledgeStore
     from project.store.models import VerifiedEpisode
     from project.store.review_queue import ReviewQueue
@@ -246,8 +268,10 @@ def duplicate_eval(rows, *, workdir: Path, embedder=None) -> dict:
     for name, keep in (("without_own", lambda e: e not in eval_ids), ("with_own", lambda e: True)):
         store = store_with(name, keep)
         per, flagged, own_hits, kinds = [], 0, 0, {"same_episode": 0, "same_fault": 0, "other_fault": 0}
+        low_with_store = 0
         for row in rows:
             report = validate_draft(row["draft"], trace_id="TR-K4-EVAL-SEM", store=store)
+            low_with_store += report.priority == "low_confidence"
             matches = next((i.related_ids for i in report.issues if i.code == "possible_duplicate"), [])
             flagged += bool(matches)
             own_hits += row["episode_id"] in matches
@@ -259,8 +283,9 @@ def duplicate_eval(rows, *, workdir: Path, embedder=None) -> dict:
                         "matches": matches})
         conditions[name] = {"store_episodes": sum(keep(e.episode_id) for e in envelopes),
                             "drafts_flagged": flagged, "own_episode_found": own_hits,
+                            "low_confidence_with_store": low_with_store,
                             "matched_ids_by_kind": kinds, "per_draft": per}
-    return {"exact": exact, "semantic": conditions, "threshold": 0.90, "k": 3,
+    return {"exact": exact, "semantic": conditions, "threshold": DUPLICATE_THRESHOLD, "k": 3,
             "cosine_diagnostic": cosine_diagnostic(rows, envelopes, faults, store.embedder)}
 
 
@@ -269,6 +294,7 @@ def cosine_diagnostic(rows, envelopes, faults, embedder) -> dict:
     other episode of the same fault, and the closest other-fault episode on the same machine.
     Diagnostic only: it shows whether any threshold could separate them; none is fitted here."""
     import numpy as np
+    from project.agents.a3_validation import DUPLICATE_THRESHOLD
     from project.agents.a4_graph import default_resolver
     from project.store.vector_index import normalized
 
@@ -300,7 +326,7 @@ def cosine_diagnostic(rows, envelopes, faults, embedder) -> dict:
             return None
         arr = np.array(values)
         return {"n": len(values), "min": round(float(arr.min()), 3), "median": round(float(np.median(arr)), 3),
-                "max": round(float(arr.max()), 3), "at_or_above_0.90": int((arr >= 0.90).sum())}
+                "max": round(float(arr.max()), 3), "at_or_above_threshold": int((arr >= DUPLICATE_THRESHOLD).sum())}
 
     return {"own_episode": stats(own), "closest_same_fault_other_episode": stats(same_fault),
             "closest_other_fault_same_machine": stats(other_fault)}
