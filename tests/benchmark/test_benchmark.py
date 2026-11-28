@@ -337,3 +337,14 @@ def test_harness_paired_max_calls_daily_stop_and_resume(tmp_path, monkeypatch, c
     # Baseline record must be logged as degraded=True so --resume re-runs it
     base_lines = [json.loads(l) for l in (out_dir2 / "raw_baseline.jsonl").read_text().splitlines() if l.strip()]
     assert len(base_lines) == 1 and base_lines[0]["degraded"] is True
+
+
+def test_harness_reads_the_newest_committed_extraction_report():
+    """The harness picks up the latest eval report (v5, 27 Nov) without --extraction-json."""
+    from project.benchmark.harness import _load_optional_extraction
+
+    info = _load_optional_extraction()
+    assert info["status"] == "present"
+    assert Path(info["path"]).name == "extraction_metrics_eval_extraction_v5.json"
+    assert info["n_episodes"] == 50 and info["failed_episodes"] == 0
+    assert info["primary_micro_f1"] == pytest.approx(0.8968)
