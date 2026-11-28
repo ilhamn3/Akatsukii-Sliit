@@ -31,6 +31,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 V5 = ROOT / "project/evaluation/results/2026-11-27_eval_groq-gpt-oss-120b_v5"
+DEV_DRAFTS = ROOT / "project/evaluation/results/2026-11-27_dev_groq-gpt-oss-120b/predictions_dev_extraction_v5.jsonl"
 GOLD_STORE = ROOT / "project/data/expanded/n400"
 REQUIRED = ("machine_type", "symptoms", "steps", "root_cause")
 SCHEMA = "validation_eval/v1"
@@ -286,7 +287,10 @@ def duplicate_eval(rows, *, workdir: Path, embedder=None) -> dict:
                             "low_confidence_with_store": low_with_store,
                             "matched_ids_by_kind": kinds, "per_draft": per}
     return {"exact": exact, "semantic": conditions, "threshold": DUPLICATE_THRESHOLD, "k": 3,
-            "cosine_diagnostic": cosine_diagnostic(rows, envelopes, faults, store.embedder)}
+            "cosine_diagnostic": cosine_diagnostic(rows, envelopes, faults, store.embedder),
+            # The dev split the duplicate threshold was chosen on (committed dev drafts).
+            "dev_cosine_diagnostic": cosine_diagnostic(_jsonl(DEV_DRAFTS), envelopes, faults, store.embedder)
+            if DEV_DRAFTS.exists() else None}
 
 
 def cosine_diagnostic(rows, envelopes, faults, embedder) -> dict:

@@ -224,7 +224,9 @@ so recorded results always name an exact prompt.
 The v4 step losses came from two general issues, not episode-specific wording: fillers
 copied into values, and a failed attempt repeated as a step. v5 addresses both.
 
-**v5 vs v3 on dev** (`compare`, same 12 episodes, same model, no failures in either run):
+**v5 vs v3 on dev** (`compare`, same 12 episodes, same model, no failures in either run;
+both runs are committed in `project/evaluation/results/2026-11-27_dev_groq-gpt-oss-120b/`,
+final row per episode, and a test re-scores them to these numbers):
 
 | Field | v3 | v5 | Delta |
 |---|---|---|---|

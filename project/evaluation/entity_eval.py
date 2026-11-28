@@ -28,7 +28,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 GOLD = ROOT / "project/data/episodes/ground_truth.jsonl"
 EVAL = ROOT / "project/evaluation/results/2026-11-27_eval_groq-gpt-oss-120b_v5"
-DEV = ROOT / "logs/extraction_eval/predictions_dev_extraction_v5.jsonl"  # Local dev run (27 Nov).
+DEV = ROOT / "project/evaluation/results/2026-11-27_dev_groq-gpt-oss-120b/predictions_dev_extraction_v5.jsonl"
 V1_PREFIXES = {"cnc_lathe": "LATHE", "hydraulic_press": "PRESS", "injection_moulding": "IMM",
                "conveyor_line": "CONV", "air_compressor": "COMP"}
 SCHEMA = "entity_eval/v1"

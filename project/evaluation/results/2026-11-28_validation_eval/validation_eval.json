@@ -1,8 +1,8 @@
 {
   "schema_version": "validation_eval/v1",
   "synthetic_data_only": true,
-  "generated_at": "2026-11-28T07:37:54+00:00",
-  "code_commit": "b2a2956",
+  "generated_at": "2026-11-28T10:37:18+00:00",
+  "code_commit": "91bff3c",
   "drafts_source": "project/evaluation/results/2026-11-27_eval_groq-gpt-oss-120b_v5",
   "embedder": "default KnowledgeStore embedder",
   "low_confidence": {
@@ -1785,6 +1785,29 @@
         "median": 0.427,
         "max": 0.674,
         "at_or_above_threshold": 5
+      }
+    },
+    "dev_cosine_diagnostic": {
+      "own_episode": {
+        "n": 10,
+        "min": 0.599,
+        "median": 0.758,
+        "max": 0.932,
+        "at_or_above_threshold": 10
+      },
+      "closest_same_fault_other_episode": {
+        "n": 9,
+        "min": 0.599,
+        "median": 0.72,
+        "max": 0.932,
+        "at_or_above_threshold": 9
+      },
+      "closest_other_fault_same_machine": {
+        "n": 10,
+        "min": 0.28,
+        "median": 0.328,
+        "max": 0.434,
+        "at_or_above_threshold": 0
       }
     }
   }

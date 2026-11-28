@@ -285,6 +285,13 @@ The changes:
    0.676-0.932 and the closest other-fault episode on the same machine 0.280-0.434. The
    rule, fixed before re-running eval, was the midpoint of that gap rounded to 0.05: 0.55.
    Only 9 dev points, so this is a first setting, not a calibration.
+   *Reproducible from the repo since the #48 review:* the dev drafts are committed in
+   `project/evaluation/results/2026-11-27_dev_groq-gpt-oss-120b/`, and
+   `validation_eval.json` carries `dev_cosine_diagnostic`. It is computed with the current
+   K5 resolver (`entities_v2`, #47), which also resolves EP-0002 ("CNC"), so it has 10 dev
+   points: same-fault 0.599-0.932, other-fault 0.280-0.434. 0.55 still separates all 10;
+   the same midpoint rule on these 10 points would round to 0.50. The threshold stays
+   0.55 (and `config.yaml` is frozen until the final benchmark).
 3. **A known-fault match no longer raises priority.** At 0.55, `possible_duplicate`
    mostly means "this fault is already known". Measured against a store of the 350 other
    gold episodes, it pushed **47 of 50** drafts to `low_confidence`, 34 of them for that
