@@ -142,4 +142,7 @@ def test_agent_without_draft_fails_visibly(tmp_path, store, queue):
 
 def test_threshold_comes_from_shared_config(tmp_path, store, queue):
     assert ValidationAgent(queue=queue, store=store).threshold == 0.75
-    assert ValidationAgent(queue=queue, store=store).duplicate_threshold == 0.90
+    from project.agents.a3_validation import DUPLICATE_THRESHOLD
+    from project.core.registry import load_config
+    configured = load_config()["system"]["duplicate_similarity_threshold"]
+    assert ValidationAgent(queue=queue, store=store).duplicate_threshold == configured == DUPLICATE_THRESHOLD == 0.55
