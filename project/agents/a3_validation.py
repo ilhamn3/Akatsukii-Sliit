@@ -23,7 +23,7 @@ from project.core.extraction_schemas import DraftRepairRecord
 from project.core.registry import load_config
 from project.core.schemas import RepairRecord
 from project.core.state import create_initial_state
-from project.agents.a4_graph import ENTITY_CODES, default_resolver, entity_issues
+from project.agents.a4_graph import ENTITY_CODES, default_resolver, derived_machine_type, entity_issues
 from project.core.validation_schemas import (  # ReviewBlocked re-exported for K4 callers
     ConfidenceBreakdown, ReviewBlocked, ValidationIssue, ValidationReport,
 )
@@ -39,8 +39,15 @@ ATTEMPT_PATH = re.compile(r"failed_attempts\.(\d+)\.(action|outcome|why_failed)"
 # Heuristic weights (sum 1.0). Development defaults, not fitted to labelled data.
 WEIGHTS = {"required_completeness": 0.45, "failed_attempt_completeness": 0.15,
            "grounding": 0.25, "capture_quality": 0.15}
-# Warnings that indicate conflicting/duplicate knowledge get review priority.
-CONFLICT_CODES = {"possible_duplicate", "failed_attempt_conflicts_with_step"}
+# Symptom-cosine threshold for the possible_duplicate warning (same machine). Chosen on the
+# dev split on 28 Nov 2026 (docs/VALIDATION_REVIEW.md); config.yaml carries the same value.
+DUPLICATE_THRESHOLD = 0.55
+# Warnings that indicate conflicting knowledge get review priority. possible_duplicate is
+# not one of them: at the dev-chosen threshold it mostly means "this fault is already
+# known" (a recurrence), and on the eval drafts it raised 34 of 50 drafts to low priority
+# against a store of past repairs. It stays a warning listing the matching records; exact
+# duplicates of a recording still block (duplicate_source).
+CONFLICT_CODES = {"failed_attempt_conflicts_with_step"}
 UNITS = (r"psi|bar|kpa|mpa|nm|n·m|n-m|ft-lbs?|lbf|mm|cm|rpm|kw|hz|°c|°f|degc|degf|"
          r"vac|vdc|amps?|volts?|litres?|liters?|ml")
 QUANTITY = re.compile(rf"(\d+(?:[.,]\d+)?)\s*({UNITS})?(?!\w)", re.IGNORECASE)
@@ -60,6 +67,15 @@ def _issue(code, severity, path, message, related=()):
 
 def _norm(text: str) -> str:
     return label_key(text).rstrip(".")
+
+
+SEGMENT_SUFFIX = re.compile(r"-S(\d+)$")
+
+
+def _segment_index(evidence_id: str) -> int:
+    """Transcript segment number from an A1 evidence ID (`<capture>-S0003` -> 3); -1 if absent."""
+    match = SEGMENT_SUFFIX.search(evidence_id)
+    return int(match[1]) if match else -1
 
 
 def _spans(draft):
@@ -85,8 +101,11 @@ def _quantity_problems(value: str, quotes: str) -> list[str]:
 def static_issues(draft: DraftRepairRecord) -> list[ValidationIssue]:
     """Schema-gap, grounding and internal-consistency checks of one draft."""
     ex, spans, issues = draft.extraction, _spans(draft), []
+    # An asset ID following the plant convention ("INJ-04") supplies a missing machine type;
+    # entity_issues then adds a machine_type_from_asset_id warning for the reviewer.
+    derived = _derived_machine(ex)
     for name in REQUIRED:
-        if not getattr(ex, name):
+        if not getattr(ex, name) and not (name == "machine_type" and derived):
             issues.append(_issue("missing_required_fact", "blocking", name,
                                  f"RepairRecord requires {name}; the source draft does not state it"))
     for index, attempt in enumerate(ex.failed_attempts):
@@ -122,7 +141,10 @@ def static_issues(draft: DraftRepairRecord) -> list[ValidationIssue]:
         if (step := steps.get(_norm(attempt.action.value))) is not None:
             issues.append(_issue("failed_attempt_conflicts_with_step", "warning", f"failed_attempts.{index}.action",
                                  f"The same action is also a completed step (steps.{step}); confirm which is correct"))
-    starts = [min(s.start_seconds for s in spans[f"steps.{i}"])
+    # Narration position of each step: its earliest cited span by time, then by segment
+    # index. Text captures carry no timing (every span starts at 0 s), so without the
+    # segment index the order check could never fire on them.
+    starts = [min((s.start_seconds, _segment_index(s.evidence_id)) for s in spans[f"steps.{i}"])
               for i in range(len(ex.steps)) if spans.get(f"steps.{i}")]
     if any(later < earlier for earlier, later in zip(starts, starts[1:])):
         issues.append(_issue("steps_out_of_source_order", "warning", "steps",
@@ -159,6 +181,11 @@ def _timestamp(seconds: float) -> str:
     return f"{total // 3600:02d}:{total % 3600 // 60:02d}:{total % 60:02d}"
 
 
+def _derived_machine(ex) -> str | None:
+    return derived_machine_type(default_resolver(), ex.machine_type and ex.machine_type.value,
+                                ex.machine_id and ex.machine_id.value)
+
+
 def draft_fields(draft: DraftRepairRecord) -> dict:
     """Index-preserving map of draft facts onto RepairRecord names; None = unknown.
 
@@ -173,7 +200,7 @@ def draft_fields(draft: DraftRepairRecord) -> dict:
                       "evidence_id": cited[0].evidence_id if cited else None})
     value = lambda fact: fact.value if fact is not None else None  # noqa: E731
     return {
-        "machine_type": value(ex.machine_type), "machine_id": value(ex.machine_id),
+        "machine_type": value(ex.machine_type) or _derived_machine(ex), "machine_id": value(ex.machine_id),
         "symptoms": [f.value for f in ex.symptoms], "steps": steps,
         "tools": [f.value for f in ex.tools], "parts": [f.value for f in ex.parts],
         "root_cause": value(ex.root_cause),
@@ -290,7 +317,7 @@ def _semantic_duplicates(draft, fields, episode_id, *, queue, store, trace_id, t
 
 
 def validate_draft(draft, *, trace_id, queue=None, store=None, threshold=0.75,
-                   duplicate_threshold=0.90, exclude_item=None) -> ValidationReport:
+                   duplicate_threshold=DUPLICATE_THRESHOLD, exclude_item=None) -> ValidationReport:
     draft = DraftRepairRecord.model_validate(
         draft.model_dump(mode="json") if isinstance(draft, DraftRepairRecord) else draft)
     issues = static_issues(draft)
@@ -331,10 +358,14 @@ def verify(draft, *, reviewer: str, verified_at, corrections=None):
     except ValidationError as exc:
         raise ReviewBlocked(_schema_issues(exc, set())) from exc
     episode_id = episode_ids(draft)[0]
+    links = []
+    if _derived_machine(draft.extraction) and "machine_type" not in supplied:
+        # Keep the derivation visible after approval: A4 preserves an equal prior link.
+        links.append(default_resolver().machine_from_asset(draft.extraction.machine_id.value))
     provenance = Provenance(
         capture_id=draft.capture_id, source_path=draft.source_path, source_sha256=draft.source_sha256,
         source_type=draft.source_type, evidence_spans=draft.evidence, extraction_model=draft.model,
-        prompt_version=draft.prompt_version, reviewer_supplied_fields=supplied)
+        prompt_version=draft.prompt_version, reviewer_supplied_fields=supplied, entity_links=links)
     return VerifiedEpisode(episode_id=episode_id, status="verified", record=record, provenance=provenance,
                            verified_by=reviewer, verified_at=verified_at, outcome=outcome), supplied
 
@@ -348,7 +379,7 @@ class ValidationAgent(BaseAgent):
         self.queue, self.store = queue, store
         self.threshold = float(threshold if threshold is not None else system.get("confidence_threshold_review", 0.75))
         self.duplicate_threshold = float(duplicate_threshold if duplicate_threshold is not None
-                                         else system.get("duplicate_similarity_threshold", 0.90))
+                                         else system.get("duplicate_similarity_threshold", DUPLICATE_THRESHOLD))
 
     def run(self, state):
         state["validation_report"], state["review_item_id"] = None, None

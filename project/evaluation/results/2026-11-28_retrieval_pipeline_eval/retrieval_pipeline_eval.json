@@ -1,0 +1,499 @@
+{
+  "schema_version": "retrieval_pipeline_eval/v1",
+  "split": "dev",
+  "synthetic_data_only": true,
+  "generated_at": "2026-11-28T10:25:17+00:00",
+  "code_commit": "fd75460",
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2@c9745ed1d9f207416be6d2e6f8de32d1f16199bf",
+  "drafts": {
+    "dev": 12,
+    "eval": 50,
+    "model": "openai/gpt-oss-120b via Groq",
+    "prompt": "extraction_v5"
+  },
+  "abstention_similarity_threshold": 0.55,
+  "reviewer": "simulated-reviewer (pipeline retrieval evaluation; approved as extracted, no edits)",
+  "ingestion": {
+    "drafts": 62,
+    "approved": 56,
+    "blocked": 6,
+    "blocking_issues": {
+      "missing_required_fact@failed_attempts.0.why_failed": 1,
+      "missing_required_fact@machine_type": 1,
+      "machine_type_unresolved@machine_type": 2,
+      "missing_required_fact@failed_attempts.1.why_failed": 1,
+      "missing_required_fact@root_cause": 1
+    }
+  },
+  "pipeline": {
+    "stored_episodes": 56,
+    "stored_faults": 30,
+    "answerable": [
+      "DQ-09",
+      "DQ-01",
+      "DQ-18",
+      "DQ-08",
+      "DQ-06",
+      "DQ-12",
+      "DQ-03",
+      "DQ-19",
+      "DQ-13",
+      "DQ-20",
+      "DQ-15",
+      "DQ-16",
+      "DQ-11",
+      "DQ-10",
+      "DQ-17"
+    ],
+    "unanswerable": [
+      "DQ-02",
+      "DQ-04",
+      "DQ-14",
+      "DQ-07",
+      "DQ-05"
+    ],
+    "results": {
+      "none/vector_only": {
+        "hit@1": 0.7333,
+        "hit@3": 0.8,
+        "mrr@10": 0.7929,
+        "misses_at_3": [
+          "DQ-06",
+          "DQ-13",
+          "DQ-20"
+        ],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 4,
+          "DQ-12": 1,
+          "DQ-03": 2,
+          "DQ-19": 1,
+          "DQ-13": null,
+          "DQ-20": 7,
+          "DQ-15": 1,
+          "DQ-16": 1,
+          "DQ-11": 1,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.4236,
+        "answerable_below_abstention": 6,
+        "unanswerable_top_scores": [
+          0.5766,
+          0.4556,
+          0.5019,
+          0.4863,
+          0.4282
+        ],
+        "unanswerable_below_abstention": 4
+      },
+      "none/graph_only": {
+        "hit@1": 0.8667,
+        "hit@3": 0.9333,
+        "mrr@10": 0.8889,
+        "misses_at_3": [
+          "DQ-13"
+        ],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 1,
+          "DQ-12": 1,
+          "DQ-03": 1,
+          "DQ-19": 1,
+          "DQ-13": null,
+          "DQ-20": 1,
+          "DQ-15": 1,
+          "DQ-16": 1,
+          "DQ-11": 3,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.1071,
+        "answerable_below_abstention": 15,
+        "unanswerable_top_scores": [
+          0.1071,
+          0.0833,
+          0.0882,
+          0.0795,
+          0.1875
+        ],
+        "unanswerable_below_abstention": 5
+      },
+      "none/hybrid": {
+        "hit@1": 0.8,
+        "hit@3": 0.9333,
+        "mrr@10": 0.8556,
+        "misses_at_3": [
+          "DQ-13"
+        ],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 1,
+          "DQ-12": 1,
+          "DQ-03": 2,
+          "DQ-19": 1,
+          "DQ-13": null,
+          "DQ-20": 3,
+          "DQ-15": 1,
+          "DQ-16": 1,
+          "DQ-11": 1,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.4942,
+        "answerable_below_abstention": 2,
+        "unanswerable_top_scores": [
+          0.6219,
+          0.501,
+          0.5458,
+          0.5272,
+          0.4847
+        ],
+        "unanswerable_below_abstention": 4
+      },
+      "detected_from_query/vector_only": {
+        "hit@1": 0.7333,
+        "hit@3": 0.8667,
+        "mrr@10": 0.8217,
+        "misses_at_3": [
+          "DQ-13",
+          "DQ-20"
+        ],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 2,
+          "DQ-12": 1,
+          "DQ-03": 2,
+          "DQ-19": 1,
+          "DQ-13": 8,
+          "DQ-20": 5,
+          "DQ-15": 1,
+          "DQ-16": 1,
+          "DQ-11": 1,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.3748,
+        "answerable_below_abstention": 6,
+        "unanswerable_top_scores": [
+          0.5766,
+          0.4556,
+          0.5019,
+          0.4863,
+          0.4282
+        ],
+        "unanswerable_below_abstention": 4
+      },
+      "detected_from_query/graph_only": {
+        "hit@1": 0.8667,
+        "hit@3": 0.9333,
+        "mrr@10": 0.8963,
+        "misses_at_3": [
+          "DQ-13"
+        ],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 1,
+          "DQ-12": 1,
+          "DQ-03": 1,
+          "DQ-19": 1,
+          "DQ-13": 9,
+          "DQ-20": 1,
+          "DQ-15": 1,
+          "DQ-16": 1,
+          "DQ-11": 3,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.1071,
+        "answerable_below_abstention": 15,
+        "unanswerable_top_scores": [
+          0.1071,
+          0.0833,
+          0.0882,
+          0.0795,
+          0.0833
+        ],
+        "unanswerable_below_abstention": 5
+      },
+      "detected_from_query/hybrid": {
+        "hit@1": 0.8,
+        "hit@3": 0.9333,
+        "mrr@10": 0.8741,
+        "misses_at_3": [
+          "DQ-13"
+        ],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 1,
+          "DQ-12": 1,
+          "DQ-03": 2,
+          "DQ-19": 1,
+          "DQ-13": 9,
+          "DQ-20": 2,
+          "DQ-15": 1,
+          "DQ-16": 1,
+          "DQ-11": 1,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.4942,
+        "answerable_below_abstention": 2,
+        "unanswerable_top_scores": [
+          0.6219,
+          0.501,
+          0.5458,
+          0.5272,
+          0.464
+        ],
+        "unanswerable_below_abstention": 4
+      }
+    }
+  },
+  "oracle_same_episodes": {
+    "stored_episodes": 56,
+    "stored_faults": 30,
+    "answerable": [
+      "DQ-09",
+      "DQ-01",
+      "DQ-18",
+      "DQ-08",
+      "DQ-06",
+      "DQ-12",
+      "DQ-03",
+      "DQ-19",
+      "DQ-13",
+      "DQ-20",
+      "DQ-15",
+      "DQ-16",
+      "DQ-11",
+      "DQ-10",
+      "DQ-17"
+    ],
+    "unanswerable": [
+      "DQ-02",
+      "DQ-04",
+      "DQ-14",
+      "DQ-07",
+      "DQ-05"
+    ],
+    "results": {
+      "none/vector_only": {
+        "hit@1": 1.0,
+        "hit@3": 1.0,
+        "mrr@10": 1.0,
+        "misses_at_3": [],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 1,
+          "DQ-12": 1,
+          "DQ-03": 1,
+          "DQ-19": 1,
+          "DQ-13": 1,
+          "DQ-20": 1,
+          "DQ-15": 1,
+          "DQ-16": 1,
+          "DQ-11": 1,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.5014,
+        "answerable_below_abstention": 4,
+        "unanswerable_top_scores": [
+          0.5133,
+          0.3751,
+          0.5506,
+          0.5474,
+          0.4065
+        ],
+        "unanswerable_below_abstention": 4
+      },
+      "none/graph_only": {
+        "hit@1": 0.8667,
+        "hit@3": 1.0,
+        "mrr@10": 0.9222,
+        "misses_at_3": [],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 1,
+          "DQ-12": 1,
+          "DQ-03": 1,
+          "DQ-19": 1,
+          "DQ-13": 3,
+          "DQ-20": 1,
+          "DQ-15": 2,
+          "DQ-16": 1,
+          "DQ-11": 1,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.1053,
+        "answerable_below_abstention": 15,
+        "unanswerable_top_scores": [
+          0.1429,
+          0.0833,
+          0.1471,
+          0.0909,
+          0.125
+        ],
+        "unanswerable_below_abstention": 5
+      },
+      "none/hybrid": {
+        "hit@1": 1.0,
+        "hit@3": 1.0,
+        "mrr@10": 1.0,
+        "misses_at_3": [],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 1,
+          "DQ-12": 1,
+          "DQ-03": 1,
+          "DQ-19": 1,
+          "DQ-13": 1,
+          "DQ-20": 1,
+          "DQ-15": 1,
+          "DQ-16": 1,
+          "DQ-11": 1,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.5553,
+        "answerable_below_abstention": 0,
+        "unanswerable_top_scores": [
+          0.5828,
+          0.4115,
+          0.6167,
+          0.568,
+          0.4519
+        ],
+        "unanswerable_below_abstention": 2
+      },
+      "detected_from_query/vector_only": {
+        "hit@1": 1.0,
+        "hit@3": 1.0,
+        "mrr@10": 1.0,
+        "misses_at_3": [],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 1,
+          "DQ-12": 1,
+          "DQ-03": 1,
+          "DQ-19": 1,
+          "DQ-13": 1,
+          "DQ-20": 1,
+          "DQ-15": 1,
+          "DQ-16": 1,
+          "DQ-11": 1,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.5014,
+        "answerable_below_abstention": 4,
+        "unanswerable_top_scores": [
+          0.5133,
+          0.358,
+          0.5506,
+          0.5474,
+          0.3809
+        ],
+        "unanswerable_below_abstention": 4
+      },
+      "detected_from_query/graph_only": {
+        "hit@1": 0.8667,
+        "hit@3": 1.0,
+        "mrr@10": 0.9222,
+        "misses_at_3": [],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 1,
+          "DQ-12": 1,
+          "DQ-03": 1,
+          "DQ-19": 1,
+          "DQ-13": 3,
+          "DQ-20": 1,
+          "DQ-15": 2,
+          "DQ-16": 1,
+          "DQ-11": 1,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.1053,
+        "answerable_below_abstention": 15,
+        "unanswerable_top_scores": [
+          0.1429,
+          0.0833,
+          0.1471,
+          0.0909,
+          0.1042
+        ],
+        "unanswerable_below_abstention": 5
+      },
+      "detected_from_query/hybrid": {
+        "hit@1": 1.0,
+        "hit@3": 1.0,
+        "mrr@10": 1.0,
+        "misses_at_3": [],
+        "rank_by_query": {
+          "DQ-09": 1,
+          "DQ-01": 1,
+          "DQ-18": 1,
+          "DQ-08": 1,
+          "DQ-06": 1,
+          "DQ-12": 1,
+          "DQ-03": 1,
+          "DQ-19": 1,
+          "DQ-13": 1,
+          "DQ-20": 1,
+          "DQ-15": 1,
+          "DQ-16": 1,
+          "DQ-11": 1,
+          "DQ-10": 1,
+          "DQ-17": 1
+        },
+        "answerable_top_score_min": 0.5553,
+        "answerable_below_abstention": 0,
+        "unanswerable_top_scores": [
+          0.5828,
+          0.4115,
+          0.6167,
+          0.568,
+          0.4337
+        ],
+        "unanswerable_below_abstention": 2
+      }
+    }
+  }
+}

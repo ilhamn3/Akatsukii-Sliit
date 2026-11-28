@@ -1,8 +1,9 @@
 """A4: catalogue entity resolution and verified graph/index writes (K5).
 
 Resolves free-text machine labels to the five catalogue machine IDs, canonicalizes
-asset identifiers ("hyd. press 3" -> PRESS-03) and links safety warnings to catalogue
-hazard IDs. Matching is deterministic and data-driven (project/data/entities/
+asset identifiers ("hyd. press 3" -> HYD-03, the plant convention in the team's data)
+and links safety warnings to catalogue hazard IDs. When a record names only an asset
+("INJ-04"), the asset prefix supplies the machine type; A3 shows that as a warning. Matching is deterministic and data-driven (project/data/entities/
 aliases.yaml plus the SafetyAgent rule keywords); there is no fuzzy or LLM guessing.
 A label that matches no machine, or more than one, is never forced into a
 category: the record stays blocked until a reviewer corrects it.
@@ -46,6 +47,7 @@ class EntityResolver:
                              for k, v in vocabulary.get("replacements", {}).items()}
         self.ignore = {self.normalize(w) for w in vocabulary.get("ignore_words", [])}
         self.filler = {self.normalize(w) for w in vocabulary.get("asset_filler", [])}
+        self.number_words = {self.normalize(str(w)): int(n) for w, n in vocabulary.get("number_words", {}).items()}
         catalogue = {f["machine_type"] for f in faults}
         self.machines = {}
         for machine, spec in vocabulary["machines"].items():
@@ -61,6 +63,9 @@ class EntityResolver:
             }
         if missing := catalogue - set(self.machines):
             raise ValueError(f"Catalogue machines without alias entries: {sorted(missing)}")
+        self.prefixes = {spec["prefix"].casefold(): machine for machine, spec in self.machines.items()}
+        if len(self.prefixes) != len(self.machines):
+            raise ValueError("Each machine needs its own asset_prefix")
         self.hazard_names = {h["hazard_id"]: h["name"] for h in hazards}
         phrases = {hid: {self.normalize(name)} for hid, name in self.hazard_names.items()}
         for source in (rule_keywords or {}, vocabulary.get("hazard_phrases", {})):
@@ -88,10 +93,26 @@ class EntityResolver:
     def _link(self, kind, field_path, raw, **values):
         return EntityLink(kind=kind, field_path=field_path, raw=raw, resolver_version=self.version, **values)
 
-    def resolve_machine(self, raw: str, field_path: str = "machine_type") -> EntityLink:
+    def _asset_tokens(self, raw: str) -> list[str]:
+        """Normalized tokens without filler, with spoken numbers as digits ("three" -> "3")."""
+        tokens = [t for t in self.normalize(raw).split() if t not in self.filler and t not in self.ignore]
+        return [str(self.number_words[t]) if t in self.number_words else t for t in tokens]
+
+    def _bare_prefix(self, raw: str) -> str | None:
+        """Machine named by its asset prefix alone ("CNC", "HYD 2"), before token replacements."""
+        words = [t for t in _PUNCT.sub(" ", _SPLIT.sub(" ", raw.casefold())).split()
+                 if not t.isdigit() and t not in self.number_words and t not in self.filler]
+        return self.prefixes.get(words[0]) if len(words) == 1 else None
+
+    def resolve_machine(self, raw: str, field_path: str = "machine_type", *, allow_prefix: bool = True) -> EntityLink:
+        """allow_prefix=False ignores the asset-prefix rule ("CNC" -> cnc_lathe). K7 scoring uses
+        that: A2 must name the equipment category, and an asset prefix is not one."""
         link = partial(self._link, "machine", field_path, raw)
+        if allow_prefix and (prefixed := self._bare_prefix(raw)):
+            return link(status="resolved", entity_id=prefixed, method="asset_prefix")
         text = " ".join(t for t in self.normalize(raw).split()
-                        if not t.isdigit() and t not in self.ignore and t not in self.filler)
+                        if not t.isdigit() and t not in self.number_words
+                        and t not in self.ignore and t not in self.filler)
         if not text:
             return link(status="unresolved", method="no_machine_words")
         exact = [m for m, spec in self.machines.items() if text in spec["aliases"]]
@@ -114,14 +135,14 @@ class EntityResolver:
             return link(status="unresolved", method="excluded_term", candidates=sorted(excluded))
         return link(status="unresolved", method="no_catalogue_match")
 
-    def canonical_machine(self, raw: str | None) -> str | None:
-        return self.resolve_machine(raw).entity_id if raw else None
+    def canonical_machine(self, raw: str | None, *, allow_prefix: bool = True) -> str | None:
+        return self.resolve_machine(raw, allow_prefix=allow_prefix).entity_id if raw else None
 
     def resolve_asset(self, raw: str, machine: str, field_path: str = "machine_id") -> EntityLink:
         """Canonical <PREFIX>-<NN> asset ID when the text is one number plus words
         that belong to the record's machine; a different machine's words conflict."""
         link = partial(self._link, "asset", field_path, raw)
-        tokens = [t for t in self.normalize(raw).split() if t not in self.filler and t not in self.ignore]
+        tokens = self._asset_tokens(raw)
         numbers = [t for t in tokens if t.isdigit()]
         words = {t for t in tokens if not t.isdigit()}
         if len(numbers) != 1:
@@ -135,6 +156,25 @@ class EntityResolver:
         if self.assets and canonical not in self.assets:
             return link(status="unresolved", method="asset_registry")
         return link(status="resolved", entity_id=canonical, method="asset_pattern")
+
+    def machine_from_asset(self, raw: str) -> EntityLink:
+        """The machine an asset ID names on its own ("INJ-04", "compressor one"): exactly one
+        number plus words that belong to exactly one machine. Used only when the record has
+        no machine type; the result is recorded as derived, never as the technician's words."""
+        link = partial(self._link, "machine", "machine_type", raw)
+        tokens = self._asset_tokens(raw)
+        if len([t for t in tokens if t.isdigit()]) != 1:
+            return link(status="unresolved", method="asset_pattern")
+        if prefixed := self._bare_prefix(raw):
+            return link(status="resolved", entity_id=prefixed, method="asset_prefix")
+        # Otherwise only a full machine name counts ("compressor one"); a loose word such as
+        # "line 2" could be any production line, so it does not supply a machine type.
+        text = " ".join(t for t in tokens if not t.isdigit())
+        owners = sorted(m for m, spec in self.machines.items() if text in spec["aliases"] | spec["heads"])
+        if len(owners) == 1:
+            return link(status="resolved", entity_id=owners[0], method="asset_machine_name")
+        return link(status="ambiguous" if owners else "unresolved", method="asset_machine_name",
+                    candidates=owners)
 
     def link_hazards(self, warning: str, machine: str, index: int) -> list[EntityLink]:
         """Specific phrases link directly (possibly several hazards). Generic
@@ -167,7 +207,16 @@ def default_resolver() -> EntityResolver:
 def entity_issues(resolver: EntityResolver, machine_type: str | None, machine_id: str | None):
     """Shared A3/A4 check. Returns (issues, machine_link, asset_link)."""
     if not machine_type:
-        return [], None, None  # A3 reports the missing required fact.
+        derived = resolver.machine_from_asset(machine_id) if machine_id else None
+        if derived is None or derived.status != "resolved":
+            return [], None, None  # A3 reports the missing required fact.
+        asset = resolver.resolve_asset(machine_id, derived.entity_id, "machine_id")
+        return [ValidationIssue(
+            code="machine_type_from_asset_id", severity="warning", field_path="machine_type",
+            message=(f"No machine type was stated; asset '{machine_id}' follows the "
+                     f"{resolver.machines[derived.entity_id]['prefix']}-<NN> convention, so it is "
+                     f"recorded as {derived.entity_id}. Correct machine_type if that is wrong."),
+            related_ids=[derived.entity_id])], derived, asset
     machine = resolver.resolve_machine(machine_type)
     if machine.status != "resolved":
         choices = ", ".join(sorted(resolver.machines))
@@ -191,6 +240,14 @@ def entity_issues(resolver: EntityResolver, machine_type: str | None, machine_id
             code="asset_id_unresolved", severity="warning", field_path="machine_id",
             message=f"Asset '{asset.raw}' kept as written; it does not match the <PREFIX>-<NN> convention or registry"))
     return issues, machine, asset
+
+
+def derived_machine_type(resolver: EntityResolver, machine_type: str | None, machine_id: str | None) -> str | None:
+    """Catalogue machine supplied by the asset ID when no machine type was stated."""
+    if machine_type or not machine_id:
+        return None
+    link = resolver.machine_from_asset(machine_id)
+    return link.entity_id if link.status == "resolved" else None
 
 
 class GraphAgent(BaseAgent):

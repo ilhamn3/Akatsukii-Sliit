@@ -12,12 +12,12 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 27.1 / 30 points · 90% complete**
+**Overall: 28.8 / 30 points · 96% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP3 | Ingestion agents 1-4 and review queue | 18 | 15.4 | 86% |
-| WP4 | Knowledge store and retrieval | 10 | 9.7 | 97% |
+| WP3 | Ingestion agents 1-4 and review queue | 18 | 16.8 | 93% |
+| WP4 | Knowledge store and retrieval | 10 | 10 | 100% |
 | WP10 | Hardening and unit tests | 2 | 2 | 100% |
 <!-- PROGRESS:END -->
 
@@ -30,8 +30,8 @@
 | 3.1 | Agent 1: Whisper transcription (timestamped transcript) | 3 | 24 Nov | 100% |
 | 3.2 | Agent 1: video frame sampling and unclear-audio flagging | 1 | 24 Nov | 75% |
 | 3.3 | Agent 2: structured extraction (steps, tools, root cause, failed attempts, warnings) | 4 | 24 Nov | 90% |
-| 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 75% |
-| 3.5 | Agent 4: entity resolution and graph writes | 3 | 26 Nov | 75% |
+| 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 90% |
+| 3.5 | Agent 4: entity resolution and graph writes | 3 | 26 Nov | 100% |
 | 3.6 | Review-queue backend for low-confidence records | 2 | 26 Nov | 90% |
 | 3.7 | Extraction precision / recall / F1 numbers exported to the harness | 1 | 27 Nov | 100% |
 
@@ -42,7 +42,7 @@
 | 4.1 | SQLite tables for verified records | 2 | 26 Nov | 100% |
 | 4.2 | Vector index (ChromaDB or FAISS) | 2 | 26 Nov | 100% |
 | 4.3 | Knowledge graph (NetworkX) of machines, faults, causes, fixes, hazards | 2 | 26 Nov | 100% |
-| 4.4 | Agent 6: hybrid vector + graph retrieval | 3 | 27 Nov | 90% |
+| 4.4 | Agent 6: hybrid vector + graph retrieval | 3 | 27 Nov | 100% |
 | 4.5 | Retrieval returns failed attempts and outcomes | 1 | 27 Nov | 100% |
 
 #### WP10 – Hardening and unit tests (2 pts)
@@ -202,5 +202,8 @@ After merging origin/main at f735884, all 80 tests and pip check passed locally.
 | [#43](https://github.com/ilhamn3/Akatsukii-Sliit/pull/43) (Done % per #34; builds on #42) | 28 Nov 2026 | [WP3] Done % for what the v5 eval proved; harness reads the v5 report | 3.3 (50->90%), 3.7 (75->100%) | 3.7: the harness now loads the newest committed extraction report by default (it matched only the v3 file name, so it still read v3 0.833); a test checks it reads v5 (micro F1 0.897, 50 episodes, 0 failures). Done-when met: CLI script on the labelled set, file the harness reads, numbers from code. 3.3: done-when met on synthetic data: every draft validates on all 12 dev sample narratives and all 50 eval narratives with v5 (0 failures), failed attempts F1 1.000 and safety warnings F1 0.889 on eval, A1 -> A2 handoff traced in Pipeline A. Remaining 10%: a run with the team's final model (Ilham's #23 note) and real recordings, which the project does not have | 78.3% -> 84.5% (23.5/30 -> 25.35/30 pts) | Ilham MM (pending) |
 | [#44](https://github.com/ilhamn3/Akatsukii-Sliit/pull/44) (Agent 1 audio evaluation; builds on #43) | 28 Nov 2026 | [WP3] Agent 1 on the 12 audio clips: WER, time and review flags | 3.1 (75->100%), 3.2 (75%, unchanged) | project/evaluation/capture_metrics.py runs the real CaptureAgent (Whisper base, CPU, local; no Gemini/Groq) on all 12 synthetic clips, checks SHA-256, times transcription and scores WER against the manifest references. 0 failures; pooled WER 6.0% (8.2% without Whisper normalization); clean 6.5%, noisy 5.6%; 46.7 s for 435.5 s of audio (RTF 0.11). A1 flagged 0 of 6 noisy clips: Whisper stayed confident (min avg_logprob -0.36), so A1 catches silence/garbled speech, not steady 15 dB noise. Domain errors noted (lathe -> late, four oh -> 40). Results committed with transcripts; a test re-scores them. 3.1 done-when met on the team audio. 3.2 stays 75%: unclear-audio flagging misses noise, and a noise flag needs separate development clips. Evidence: docs/AUDIO_CAPTURE_EVAL.md | 84.5% -> 87% (25.35/30 -> 26.1/30 pts) | Ilham MM (pending) |
 | [#45](https://github.com/ilhamn3/Akatsukii-Sliit/pull/45) (Agent 3 evaluation; builds on #44) | 28 Nov 2026 | [WP3] Agent 3 flags on the 50 eval drafts: low confidence, contradictions, duplicates | 3.4 (50->75%) | project/evaluation/validation_eval.py scores A3 on the committed v5 eval drafts (no model calls). Low confidence: 13/50 flagged, precision 0.92, recall 0.27 vs any K7 error; all missing/unresolvable required facts caught (machine type 10/10, root cause 1/1), wrong-but-grounded values never (A3 has no gold). Injected: failed attempt as step 14/14, unquoted quantity 50/50, ungrounded fact 50/50, reversed steps 0/50 (text spans all start at 0 s); the one natural conflict (EP-0351) is a real model error. Duplicates: exact re-submission 50/50, none on first submission; semantic warning flagged 3/50, all 9 matches same-fault, 0 other-fault, own episode 0 (same-fault gold symptoms are identical text). Thresholds untouched. Remaining: step-order fallback for text, duplicate threshold on dev, score calibration. Evidence: docs/VALIDATION_REVIEW.md | 87% -> 90.3% (26.1/30 -> 27.1/30 pts) | Ilham MM (pending) |
+| [#46](https://github.com/ilhamn3/Akatsukii-Sliit/pull/46) (A3 fixes from the #45 evaluation; builds on #45) | 28 Nov 2026 | [WP3] A3: step order on text captures, dev-split duplicate threshold, priority fix | 3.4 (75->90%) | Fixes the gaps #45 measured. Step order breaks time ties by A1 segment index (text captures have no timing): reversed steps caught 40/50 (was 0); the 10 misses narrate all steps in one segment; the one natural flag (EP-0278) is a real model mis-ordering. Duplicate threshold 0.90 -> 0.55, chosen on the 12 dev drafts (same-fault 0.68-0.93 vs other-fault 0.28-0.43, midpoint rounded) before re-running eval: possible_duplicate on 36/50 eval drafts (was 3), 0 of 105 matched IDs a different fault. A known-fault match no longer raises priority: at 0.55 it raised 47/50 drafts to low_confidence against a store of past repairs (34 for that reason alone); now 13/50, as without a store. Calibration check: score tracks completeness, not correctness (score 1.0: 42 drafts, 37 with an error, mean F1 0.898; 0.75-1.0: 8 drafts, mean F1 0.853); weights not refitted. 349 tests pass. Remaining: recalibrate on real data (threshold rests on 9 dev points). Evidence: docs/VALIDATION_REVIEW.md | 90.3% -> 92.3% (27.1/30 -> 27.7/30 pts) | Ilham MM (pending) |
+| [#47](https://github.com/ilhamn3/Akatsukii-Sliit/pull/47) (A4 entities_v2; builds on #46) | 28 Nov 2026 | [WP3] A4 uses the data's asset prefixes; machine type from an asset ID | 3.5 (75->100%) | aliases.yaml now uses the plant convention in the team's data (CNC/HYD/INJ/CNV/CMP-NN): A4 had rewritten every data asset ID to provisional prefixes (CNC-03 -> LATHE-03; 0/400 gold IDs kept, now 400/400). A bare prefix names its machine ("CNC"), spoken numbers read as digits ("three" -> CNV-03), and an asset ID with a prefix or full machine name supplies a missing machine type, shown as a machine_type_from_asset_id warning and kept in provenance; loose words ("line 2") never do. K7 scoring keeps the prefix rule off, so committed K7 scores are unchanged. Developed on the 12 dev drafts (blocked 3 -> 0); eval drafts measured once: blocked on machine type 10 -> 3 (the rest name a part or nothing), machine correct 40 -> 47, 0 wrong, asset ID correct 0 -> 19. A3 re-run: low_confidence 13 -> 6, because those drafts now resolve correctly. project/evaluation/entity_eval.py, 364 tests pass. Done-when met and the vocabulary is checked against the team's asset names. Evidence: docs/ENTITY_GRAPH.md | 92.3% -> 94.8% (27.7/30 -> 28.45/30 pts) | Ilham MM (pending) |
+| #TBD (retrieval on pipeline-ingested episodes; builds on #47) | 28 Nov 2026 | [WP4] Hybrid retrieval evaluated on episodes ingested by the real Pipeline A | 4.4 (90->100%) | The remaining 10% from the #21 review. project/evaluation/retrieval_pipeline_eval.py sends the real A2 drafts (12 dev + 50 eval, v5) through A3, the review queue (approved as extracted), A4 and the store, then runs A6 on the 20 dev queries; scored by source-episode fault, and compared with an oracle store of the same episodes. 56/62 drafts approved (6 blocked by A3, left pending). Hybrid on the 15 answerable queries: hit@1 0.80, hit@3 0.93, MRR 0.856 (oracle, same episodes: 1.00/1.00/1.00); all slips are one fault whose narration never mentioned the queried symptom. Abstention at 0.55: 4/5 unanswerable below (oracle 2/5), 2/15 answerable below (oracle 0/15). Pipeline B's LLM agents not run (Gemini reserved); nothing tuned; test split refused. Evidence: docs/RETRIEVAL.md | 94.8% -> 95.8% (28.45/30 -> 28.75/30 pts) | Ilham MM (pending) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*
