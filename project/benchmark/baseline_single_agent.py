@@ -19,7 +19,13 @@ import uuid
 
 from pydantic import BaseModel, Field
 
-from project.core.llm import FakeLLM, get_llm
+from project.core.llm import (
+    DailyQuotaExhaustedError,
+    FakeLLM,
+    get_llm,
+    is_daily_quota_error,
+    mark_daily_quota_exhausted,
+)
 from project.core.orchestration_helpers import extract_valid_evidence_ids, normalize_evidence
 from project.core.registry import load_config
 from project.core.schemas import ActionStep, FinalAnswer
@@ -237,6 +243,9 @@ def run_baseline_query(
             last_exc = None
             break
         except Exception as exc:
+            if is_daily_quota_error(exc):
+                mark_daily_quota_exhausted(str(exc))
+                raise DailyQuotaExhaustedError(str(exc)) from exc
             last_exc = exc
             if attempt < 2:
                 time.sleep((2 ** attempt) * 0.5)

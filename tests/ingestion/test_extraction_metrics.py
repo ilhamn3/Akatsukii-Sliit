@@ -303,3 +303,28 @@ def test_cli_score_and_human_forms(tmp_path, data):
     assert human["primary"]["micro"]["f1"] == 1.0
     with pytest.raises(SystemExit):
         km.main(["--threshold", "0", "score", "--predictions", str(preds)])
+
+
+@pytest.mark.parametrize("folder", sorted(p.name for p in (km.ROOT / "project/evaluation/results").iterdir()
+                                          if p.is_dir()))
+def test_committed_results_rescore_to_their_reported_numbers(folder, data):
+    """Committed numbers must come from code: re-scoring the committed predictions reproduces them."""
+    base = km.ROOT / "project/evaluation/results" / folder
+    [report_path] = [p for p in base.glob("extraction_metrics_*.json")]
+    [preds_path] = list(base.glob("predictions_*.jsonl"))
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    preds = [json.loads(l) for l in preds_path.read_text(encoding="utf-8").splitlines()]
+    rescored, _ = km.score_predictions(preds, data, system="multi_agent_a2")
+    assert rescored["episodes"] == report["episodes"] and len(report["episodes"]) == 50
+    assert rescored["primary"] == report["primary"] and rescored["exact_match"] == report["exact_match"]
+    text = preds_path.read_text(encoding="utf-8")
+    assert "gsk_" not in text and "org_" not in text  # No credentials or provider account IDs.
+
+
+def test_scoring_uses_the_last_row_per_episode(data):
+    ids = km.select_episodes(data, "dev")[:2]
+    gold = [{"episode_id": e, "prediction": km.gold_for(e, data)} for e in ids]
+    failed_first = [{"episode_id": ids[0], "prediction": None, "error": "Error code: 401"}] + gold
+    report, rows = km.score_predictions(failed_first, data, system="a")
+    assert report["episodes"] == ids and len(rows) == 2 and report["failed_episodes"] == []
+    assert report["primary"]["micro"]["f1"] == 1.0

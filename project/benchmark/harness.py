@@ -19,6 +19,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import random
 import subprocess
 import sys
 import time
@@ -35,6 +36,12 @@ except ImportError:
 from project.benchmark.baseline_single_agent import get_baseline_prompt_hash, run_baseline_query
 from project.benchmark.metrics import load_faults_catalogue, score_query_result
 from project.benchmark.stats import aggregate_per_query, compare_systems, summarize_single_system
+from project.core.llm import (
+    DailyQuotaExhaustedError,
+    is_daily_quota_exhausted,
+    reset_daily_quota_flag,
+    set_global_rpm,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 TEST_SET_DIR = ROOT / "project" / "data" / "test_set"
@@ -169,9 +176,12 @@ def _run_multi_once(query: str, machine_type: Optional[str]) -> Dict[str, Any]:
     token_count = int(sum(toks)) if toks else None
 
     llm_check = str(flags.get("llm_check") or "")
+    warnings_text = " ".join(str(w) for w in ((res.get("final_answer") or {}).get("safety_warnings") or []))
     degraded = bool(
         res.get("error") is not None
         or llm_check.startswith("skipped")
+        or "LLM intent check unavailable" in warnings_text
+        or is_daily_quota_exhausted()
         or any(r.get("decision") == "FALLBACK_USED" or r.get("llm") == "fallback" for r in trace_events)
     )
     err = None
@@ -343,6 +353,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--model", type=str, default=None)
     parser.add_argument("--thinking", type=str, default=None)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--rpm", type=float, default=10.0, help="Client-side LLM rate limit (requests/min, default: 10)")
+    parser.add_argument("--max-calls", type=int, default=None, help="Stop cleanly after N LLM calls in this run")
+    parser.add_argument("--seed", type=int, default=42, help="Fixed seed for cross-tier query shuffle")
     parser.add_argument("--extraction-json", type=Path, default=None)
     parser.add_argument("--human-csv", type=Path, default=None)
     args = parser.parse_args(argv)
@@ -354,6 +367,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.thinking:
         os.environ["GEMINI_THINKING"] = args.thinking
     os.environ["TEMPERATURE"] = "0.0"
+
+    reset_daily_quota_flag()
+    set_global_rpm(None if args.fake_llm or args.rpm <= 0 else args.rpm)
 
     frozen_status = "not_checked (dev)"
     if args.split == "test" and not args.final:
@@ -369,8 +385,12 @@ def main(argv: Optional[List[str]] = None) -> int:
             return 3
 
     queries, golds = load_split(args.split, final=args.final)
+    # Fixed seeded shuffle across tiers so partial runs cover all tiers evenly
+    shuffled_queries = list(queries)
+    random.Random(args.seed).shuffle(shuffled_queries)
     if args.limit is not None:
-        queries = queries[: args.limit]
+        shuffled_queries = shuffled_queries[: args.limit]
+    queries = shuffled_queries
 
     faults = load_faults_catalogue()
     systems = ["multi", "baseline"] if args.system == "both" else [args.system]
@@ -385,43 +405,86 @@ def main(argv: Optional[List[str]] = None) -> int:
         "frozen_verify": frozen_status,
         "runs": args.runs,
         "systems": systems,
+        "rpm": args.rpm,
+        "max_calls": args.max_calls,
+        "seed": args.seed,
         "model": "fake" if args.fake_llm else (os.getenv("GEMINI_MODEL") or "default"),
         "thinking": os.getenv("GEMINI_THINKING") or "default",
         "temperature": 0.0,
     }
     (args.out / "run_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
-    for sys_name in systems:
-        code_hash = compute_system_hash(sys_name)
-        raw_path = args.out / f"raw_{sys_name}.jsonl"
-        cached = load_cache(raw_path, sys_name, code_hash) if args.resume else {}
+    code_hashes = {s: compute_system_hash(s) for s in systems}
+    raw_paths = {s: args.out / f"raw_{s}.jsonl" for s in systems}
+    caches = {
+        s: (load_cache(raw_paths[s], s, code_hashes[s]) if args.resume else {})
+        for s in systems
+    }
 
-        for run_idx in range(1, args.runs + 1):
-            print(f"\n--- Harness: system={sys_name} split={args.split} run={run_idx}/{args.runs} hash={code_hash} ---")
-            for q in queries:
-                qid = q["query_id"]
-                if (qid, run_idx) in cached:
+    calls_used = 0
+    total_pairs = len(queries) * args.runs
+    completed_pairs: set[tuple[str, int]] = set()
+    pair_systems_ok: Dict[tuple[str, int], set[str]] = {}
+    stop_reason: Optional[str] = None
+
+    for run_idx in range(1, args.runs + 1):
+        print(f"\n--- Harness Paired Run {run_idx}/{args.runs} (split={args.split}, systems={systems}, rpm={args.rpm}) ---")
+        for q in queries:
+            if stop_reason is not None:
+                break
+            qid = q["query_id"]
+            gold = golds[qid]
+            machine_type = _infer_machine(q["query"])
+            pair_key = (qid, run_idx)
+            pair_systems_ok.setdefault(pair_key, set())
+
+            for sys_name in systems:
+                if args.max_calls is not None and calls_used >= args.max_calls:
+                    stop_reason = f"Reached --max-calls limit ({args.max_calls}). Stopping cleanly; resume with the same command."
+                    break
+
+                if (qid, run_idx) in caches[sys_name]:
+                    rec = caches[sys_name][(qid, run_idx)]
+                    all_records.append(rec)
+                    pair_systems_ok[pair_key].add(sys_name)
                     print(f"[RESUME {sys_name} r{run_idx}] {qid}")
-                    all_records.append(cached[(qid, run_idx)])
                     continue
 
-                gold = golds[qid]
-                machine_type = _infer_machine(q["query"])
-                if sys_name == "multi":
-                    res = _run_multi_once(q["query"], machine_type)
-                else:
-                    res = run_baseline_query(
-                        query=q["query"],
-                        machine_type=machine_type,
-                        allow_fake=args.fake_llm,
-                    )
+                daily_hit = False
+                try:
+                    if sys_name == "multi":
+                        res = _run_multi_once(q["query"], machine_type)
+                    else:
+                        res = run_baseline_query(
+                            query=q["query"],
+                            machine_type=machine_type,
+                            allow_fake=args.fake_llm,
+                        )
+                except DailyQuotaExhaustedError as exc:
+                    daily_hit = True
+                    res = {
+                        "final_answer": None,
+                        "evidence": [],
+                        "trace_id": None,
+                        "latency_ms": 0.0,
+                        "llm_calls": 0,
+                        "token_count": None,
+                        "degraded": True,
+                        "error": f"DailyQuotaExhaustedError: {exc}",
+                    }
+
+                if is_daily_quota_exhausted():
+                    daily_hit = True
+                    res["degraded"] = True
+                    if not res.get("error"):
+                        res["error"] = "DailyQuotaExhaustedError: daily quota exhausted mid-query"
 
                 metrics = score_query_result(q, gold, res, faults=faults)
                 rec = {
                     "system": sys_name,
                     "query_id": qid,
                     "run": run_idx,
-                    "code_hash": code_hash,
+                    "code_hash": code_hashes[sys_name],
                     "tier": q["tier"],
                     "expected_behaviour": gold["expected_behaviour"],
                     "final_answer": res.get("final_answer"),
@@ -431,14 +494,47 @@ def main(argv: Optional[List[str]] = None) -> int:
                     "error": res.get("error"),
                     **metrics,
                 }
-                _append_jsonl(raw_path, rec)
+                _append_jsonl(raw_paths[sys_name], rec)
                 all_records.append(rec)
+                calls_used += int(res.get("llm_calls") or 0)
+                if not rec["degraded"]:
+                    pair_systems_ok[pair_key].add(sys_name)
+
                 print(
                     f"[{sys_name} r{run_idx}] {qid} ({q['tier']}): "
                     f"beh={metrics['behaviour_match']} rc1={metrics['top1_root_cause_match']} "
                     f"rc3={metrics['top3_root_cause_hit']} saf={metrics['safety_coverage']:.2f} "
                     f"deg={rec['degraded']} ({metrics['latency_ms']:.0f}ms)"
                 )
+
+                if daily_hit:
+                    stop_reason = (
+                        "Daily Gemini quota (RPD) exhausted. Quota resets at midnight Pacific "
+                        "(00:00 America/Los_Angeles). Stopping cleanly; resume with the same command."
+                    )
+                    break
+
+            if len(pair_systems_ok.get(pair_key, set())) == len(systems):
+                completed_pairs.add(pair_key)
+
+            done_cnt = len(completed_pairs)
+            rem_pairs = max(0, total_pairs - done_cnt)
+            avg_calls_per_pair = (calls_used / done_cnt) if done_cnt > 0 and calls_used > 0 else (6.0 if len(systems) == 2 else 3.0)
+            proj_rem = round(avg_calls_per_pair * rem_pairs)
+            print(
+                f"[PROGRESS] calls_used={calls_used} | pairs_complete={done_cnt}/{total_pairs} | "
+                f"projected_remaining_calls={proj_rem}"
+            )
+
+            if stop_reason is None and args.max_calls is not None and calls_used >= args.max_calls and done_cnt < total_pairs:
+                stop_reason = f"Reached --max-calls limit ({args.max_calls}). Stopping cleanly; resume with the same command."
+                break
+
+        if stop_reason is not None:
+            break
+
+    if stop_reason:
+        print(f"\n[STOP] {stop_reason}")
 
     per_query_df, counts = aggregate_per_query(all_records)
     system_summaries = {
