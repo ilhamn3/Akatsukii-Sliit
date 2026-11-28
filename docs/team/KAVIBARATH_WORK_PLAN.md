@@ -12,11 +12,11 @@
 ## 1. Progress tracker
 
 <!-- PROGRESS:START -->
-**Overall: 23.2 / 30 points · 77% complete**
+**Overall: 23.5 / 30 points · 78% complete**
 
 | WP | Title | Weight | Earned | WP % |
 |---|---|---:|---:|---:|
-| WP3 | Ingestion agents 1-4 and review queue | 18 | 11.5 | 64% |
+| WP3 | Ingestion agents 1-4 and review queue | 18 | 11.8 | 66% |
 | WP4 | Knowledge store and retrieval | 10 | 9.7 | 97% |
 | WP10 | Hardening and unit tests | 2 | 2 | 100% |
 <!-- PROGRESS:END -->
@@ -32,7 +32,7 @@
 | 3.3 | Agent 2: structured extraction (steps, tools, root cause, failed attempts, warnings) | 4 | 24 Nov | 50% |
 | 3.4 | Agent 3: schema/consistency validation, dedup, confidence scoring | 4 | 26 Nov | 50% |
 | 3.5 | Agent 4: entity resolution and graph writes | 3 | 26 Nov | 75% |
-| 3.6 | Review-queue backend for low-confidence records | 2 | 26 Nov | 75% |
+| 3.6 | Review-queue backend for low-confidence records | 2 | 26 Nov | 90% |
 | 3.7 | Extraction precision / recall / F1 numbers exported to the harness | 1 | 27 Nov | 75% |
 
 #### WP4 – Knowledge store and retrieval (10 pts)
@@ -198,5 +198,6 @@ After merging origin/main at f735884, all 80 tests and pip check passed locally.
 | [#27](https://github.com/ilhamn3/Akatsukii-Sliit/pull/27) (root-cause prompt; also lands #23 and #24 on main) | 27 Nov 2026 | [WP3] Extraction prompt v5 as default after dev-split comparison | 3.3 (50%, unchanged), 3.7 (75%, unchanged) | Prompt work on the 12 dev episodes only (eval and test splits untouched). v4: any wording presenting a cause as the finding counts as a stated root cause; hedged or unstated causes stay null. v5 adds clean values with exact quotes and keeps failed actions out of steps. Dev result, Groq gpt-oss-120b, 0 failures in both runs: root cause F1 0.957 -> 1.000, micro F1 0.887 -> 0.874 (single-item differences in steps, symptoms, tools and parts, documented). v5 is now the default; v3 stays selectable. Runner tooling: provider vs output failure labels, compare refuses incomplete runs, stop on rate limit, per-call token counts, optional `--wait-on-rate-limit`. 264 tests pass. No % change: 3.3 still needs team samples, and the reported v5 eval-split number is not run yet. Evidence: docs/EXTRACTION_METRICS.md | 77% -> 77% (23.2/30 pts) | Ilham MM (merged, no review comments) |
 | [#34](https://github.com/ilhamn3/Akatsukii-Sliit/pull/34) (v5 eval result) | 27 Nov 2026 | [WP3] Record the v5 eval-split extraction result | 3.3 (50%, unchanged), 3.7 (75%, unchanged) | The one eval-split run with v5 (Groq gpt-oss-120b, same 50 episodes as v3, no prompt change after it): micro F1 0.833 -> 0.897 (P 0.869, R 0.927), exact-match 0.606 -> 0.683, root cause 0.864 -> 0.990, 0 failures (v3 had 3). On the 47 episodes both runs completed, 0.864 -> 0.890, so most of the gain is the prompt and the rest is the K8 retry removing failures. Above the O1 target of 0.85, on synthetic data with a development provider. Outputs committed under project/evaluation/results/ (final row per episode only; superseded rate-limit rows held provider account details). Fix: `score` uses the last row per episode, as `run` does (re-scoring a log with superseded failures counted them twice); a test re-scores every committed results folder to its reported numbers. 283 tests pass. No % change: 3.3 still needs team samples, and 3.7 still needs harness ingestion, the team's final model and review. Evidence: docs/EXTRACTION_METRICS.md | 77% -> 77% (23.2/30 pts) | Ilham MM (merged, no review comments) |
 | #TBD (tracker update) | 28 Nov 2026 | [WP3] Record review outcomes in the K PR log | none | Reviewer column now shows what actually happened to each PR (#5, #12-#14, #22-#24, #27, #34), from the GitHub reviews. #23 and #24 were approved and merged into their stacked bases and reached main via #27. No code or % change | 77% -> 77% (23.2/30 pts) | Ilham MM (pending) |
+| #TBD (review-page fixes from the #32 review) | 28 Nov 2026 | [WP3] Review page shows everything approval publishes; corrections for blocked drafts | 3.6 (75->90%) | #32 connected the UI to the K4 ReviewQueue and was merged over my requested changes. This PR makes them: the page shows every extracted field approval publishes (failed attempts, tools, parts, machine ID were hidden), review reasons and missing fields (incl. the fixture and K8-retry flags), confidence labelled uncalibrated; blocking issues get correction inputs mapped to the keys A3 accepts, so blocked drafts can be approved once corrected (before, only rejected); duplicate_source can only be rejected; no default reviewer name. Logic in project/store/review_view.py with unit tests; tests/ui/test_review_page.py drives the page against a real ReviewQueue + KnowledgeStore; checked in the running app (correct -> approve -> published, decided_by recorded). UI tests get a 30 s AppTest timeout (the existing trace-viewer test flaked at the 3 s default). 337 tests pass. Done-when met: queue items are approved/rejected through the backend API from the UI. Remaining: review | 77% -> 78% (23.2/30 -> 23.5/30 pts) | Ilham MM (pending) |
 
 *Example row:* `| #4 | 22 Nov | [WP1] Repo scaffold and Pydantic schemas | 1.1 (0->100%), 1.2 (0->100%) | Folder structure, .gitignore, schemas | 0% -> 17% | Kavibarath S |` *(delete this example line if you copy it).*

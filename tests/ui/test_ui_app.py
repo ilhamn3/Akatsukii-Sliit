@@ -8,6 +8,9 @@ from unittest.mock import patch
 
 from streamlit.testing.v1 import AppTest
 
+# AppTest's 3 s default is too tight on a cold first run (pages import the store and graph).
+APP_TIMEOUT_S = 30
+
 UI_DIR = Path(__file__).resolve().parents[2] / "project" / "ui"
 APP_PATH = UI_DIR / "chat_page.py"
 ENTRY_PATH = UI_DIR / "app.py"
@@ -54,7 +57,7 @@ def test_chat_renders_grounded_answer_and_no_mock_banner():
 
     with patch("project.core.api._get_cached_graph", return_value=object()), \
          patch("project.core.api.run_query", return_value=fake_result):
-        app = AppTest.from_file(str(APP_PATH)).run()
+        app = AppTest.from_file(str(APP_PATH), default_timeout=APP_TIMEOUT_S).run()
         assert not app.error  # No MOCK banner on real mode
         app.chat_input[0].set_value("Compressor belt squeals").run()
         assert not app.exception
@@ -92,7 +95,7 @@ def test_chat_renders_refusal_escalation_error_and_flag_banners():
     }
     with patch("project.core.api._get_cached_graph", return_value=object()), \
          patch("project.core.api.run_query", return_value=refusal_result):
-        app = AppTest.from_file(str(APP_PATH)).run()
+        app = AppTest.from_file(str(APP_PATH), default_timeout=APP_TIMEOUT_S).run()
         app.chat_input[0].set_value("Can I open without venting?").run()
         assert not app.exception
         err_text = "\n".join(e.value for e in app.error)
@@ -115,7 +118,7 @@ def test_chat_renders_refusal_escalation_error_and_flag_banners():
     }
     with patch("project.core.api._get_cached_graph", return_value=object()), \
          patch("project.core.api.run_query", return_value=err_result):
-        app = AppTest.from_file(str(APP_PATH)).run()
+        app = AppTest.from_file(str(APP_PATH), default_timeout=APP_TIMEOUT_S).run()
         app.chat_input[0].set_value("Lathe alarm").run()
         err_text = "\n".join(e.value for e in app.error)
         assert "Pipeline Error" in err_text
@@ -130,15 +133,20 @@ def test_review_queue_renders_and_approves_via_api():
             "priority": "low_confidence",
             "confidence": 0.62,
             "episode_id": "EP-0999",
-            "draft": {
-                "machine_type": {"value": "cnc_lathe", "sources": [{"segment_id": "S1", "quote": "lathe spindle hot"}]},
-                "root_cause": {"value": "clogged chiller filter", "sources": [{"segment_id": "S2", "quote": "filter was blocked"}]},
-                "outcome": {"value": "worked", "sources": [{"segment_id": "S3", "quote": "ran cool"}]},
-                "symptoms": [{"value": "spindle hot", "sources": [{"segment_id": "S1", "quote": "spindle hot"}]}],
-                "steps": [{"value": "Clean chiller filter", "sources": [{"segment_id": "S2", "quote": "cleaned filter"}]}],
-                "safety_warnings": [],
+            "draft": {  # Same shape as ReviewItem.model_dump(mode="json"): facts live under extraction.
+                "review_reasons": ["awaiting_validation"],
+                "missing_fields": [],
+                "extraction": {
+                    "machine_type": {"value": "cnc_lathe", "sources": [{"segment_id": "S1", "quote": "lathe spindle hot"}]},
+                    "root_cause": {"value": "clogged chiller filter", "sources": [{"segment_id": "S2", "quote": "filter was blocked"}]},
+                    "outcome": {"value": "worked", "sources": [{"segment_id": "S3", "quote": "ran cool"}]},
+                    "symptoms": [{"value": "spindle hot", "sources": [{"segment_id": "S1", "quote": "spindle hot"}]}],
+                    "steps": [{"value": "Clean chiller filter", "sources": [{"segment_id": "S2", "quote": "cleaned filter"}]}],
+                    "safety_warnings": [],
+                },
             },
             "report": {
+                "confidence": {"method": "rule_based_v1_uncalibrated"},
                 "issues": [
                     {"code": "LOW_CONF", "severity": "warning", "field_path": "steps", "message": "Check step order"}
                 ]
@@ -147,11 +155,14 @@ def test_review_queue_renders_and_approves_via_api():
     ]
     with patch("project.core.api.list_pending_reviews", return_value=pending), \
          patch("project.core.api.approve_review_item", return_value={"episode_id": "EP-0999"}) as mock_app:
-        app = AppTest.from_file(str(REVIEW_PATH)).run()
+        app = AppTest.from_file(str(REVIEW_PATH), default_timeout=APP_TIMEOUT_S).run()
         assert not app.exception
         assert any("REV-001" in s.value for s in app.subheader)
-        app.button[0].click().run()
+        assert app.button(key="approve_REV-001").disabled  # Reviewer name is required, no default.
+        app.text_input(key="reviewer_name").input("senior-tech-1").run()
+        app.button(key="approve_REV-001").click().run()
         mock_app.assert_called_once()
+        assert mock_app.call_args.kwargs["reviewer"] == "senior-tech-1"
         assert any("EP-0999" in s.value for s in app.success)
 
 
@@ -164,7 +175,7 @@ def test_trace_viewer_renders_ordered_handoffs(tmp_path):
     trace_file.write_text("\n".join(json.dumps(e) for e in events) + "\n", encoding="utf-8")
 
     with patch("project.core.trace.DEFAULT_LOG_PATH", trace_file):
-        app = AppTest.from_file(str(TRACE_PATH)).run()
+        app = AppTest.from_file(str(TRACE_PATH), default_timeout=APP_TIMEOUT_S).run()
         assert not app.exception
         assert len(app.dataframe) == 1
         assert len(app.expander) == 2
